@@ -1,0 +1,51 @@
+A certain coding style is encouraged when developing for Seria Platform. Although this coding
+style is not enforced, we encourage following it for consistency:
+
+NAMING CONVENTION
+
+	Variable names:
+		$variableName		Normal variables
+		$_privateVariable	Private variables (although not needed, it prevents naming conflicts)
+		$seria_variableName	All public variables created by files within the seria/ folder must use the 'seria_' prefix, as long as this variable may conflict with user space code.
+
+	Function names:
+		myFunctionName		A public function
+		_privateFunctionName	A function that we do not intend to be called by others, should be declared as protected/private, but if declared public is considered to be an internal (non-api) function.
+		seria_*			All public functions created by files within the seria/ folder must use the 'seria_' prefix.
+
+	Class names:
+		MyClassName		Class names use camel case
+		MySimpleApplication	A class extending the Application class
+
+	Acronyms:
+
+		HTML is an acronym. When used in variables, treat this acronym as a single word like this:
+		myHtmlFile instead of myHTMLFile
+
+	Class constants:
+
+		Constants without special meaning to the public API must have a "type" appended. For example, hooks should be named
+		LOGOUT_HOOK, while SERIA_Validator::STRING is also correct since STRING is intended for internal use in the
+		class.
+
+INDENTATION
+
+	The tab character is used for indentation. Also legal is 8 spaces, but this is discouraged and
+	may be removed. Replacing tabs with spaces may cause problems with version control.
+
+Curly brackets:
+
+	Both allowed:
+
+	if(condition) {
+	}
+
+	if(condition)
+	{
+	}
+
+Quoting:
+
+	Only single and double quotes are allowed. Other forms of quoting should not be used.
+
+	Use single quotes whenever there is no need to parse variables or special characters such as \n and similar.

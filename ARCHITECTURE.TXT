@@ -1,0 +1,57 @@
+Seria Platform is an "operating system" for PHP web applications. Seria Platform attempts to make the environment
+predictable by abstracting away special quirks introduced by certain PHP configurations, and make tools available
+for the following:
+
+- Caching
+- Authentication
+- Hooks and listeners
+- Database abstraction
+- Templates
+- Translation
+- RPC
+
+Key architecture elements:
+
+Webroot application
+-------------------
+The webroot application is code for the main purpose of the installation. It consists of the following files:
+
+/seria		The Seria Platform framework
+/seria.php	An optional PHP file that is included on every page view, also in administration view. For
+		hooking into core hooks.
+/classes	An optional folder for custom class files.
+/files		The default location for user uploaded files.
+
+Platform applications
+---------------------
+Any installation of Seria Platform carries applications. Applications in this context are meant to service common
+needs for any Webroot application. If the webroot application is a webshop, it can utilize applications such as a
+e-mail newsletter application, a CRM application and of course the normal Control Panel application.
+
+Platform applications are located in the /seria/apps folder. Each app has an application.php that is included on every
+page view.
+
+Examples:
+- Seria Control Panel, an application for centralizing control over all user configurable functionable options and user
+management.
+- Seria Business, a registry of companies, contacts, payments etc.
+- Seria Mobile, an application helping with identifying mobile phones and supporting them trough a simplified template 
+system. Used when the webroot application has another purpose. The webroot application can then use the Seria Mobile 
+application to provide a mobile version of itself.
+- Seria EsiFrontend; an esi parser that intercepts unhandled urls on the webroot and forwards them to another website.
+- Seria Content Management; an application for managing a content repository, workflow and publishing process that can 
+be used by any application.
+- Seria Mailing List, an application for sending mass e-mails and handling 
+
+
+Platform components
+-------------------
+Any installation of Seria Platform consists of the core framework and support components. Support components are
+located in the /seria/components folder. Each component has a component.php that is included on every page view.
+
+Examples:
+- Service Providers. Any service that has custom API's in Seria Platform, such as handling payment by VISA and similar
+can be supported by creating a service provider. For example the SERIA_PaymentService could be extended by PayPal
+Payment Service.
+
+

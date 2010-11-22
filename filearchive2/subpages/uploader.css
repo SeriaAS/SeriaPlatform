@@ -1,0 +1,28 @@
+@CHARSET "UTF-8";
+
+* {
+	margin: 0px;
+	padding: 0px;
+}
+
+div#form_area {
+	overflow: hidden;
+	height: 30px;
+	vertical-align: center;
+}
+
+div#form_area label.text {
+	line-height: 30px;
+	font-size: 14px;
+	float: left;
+}
+div#form_area input {
+	line-height: 30px;
+	font-size: 14px;
+	margin-top: 1px;
+	height: 25px;
+	margin-left: 5px;
+	width: 50%;
+	position: absolute;
+	top: 0px;
+}

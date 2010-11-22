@@ -1,0 +1,4 @@
+<?php $Giant_list_lang = array_merge($Giant_list_lang, array (
+  'bae4097497464e428ac8633bac367a8c' => 'RPC Innstillinger',
+  '08e0395a148061002e046bbb2c70642c' => 'RPC kobler sammen Seria Platform instanser slik at oppgaver kan distribueres over internett. Her kan du sette inn autentiseringsnøkler som er påkrevd for priviligerte operasjoner på andre systemer. Du kan også tillate andre systemer å gjøre priviligerte operasjoner på dette systemet  ved å legge til en konto med autentiseringsnøkkel (passord). Bare send klient-id og nøkkel til dem slik at de kan legge dette til i sine RPC tjenester.',
+)); ?>

@@ -1,0 +1,657 @@
+* {
+	margin: 0px;
+	padding: 0px;
+	color: #555;
+	font-size: 12px;
+}
+html {
+	background-image: url(background.png);
+	background-repeat: repeat-x;
+	background-attachment: fixed;
+}
+body {
+	font-family: Tahoma, Arial, sans-serif;
+	background-repeat: no-repeat;
+	background-position: top center;
+}
+
+* {
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: -moz-none;
+	-khtml-user-select: none;
+	user-select: none;
+}
+
+input, textarea {
+	-ms-user-select: text;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-khtml-user-select: text;
+	user-select: text;
+}
+
+
+li {
+	margin-left: 20px;
+}
+
+.highlight:hover {
+	background-color: #ded !important;
+	cursor: pointer !important;
+	cursor: hand;
+}
+
+table.grid {
+	border-collapse: collapse;
+}
+
+table.grid {
+	cursor: default;
+	width: 100%;
+	border: solid 1px #ddd;
+	margin: 5px 0px;
+	
+}
+
+table.grid thead th {
+	text-align: left;
+	background-image: url('grid-heading-bg.png');
+	background-position: bottom center;
+	background-repeat: repeat-x;
+	border-bottom: 1px solid #aaa;
+	border-right: 1px solid #aaa;
+	padding-left: 2px;
+	color: #444;
+	font-weight: normal;
+}
+
+table.grid thead th.batch {
+	width: 18px;
+}
+
+table.grid tbody tr.odd {
+	background-color: #eee;
+}
+table.grid tbody tr.even {
+	background-color: transparent;
+}
+
+table.grid thead th.highlight:hover {
+	background-color: #ded;
+	cursor: hand;
+}
+
+tr.clickable, td.clickable  {
+	cursor: pointer !important;
+	cursor: hand;
+}
+
+table.grid tbody th {
+	text-align: right;
+	padding-right: 10px;
+	font-weight: normal;
+	vertical-align: top;
+}
+
+table.grid tr td {
+	padding: 1px 5px 1px 2px;
+}
+
+table.grid tr.tableNoElements td {
+	text-align: center;
+}
+
+table.form {
+	border-collapse: collapse;
+}
+
+table.form tbody th {
+	text-align: left;
+	vertical-align: top;
+}
+
+tr.tableErrorRow td {
+	background-color: #ff9999;
+}
+
+tr.tableWarningRow td {
+	background-color: #ffff99;
+}
+
+td.clickableCell {
+	cursor: hand;
+	cursor: pointer !important;
+}
+
+td {
+	vertical-align: top;
+}
+
+td.tableMaxWidth, th.tableMaxWidth {
+	width: 100%;
+}
+
+td.statusRow {
+	text-align: right;
+	white-space: nowrap;
+}
+
+div#popupMain {
+	border: 2px solid #ddd;
+	border-top: 2px solid #4fb7dc;
+	top: 4px;
+	left: 4px;
+	bottom: 4px;
+	right: 4px;
+	position: absolute;
+	padding: 4px;
+	background-color: white;
+}
+
+h1,h2,h3,h4,h5,h6,p {
+	margin-top: 10px;
+	margin-bottom: 5px;
+}
+h1 {
+	font-size: 15px;
+}
+h2 {
+	font-size: 13px;
+}
+h3 {
+	font-size: 12px;
+}
+h4,h5,h6 {
+	font-size: 12px;
+	font-weight: normal;
+}
+
+div#main h1.legend {
+	margin: -6px;
+	padding: 0px;
+	margin-bottom: 10px;
+	background-color: #4fb7dc;
+	color: #fff;
+	padding: 2px;
+	padding-left: 4px;
+}
+
+div#main h1.legend a {
+	color: #fff;
+	font-size: 1em;
+}
+
+div.important {
+	color: #f00;
+	padding: 10px;
+	margin: 2px;
+	border: 3px solid #4eb6db;
+	background-color: #f4f4f4;
+}
+p.error {
+	color: #ff0000;
+}
+div.fieldError {
+	color: #ff0000;
+}
+#topbar {
+	width: 980px;
+	font-weight: bold;
+	height: 93px;
+	background-image: url('heading-bg.png');
+	margin: auto;
+}
+#topbar a {
+	display: block;
+	float: left;
+	height: 93px;
+	background-image: url('heading-bg.png');
+	position: relative;
+	padding: 0px 40px;
+	text-decoration: none;
+	border: 0px solid black;
+}
+#topbar a .caption {
+	display: block;
+	padding-top: 45px;
+	text-transform: uppercase;
+}
+#topbar a.prev .caption, #topbar a.next .caption, #topbar a.inactive .caption {
+	color: white;
+}
+
+#topbar a.active {
+	background-image: url('heading-bg-active.png');
+}
+#topbar a .left {
+	position: absolute;
+	left: 0px;
+	top: 0px;
+}
+#topbar a .right {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+}
+#topbar a.inactive .left {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-left-inactive.png');
+}
+#topbar a.inactive .right {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-right-inactive.png');
+}
+#topbar a.active .left {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-left-active.png');
+}
+#topbar a.active .right {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-right-active.png');
+}
+#topbar a.prev .left {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-left-prev.png');
+}
+#topbar a.prev .right {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-right-prev.png');
+}
+#topbar a.next .left {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-left-next.png');
+}
+#topbar a.next .right {
+	width: 10px;
+	height: 93px;
+	background-image: url('heading-right-next.png');
+}
+#topbar span.end {
+	width: 10px;
+	height: 93px;
+	float: left;
+	background-image: none;
+}
+#topbar span.end.prev {
+	width: 10px;
+	height: 93px;
+	float: left;
+	background-image: url('heading-left-prev.png');
+}
+
+#topbar a.logo {
+	width: 165px;
+	height: 93px;
+	padding: 0px;
+	background-image: url('heading-logo-inactive.png');
+}
+#topbar a.logoactive {
+	width: 165px;
+	height: 93px;
+	padding: 0px;
+	background-image: url('heading-logo-active.png');
+}
+#topbar a.logonext {
+	width: 165px;
+	height: 93px;
+	padding: 0px;
+	background-image: url('heading-logo-next.png');
+}
+#topbar a.logo img,#topbar a.logoactive img,#topbar a.logonext img {
+	border:0px solid black;
+	position: absolute;
+	left: 15px;
+	top: 15px;
+}
+#submenu {
+	height: 28px;
+}
+#submenu ul {
+	margin: auto;
+	width: 980px;
+	height: 28px;
+}
+#submenu ul li {
+	list-style-type: none;
+	line-height: 28px;
+	float: left;
+}
+#submenu ul li a {
+	text-decoration: none;
+}
+#submenu ul li a:hover {
+	text-decoration: underline;
+}
+#footer {
+	clear: both;
+	text-align: center;
+	color: #aaa;
+}
+#footer a {
+	color: #999;
+	text-decoration: none;
+}
+p.warning {
+	display: block;
+	padding: 20px;
+	border: 3px solid #4eb6db;
+	background-color: #f4f4f4;
+}
+#contents {
+}
+
+#contents #contentsWrapper {
+	width: 980px;
+	margin: auto;
+	padding-top: 10px;
+}
+
+#contents.contentsFrame #contentsWrapper {
+	width: auto;
+	padding-top: 0px;
+}
+
+#contents div#main {
+	width: 968px;
+	background-color: #fff;
+}
+
+#contents.hasBlocks div#main {
+	width: 746px;
+}
+
+div.previewFrame {
+	width: 50px;
+	height: 50px;
+	border: solid 1px #bbbbbb;
+	float: left;
+	margin-right: 5px;
+	clear: left;
+}
+
+div.previewFrame img {
+}
+
+div#main {
+	float: left;
+	margin: 0px;
+	padding: 5px;
+	border: 1px solid #eee;
+	border-top: 2px solid #4fb7dc;
+	width: 746px;
+}
+
+div#contents.wide div#main {
+	width: 956px;
+}
+
+div.fileData {
+	display: block;
+	clear: both;
+	margin: 5px;
+}
+
+div.filePreviewBox {
+	position: relative;
+	background-color: #dedede;
+	display: none;
+	float: left;
+	clear: both;
+}
+
+div.flashMessages {
+	padding: 0px;
+	padding-bottom: 10px;
+}
+
+div.flashMessages p {
+	color: #000;
+	border: solid 1px #eee;
+	padding: 3px;
+}
+
+div.flashMessages p a.close {
+	float: right;
+}
+
+div.flashMessages p.flashNotice {
+	border: 3px solid #aaeeaa;
+	background-color: #bbffbb;
+}
+
+div.flashMessages p.flashError {
+	border: 3px solid #eeaaaa;
+	background-color: #ff9999;
+}
+
+.nobr {
+	white-space: nowrap;
+}
+
+div.batchOperations {
+	clear: both;
+	padding: 2px;
+}
+
+/* This one is required for setting correct pointer in treeview (!!) */
+a:hover {
+	cursor: pointer !important; /* Others than IE */
+	cursor: hand; /* IE */
+}
+
+td.statusError {
+	color: red;
+}
+
+td.statusOk {
+	color: green;
+}
+
+dl {
+	
+}
+
+dt {
+	font-weight: bold;
+}
+
+ul.sitemenu li {
+	margin-left: 10px;
+}
+
+dd {
+	margin-left: 10px;
+	margin-bottom: 8px;
+}
+
+strong.searchResultTitle {
+	display: block;
+	margin-top: 3px;
+	margin-left: 2px;
+	margin-bottom: 5px;
+	font-weight: bold;
+}
+
+div.menuIndentation {
+	width: 20px;
+	height: 10px;
+	float: left;
+}
+
+div.userAndUsergroupSelect {
+	clear: both;
+}
+
+div.userAndUsergroupSelect div {
+	float: left;
+}
+
+div.userAndUsergroupSelect div select {
+	width: 200px;
+	height: 100px;
+	margin-right: 10px;
+	padding: 1px;
+}
+
+div.userAndUsergroupSelect div select option {
+	padding-left: 1px;
+}
+
+div.userAndUsergroupSelect div.selectButtons input {
+	min-width: 50px;
+	width: auto !important;
+	width: 50px;
+	margin: 4px auto;	
+}
+
+input.differentSelected {
+	
+}
+
+.clear {
+	clear: both;
+}
+
+span.ajaxLoader {
+	display: none;
+}
+
+div#ajaxAction {
+	-moz-border-radius: 4px; 
+	border-radius: 4px; 
+	-webkit-border-radius: 4px; 
+	border: 4px solid #4fb7dc; 
+	position: fixed;
+	top: 10px; 
+	right: 10px; 
+	width: 180px; 
+	height: 48px; 
+	z-index: 30000; 
+	background-color: #fff;
+	display: none;
+}
+div#ajaxAction, div#ajaxAction * {
+	cursor: default;
+	-ms-user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}
+
+input, textarea {
+	-ms-user-select: text;
+	-webkit-user-select: text;
+	-moz-user-select: text;
+	-khtml-user-select: text;
+	user-select: text;
+}
+
+p, span, div, label, th, td {
+	cursor: default;
+}
+
+div#blocks {
+	float: left;
+	min-height: 100px;
+	margin: 0px;
+	padding: 0px;
+	margin-right: 10px;
+}
+
+div#blocks .sectionMenu {
+	width: 195px; 
+	background-color:white;
+	margin-bottom: 8px;
+	padding: 5px;
+}
+
+div#blocks .sectionMenu h4.legend {
+	background-color: #4fb7dc;
+	color: #fff;
+	margin: 0;
+	margin: -5px;
+	padding: 5px;
+	padding-top: 4px;
+	padding-bottom: 3px;
+	margin-bottom: 5px;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+div#blocks .block {
+	width: 200px; 
+	background-color:white;
+	margin-bottom: 8px;
+	padding: 5px;
+}
+
+div#blocks .block h4.legend {
+	background-color: #4fb7dc;
+	color: #fff;
+	margin: 0;
+	margin: -5px;
+	padding: 5px;
+	padding-top: 4px;
+	padding-bottom: 3px;
+	margin-bottom: 5px;
+	font-weight: bold;
+	font-size: 13px;
+}
+
+div#blocks br {
+	padding: 10px;
+	margin: 0;
+}
+
+#blocks ul {
+	list-style-type: none;
+}
+#blocks ul li {
+	margin-left: 5px;
+}
+#blocks ul li a.selected, #sectionmenu ul li.selected a {
+	font-weight: bold;
+}
+
+
+form.SERIA_Form .formfield.required label {
+}
+form.SERIA_Form .formfield.required label {
+	font-weight: bold;
+}
+form.SERIA_Form .formfield .error {
+	color: #ff0000;
+	margin: 0;
+	padding: 0;
+	padding-left: 150px;
+}
+.gridButtons {
+	margin: 0px;
+	padding: 5px;
+	border: 2px solid #eee;
+}
+.gridButtons input {
+	padding: 2px;
+}
+
+.debugMessages {
+	border: 2px solid red; 
+	overflow: auto;
+}
+
+.debugMessages strong {
+	color: red;
+}
+
+iframe#main {
+	background-color: white;
+}

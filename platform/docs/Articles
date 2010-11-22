@@ -1,0 +1,52 @@
+Articles
+
+API
+
+	CMS_Base::db($db=false)				Gets or sets PDO object for accessing database directly
+	CMS_Base::user()				Returns the currently logged in user
+	CMS_Base::getParam($name)			Returns a configuration setting
+	CMS_Base::setParam($name,$value)		Sets a CMS param
+	CMS_Base::guid()				Returns a unique ID for the CMS_Base::db()
+
+
+	INTERNAL CLASS. YOU SHOULD NOT INTERFACE DIRECTLY WITH THIS CLASS, BUT INSTEAD USE OBJECT RETURNED BY ->getTemplate()
+
+	CMS_Article::__construct($type,$id=false)	Creates or gets an article object.
+	CMS_Article->getTemplate()			Returns the CMS_Article_Template for this object.
+	CMS_Article->set($name,$value)			Sets a system variable for the article.
+	CMS_Article->get($name)				Gets a system variable from the article.
+	CMS_Article->getExtra()				Returns an array containing arbitrary information attached to the article.
+	CMS_Article->allowUpdates()			Requests that the article is updateable. Only one instance can be updateable at one time.
+	CMS_Article->isUpdateable()			True if article is updateable (see ->allowUpdates())
+	CMS_Article->setExtra($extra)			Sets the arbitrary information attached to the article.
+	CMS_Article->extendExtra($extra)		Extends extra information for the article by merging $extra with existing data.
+	CMS_Article->save()				Saves all changes for the article.
+	CMS_Article->getTags($system=false)		Returns all public tags attached to this article.
+	CMS_Article->addTag($name,$system=false)	Sets/adds a tag to the article.
+	CMS_Article->removeTag($name,$system=false)	Removes a tag from the article.
+
+	CMS_Article_Template (ABSTRACT)			Each article type that is available trough CMS must have a class that extends this class.
+							For example, article type News must have a class called NewsArticle extends CMS_Article_Template.
+	CMS_Article_Template->getAbstract()		Returns an array containing structured data for this article type. See CMS_Article_Template.class.php
+	CMS_Article_Template->allowUpdates()		Requests that the article is updateable. Only one instance can be updateable at one time.
+	CMS_Article_Template->set($name,$value)		Sets a value related to the article type. For example "introduction" for a news article.
+	CMS_Article_Template->save()			Saves changes.
+	CMS_Article_Template->getTags()			Returns an array containing all tags attached to this article.
+	CMS_Article_Template->addTag($name)		Adds a tag to this article.
+	CMS_Article_Template->removeTag($name)		Removes a tag from this article.
+	CMS_Article_Template->isInvalid()		Validate all data attached to this article.
+
+
+System tags
+
+	1. All system tags are prefixed with a ":".
+
+	2. The following tag prefixes are in use:
+
+		:type:News		:type:Employee			type of 
+		:content_language:no	:language:en	etc.		two character language code
+		:author_id:237		:author:3982	etc.		user id of the user that created the article
+		:is_published:1		:published:0			1 if the article is published, 0 if not
+		:cat:1 :cat:2 :cat:3				id of the categories that this article is published in
+
+

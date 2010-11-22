@@ -1,0 +1,1 @@
+Use the 'link' view to display an ahref link. ->output('link') or ->render('link')..

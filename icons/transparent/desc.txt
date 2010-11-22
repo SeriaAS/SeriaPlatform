@@ -1,0 +1,1 @@
+Small icon that is fully transparent. It is used by accessibility code to create invisible img objects with alt-text.

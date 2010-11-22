@@ -1,0 +1,17 @@
+<?php
+	class SERIA_CDNHttpPath extends SERIA_HttpPath
+	{
+		function __construct($host, $url)
+		{
+			parent::__construct($host);
+		}
+
+		function output()
+		{
+			SERIA_Template::disable();
+
+			$
+
+			return "HEI";
+		}
+	}

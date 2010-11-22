@@ -1,0 +1,87 @@
+<?php
+/**
+*	CONFIGURATION
+*
+*	This is a sample configuration file. It should be located along with the seria folder in the installation root with the name
+*	_config.php
+*/
+	
+	// Default settings will be used if not defined
+
+/**
+*	REQUIRED CONFIGURATION SECTION
+*
+*	All defines here are required, unless they are already commented out - in which case a sensible default is used.
+*/
+
+	define('SERIA_COMPATIBILITY',	2);
+
+// PATHS:
+	define('SERIA_HTTP_ROOT', 	'http://example.com');			// http path for the website. Only use https:// here if you do not want to support http://. https:// is automatically used otherwise.
+	define('SERIA_ROOT',		dirname(__FILE__));			// the root folder for the entire website.
+	define('SERIA_FILES_ROOT',	SERIA_ROOT.'/files');			// folder where Seria Platform can write and place user generated files. Checkout FILES.TXT for directory structure.
+	define('SERIA_FILES_HTTP_ROOT',	SERIA_HTTP_ROOT.'/files');		// http path to files mapped from SERIA_FILES_ROOT. Change to mirror files on for example Amazon S3.
+//	define('SERIA_FILES_DELAY',	0);					// delay in seconds between storing a file and it being accessible from the world trough http - for example if the file is propagated to Amazon S3.
+
+// DATABASE:
+	define('SERIA_DB_HOST', 	'localhost');				// database hostname or IP. (IP is often faster than hostname)
+//	define('SERIA_DB_PORT', 	'3306');				// database port (will use engine default if not specified)
+	define('SERIA_DB_NAME', 	'seria');				// database name
+	define('SERIA_DB_USER', 	'');					// username
+	define('SERIA_DB_PASSWORD', 	'');					// password
+	define('SERIA_DB_TYPE',		'mysql');				// database engine type. Currently only mysql have been tested.
+
+// CUSTOMIZATION
+	define('SERIA_EMAIL_FROM', 	'no-reply@example.com');		// address from which e-mail is sent by the applications
+// 	define('SERIA_LOGIN_URL', 'http://mywebpage.com/index.php?page=login');	// custom url for the login page. All logins will be redirected here if set. Will receive a "continue" get-parameter.
+
+// ENVIRONMENT
+	define('SERIA_TIMEZONE', 	'Europe/Oslo');				// the time zone used for displaying time to users http://www.php.net/timezones
+	define('SERIA_CURRENCY', 	'EUR');					// the default currency for the website. ISO 4217: http://www.iso.org/iso/support/currency_codes_list-1.htm
+
+
+// SPECIAL
+//	define('SERIA_PREFIX', 		'seria');				// prefix for variables, cookies and database tables that might conflict with other code
+//	define('SERIA_XHTML', 		1);					// output XHTML instead of HTML
+//	define('SERIA_GUI_TEMPLATE', dirname(__FILE__).'/seria/platform/templates/seria/seria.php');
+//  define('SERIA_VALIDATE_EMAIL_HOST', false);		// Turn on/off checking of email servers.
+//  define('SERIA_GUI_NO_GZIP', true);		// Disable gziphandler in SERIA_Gui
+
+
+// DEBUGGING AND DEVELOPMENT
+/**
+* WARNING: The SERIA_INSTALL constant should never be manually set. It is automatically set by Seria Platform for ten minutes after the first run of
+* the platform.
+*	define('SERIA_INSTALL', 	1);					// 
+*/
+//	define('SERIA_DEBUG', 		1);					// enable debug mode and logging
+//	define('SERIA_NOCACHE', 	1);					// disable caching
+//	define('SERIA_ERROR_EMAIL', 	'errors@example.com');			// send error messages to this e-mail address. No mail is sent if undefined.
+
+// FINE GRAINED CONTROL OVER PATHS. Normally you do not need to change this, but for performance reasons you might want to place tmp files on a tmpfs?
+//	define('SERIA_PRIV_ROOT',	SERIA_FILES_ROOT.'/priv');		// Files that must not be accessible by the world.
+//	define('SERIA_DYN_ROOT',	SERIA_FILES_ROOT.'/dyn');		// PHP files dynamically created, world accessible.
+//	define('SERIA_DYN_HTTP_ROOT',	SERIA_FILES_HTTP_ROOT.'/dyn');		// HTTP base url
+//	define('SERIA_TMP_ROOT',	SERIA_PRIV_ROOT.'/tmp');		// Temporary files stored here
+//	define('SERIA_CACHE_ROOT',	SERIA_TMP_ROOT.'/cache');		// Files based caching. If you have limited storage on the SERIA_TMP_ROOT, you might want to relocate this.
+//	define('SERIA_LOG_ROOT',	SERIA_PRIV_ROOT.'/logs');		// Log files
+
+// DEPRECATED HIDDEN FEATURES (Enabling trough config file is deprecated)
+//	define('SERIA_STATIC_FTP', 	1);					// enable mapping files to FTP-servers and serving them from another URL.
+// 	define('SERIA_FFMPEG_PATH', '	/path/to/ffmpeg');				// path to ffmpeg for transcoding video
+//	define('SERIA_TRANSLATION_APPLICATION_ENABLE', 1);			// enable translation application?
+//	define('SERIA_MEMCACHED_KEY', 	'');					// key to use to separate from other uses of the same memcache server
+
+
+/**
+*	Writable location for Seria Platform.
+*
+*	/files
+*	/files/dyn			Dynamically created PHP code, per application/component. Will be world reachable and executable. Usually for specialized purposes.
+*	/files/priv			Automatically created files, per application/component. Make sure that this folder is not readable from the web, preferably relocate it outside of the www root.
+*	/files/priv/logs		Log files for different purposes. Will be rotated automatically in the future by configurable setting in control panel.
+*	/files/priv/tmp			Path to temporary files created by applications. Can be symlinked or mounted as tmpfs. Files here will be automatically deleted when they are one week old (unless deleted earlier by the component), and should therefore be automatically created if missing.
+*	/files/priv/tmp/cache		Path to files based cache
+*	/files/priv/seria_live		Path to private files created by the Seria Live application. Will not be world reachable, and are never deleted. Automatically created by Seria Live.
+*	/files/priv/seria_mvc		Path to private files created by the Seria MVC Component. Will not be world reachable, and are never deleted.
+*/

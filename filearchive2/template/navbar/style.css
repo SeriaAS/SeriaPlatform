@@ -1,0 +1,35 @@
+@CHARSET "UTF-8";
+
+div#filearchive2_container {
+	overflow: hidden;
+}
+
+span#filearchive2_path_desc {
+	float: left;
+	margin-top: 7px;
+}
+
+span#filearchive2_path {
+	float: left;
+	border: 1px solid #dddddd;
+	margin-top: 3px;
+	margin-bottom: 3px;
+	margin-left: 3px;
+	margin-right: 3px;
+	font-size: 15px;
+	line-height: 20px;
+	width: 790px;
+}
+
+span.directoryPathComponent:hover {
+	text-decoration: underline;
+	cursor: pointer !important;
+	cursor: hand;
+}
+img.directoryPathSeparator {
+	width: 8px;
+	height: 12px;
+	margin-bottom: -1px;
+	margin-left: 5px;
+	margin-right: 5px;
+}

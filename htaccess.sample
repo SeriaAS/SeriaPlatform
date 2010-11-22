@@ -1,0 +1,5 @@
+#Rename this file to .htaccess to increase maximum file size for uploads
+
+php_value memory_limit 1024M
+php_value upload_max_filesize 1024M
+php_value max_execution_time 7200

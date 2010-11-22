@@ -1,0 +1,4 @@
+Pages here are not intended to be accessed directly. Instead, pages here are supposed to be called by issuing for example
+SERIA_Base::page(SERIA_Gui-object, "login").
+
+Menu structures and similar is supposed to be handled by the file that calls SERIA_Base::page()

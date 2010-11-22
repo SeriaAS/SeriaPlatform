@@ -1,0 +1,29 @@
+
+div.formDisplayTable {
+	display: table;
+}
+
+div.formDisplayTable div.formfield {
+	display: table-row;
+}
+
+div.formDisplayTable div.formfield div.label,
+div.formDisplayTable div.formfield div.field {
+	display: table-cell;
+	vertical-align: top;
+}
+
+td.labelDisplayTableForm {
+	vertical-align: top;
+}
+
+div.formDisplayTable div.formfield div.label label,
+td.labelDisplayTableForm label {
+	margin-right: 5px;
+}
+
+input.normalDisplayTableForm,
+textarea.normalDisplayTableForm,
+div.containerDisplayTableForm {
+	width: 200px;
+}

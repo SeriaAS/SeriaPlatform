@@ -1,0 +1,14 @@
+@CHARSET "UTF-8";
+
+div#settings_icons {
+	overflow: hidden;
+	clear: both;
+	margin-bottom: 20px;
+}
+
+div#settings_icons div.icon {
+	overflow: hidden;
+	float: left;
+	margin-right: 15px;
+	text-align: center;
+}

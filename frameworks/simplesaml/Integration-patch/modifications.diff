@@ -1,0 +1,325 @@
+diff -ru -x .svn simplesamlphp-1.5.1.orig/config/authsources.php simplesamlphp-1.5.1/config/authsources.php
+--- simplesamlphp-1.5.1.orig/config/authsources.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/config/authsources.php	2010-04-28 13:37:50.000000000 +0200
+@@ -226,3 +226,9 @@
+ 	*/
+ 
+ );
++
++$additions = SERIA_Hooks::dispatch('simplesaml.authsources');
++foreach ($additions as $add) {
++	foreach ($add as $name => $params)
++		$config[$name] = $params;
++}
+diff -ru -x .svn simplesamlphp-1.5.1.orig/config/config.php simplesamlphp-1.5.1/config/config.php
+--- simplesamlphp-1.5.1.orig/config/config.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/config/config.php	2010-04-28 13:37:50.000000000 +0200
+@@ -459,4 +459,10 @@
+ );
+ 
+ 
++$additions = SERIA_Hooks::dispatch('simplesaml.config');
++foreach ($additions as $add) {
++	foreach ($add as $name => $params)
++		$config[$name] = $params;
++}
++
+ ?>
+\ No newline at end of file
+diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php
+--- simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php	2010-04-28 13:37:50.000000000 +0200
+@@ -322,13 +322,17 @@
+         // fails in a fatal way, the stale flag will cause the manager
+         // to be cleaned up next time discovery is attempted.
+ 
++        SERIA_Base::debug('Tracing (Consumer)->begin');
+         $m = $disco->getManager();
+         $loader = new Auth_Yadis_ManagerLoader();
+ 
+         if ($m) {
++        	SERIA_Base::debug('Got Yadis mgr');
+             if ($m->stale) {
++            	SERIA_Base::debug('Stale mgr');
+                 $disco->destroyManager();
+             } else {
++            	SERIA_Base::debug('Taking mgr');
+                 $m->stale = true;
+                 $disco->session->set($disco->session_key,
+                                      serialize($loader->toSession($m)));
+@@ -341,14 +345,17 @@
+         // Reset the 'stale' attribute of the manager.
+         $m =& $disco->getManager();
+         if ($m) {
++        	SERIA_Base::debug('Unsetting mgr stale');
+             $m->stale = false;
+             $disco->session->set($disco->session_key,
+                                  serialize($loader->toSession($m)));
+         }
+ 
+         if ($endpoint === null) {
++        	SERIA_Base::debug('Got no endpoint');
+             return null;
+         } else {
++        	SERIA_Base::debug('Got an endpoint, starting without discovery.');
+             return $this->beginWithoutDiscovery($endpoint,
+                                                 $anonymous);
+         }
+diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/Auth/Yadis/ParanoidHTTPFetcher.php simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php
+--- simplesamlphp-1.5.1.orig/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2010-04-28 13:37:50.000000000 +0200
+@@ -128,6 +128,9 @@
+             curl_setopt($c, CURLOPT_TIMEOUT, $off);
+             curl_setopt($c, CURLOPT_URL, $url);
+ 
++            /* XXX - ACHTUNG! */
++            curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
++
+             curl_exec($c);
+ 
+             $code = curl_getinfo($c, CURLINFO_HTTP_CODE);
+@@ -192,6 +195,9 @@
+         curl_setopt($c, CURLOPT_WRITEFUNCTION,
+                     array(&$this, "_writeData"));
+ 
++        /* XXX - ACHTUNG! */
++        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
++
+         curl_exec($c);
+ 
+         $code = curl_getinfo($c, CURLINFO_HTTP_CODE);
+diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php
+--- simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php	2009-12-16 09:53:54.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php	2010-04-28 13:37:50.000000000 +0200
+@@ -105,6 +105,7 @@
+ 		} else {
+ 			$session->setIdP(NULL);
+ 		}
++		$session->saveSession();
+ 
+ 		/* Redirect... */
+ 		SimpleSAML_Utilities::redirect($returnURL);
+diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/SimpleSAML/Session.php simplesamlphp-1.5.1/lib/SimpleSAML/Session.php
+--- simplesamlphp-1.5.1.orig/lib/SimpleSAML/Session.php	2009-12-04 12:15:31.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Session.php	2010-04-28 13:37:50.000000000 +0200
+@@ -532,6 +532,8 @@
+ 
+ 	public function setAttributes($attributes) {
+ 		$this->dirty = true;
++		foreach ($attributes as $name => $value)
++			SERIA_Base::debug('ATTR: '.$name.' = '.serialize($value));
+ 		$this->attributes = $attributes;
+ 	}
+ 	
+diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDConsumer.php simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php
+--- simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2009-05-05 07:56:32.000000000 +0200
++++ simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2010-04-28 13:37:53.000000000 +0200
+@@ -20,6 +20,21 @@
+ 	 */
+ 	private $requiredAttributes;
+ 
++	/**
++	 * List of ax optional attributes
++	 */
++	private $axOptionalAttributes;
++
++	/**
++	 * List of ax required attributes
++	 */
++	private $axRequiredAttributes;
++
++	/**
++	 * Url of discovery endpoint
++	 */
++	private $discoveryEndpoint;
++
+ 
+ 	/**
+ 	 * Constructor for this authentication source.
+@@ -37,6 +52,11 @@
+ 
+ 		$this->optionalAttributes = $cfgParse->getArray('attributes.optional', array());
+ 		$this->requiredAttributes = $cfgParse->getArray('attributes.required', array());
++
++		$this->axOptionalAttributes = $cfgParse->getArray('ax.optional', array());
++		$this->axRequiredAttributes = $cfgParse->getArray('ax.required', array());
++
++		$this->discoveryEndpoint = $cfgParse->getString('discovery', false);
+ 	}
+ 
+ 
+@@ -52,6 +72,9 @@
+ 		$state['openid:AuthId'] = $this->authId;
+ 		$id = SimpleSAML_Auth_State::saveState($state, 'openid:state');
+ 
++		$simplesaml_session = SimpleSAML_Session::getInstance();
++		$simplesaml_session->saveSession();
++
+ 		$url = SimpleSAML_Module::getModuleURL('openid/consumer.php');
+ 		SimpleSAML_Utilities::redirect($url, array('AuthState' => $id));
+ 	}
+@@ -76,6 +99,32 @@
+ 		return $this->optionalAttributes;
+ 	}
+ 
++	/**
++	 * Retrieve required attributes.
++	 *
++	 * @return array  Required attributes.
++	 */
++	public function getAxRequiredAttributes() {
++		return $this->axRequiredAttributes;
++	}
++
++	/**
++	 * Retrieve optional attributes.
++	 *
++	 * @return array  Optional attributes.
++	 */
++	public function getAxOptionalAttributes() {
++		return $this->axOptionalAttributes;
++	}
++
++	/**
++	 * Retrieve the url of the discovery endpoint. (Google/etc uses this).
++	 *
++	 * @return string  Either an url or false.
++	 */
++	public function getDiscoveryEndpoint() {
++		return $this->discoveryEndpoint;
++	}
+ }
+ 
+ ?>
+\ No newline at end of file
+diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simplesamlphp-1.5.1/modules/openid/www/consumer.php
+--- simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php	2009-10-16 13:04:16.000000000 +0200
++++ simplesamlphp-1.5.1/modules/openid/www/consumer.php	2010-04-28 13:37:53.000000000 +0200
+@@ -58,6 +58,8 @@
+ function run_try_auth() {
+     global $authSource;
+ 
++    SERIA_Base::debug('Trying auth');
++
+     $openid = $_GET['openid_url'];
+     $consumer = getConsumer();
+ 
+@@ -77,6 +79,36 @@
+         $auth_request->addExtension($sreg_request);
+     }
+ 
++    new Auth_OpenID_AX();
++    $attrs = array();
++    $axopt = $authSource->getAxOptionalAttributes();
++    $axreq = $authSource->getAxRequiredAttributes();
++    foreach ($axopt as $attr)
++        $attrs[] = array(0, $attr[0], $attr[1]);
++    foreach ($axreq as $attr)
++        $attrs[] = array(1, $attr[0], $attr[1]);
++    $req_attrs = array();
++    foreach ($attrs as $attr) {
++        if (isset($req_attrs[$attr[2]])) {
++            $info =& $req_attrs[$attr[2]];
++            if ($info['type'] != $attr[1] ||
++                $info['required'] != $attr[0])
++                throw new Exception('Conflicting type/required for ax attribute '.$attr[2]);
++            $info['count']++;
++            unset($info);
++        } else
++            $req_attrs[$attr[2]] = array('count' => 1, 'type' => $attr[1], 'required' => $attr[0]);
++    }
++    if ($req_attrs) {
++    	foreach ($req_attrs as $name => &$attr)
++    	    $attr = Auth_OpenID_AX_AttrInfo::make($attr['type'], $attr['count'], $attr['required'], $name);
++        unset($attr);
++        $ax_request = new Auth_OpenID_AX_FetchRequest();
++        foreach ($req_attrs as $attr)
++            $ax_request->add($attr);
++        $auth_request->addExtension($ax_request);
++    }
++    
+     // Redirect the user to the OpenID server for authentication.
+     // Store the token for this authentication so we can verify the
+     // response.
+@@ -109,6 +141,9 @@
+ }
+ 
+ function run_finish_auth() {
++    global $authSource;
++
++	SERIA_Base::debug('Finishing auth');
+ 
+ 	$error = 'General error. Try again.';
+ 
+@@ -124,20 +159,25 @@
+ 	
+ 		// Check the response status.
+ 		if ($response->status == Auth_OpenID_CANCEL) {
++			SERIA_Base::debug('OpenID authentication cancelled');
+ 			// This means the authentication was cancelled.
+ 			throw new Exception('Verification cancelled.');
+ 		} else if ($response->status == Auth_OpenID_FAILURE) {
++			SERIA_Base::debug('OpenID authentication failed');
+ 			// Authentication failed; display the error message.
+ 			throw new Exception("OpenID authentication failed: " . $response->message);
+ 		} else if ($response->status == Auth_OpenID_SUCCESS) {
++			SERIA_Base::debug('OpenID authentication succeeded');
+ 			// This means the authentication succeeded; extract the
+ 			// identity URL and Simple Registration data (if it was
+ 			// returned).
+ 			$openid = $response->identity_url;
+-	
++
++			SERIA_Base::debug('OpenID identity url: '.$openid);
+ 			$attributes = array('openid' => array($openid));
+ 	
+ 			if ($response->endpoint->canonicalID) {
++				SERIA_Base::debug('OpenID: openid.canonicalID = '.(is_string($response->endpoint->canonicalID) ? $response->endpoint->canonicalID : serialize($response->endpoint->canonicalID)));
+ 				$attributes['openid.canonicalID'] = array($response->endpoint->canonicalID);
+ 			}
+ 	
+@@ -150,11 +190,32 @@
+ 					$attributes['openid.sreg.' . $sregkey] = array($sregvalue);
+ 				}
+ 			}
++    		$axopt = $authSource->getAxOptionalAttributes();
++    		$axreq = $authSource->getAxRequiredAttributes();
++    		if ($axopt || $axreq) {
++				new Auth_OpenID_AX();
++				$obj = Auth_OpenID_AX_FetchResponse::fromSuccessResponse($response);
++				if ($obj) {
++					SERIA_Base::debug('AX Response: '.serialize($obj));
++    				$axattr = array();
++    				foreach ($axopt as $attr)
++    					$axattr[$attr[1]] = $attr[0];
++    				foreach ($axreq as $attr)
++    					$axattr[$attr[1]] = $attr[0];
++    				foreach ($axattr as $name => $spec) {
++    					$attributes['openid.ax.'.$name] = $obj->get($spec);
++    					if (!$attributes['openid.ax.'.$name])
++    						unset($attributes['openid.ax.'.$name]);
++    				}
++				}
++			}
+ 
+ 			global $state;
+ 			$state['Attributes'] = $attributes;
++			SERIA_Base::debug('Completing OpenID');
+ 			SimpleSAML_Auth_Source::completeAuth($state);
+-			
++			SERIA_Base::debug('Completed OpenID');
++
+ 		}
+ 
+ 	} catch (Exception $e) {
+@@ -170,6 +231,10 @@
+ 
+ }
+ 
++if (!isset($_GET['openid_url']) || empty($_GET['openid_url']) &&
++    $authSource->getDiscoveryEndpoint())
++	$_GET['openid_url'] = $authSource->getDiscoveryEndpoint();
++
+ if (array_key_exists('returned', $_GET)) {
+ 	run_finish_auth();
+ } elseif (!empty($_GET['openid_url'])) {

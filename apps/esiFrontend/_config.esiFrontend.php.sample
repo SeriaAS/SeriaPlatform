@@ -1,0 +1,4 @@
+<?php
+	define('ESIFRONTEND_BACKEND_IP', '127.0.0.1');
+	define('ESIFRONTEND_BACKEND_HOSTNAME', 'backend.com'); // the hostname that the backend will perceive requests to come to, must probably be configured in web server as the vhost.
+	define('ESIFRONTEND_BACKEND_PORT', '8080');

@@ -1,0 +1,147 @@
+input.fileselect {
+	clear: both;
+}
+
+ul.selectableIcons {
+	display: block;
+	padding: 0px;
+	
+	border: solid 1px #cdcdcd;
+	clear: both;
+	float: left;
+	width: 100%;
+}
+
+li.fileIcon {
+	float: left;
+	padding: 0px;
+	margin: 1px;
+	width: 120px;
+	position: relative;
+	height: 80px;
+	display: block;
+	cursor: default;
+}
+
+li.fileIcon div img {
+	clear: both;
+	margin: auto;
+	display: block;
+}
+
+li.fileIcon div span {
+	cursor: inherit;
+}
+
+li.fileIcon div {
+	display: block;
+	position: absolute;
+	bottom: 0px;
+	width: 120px;
+}
+
+li.fileIcon div span {
+	text-align: center;
+	width: 120px;
+	display: block;
+}
+
+ul.selectableIcons li.ui-selected, ul.clickableIcons li.singleSelected {
+	background-color: #ddeeff;
+	border: solid 1px #cccccc;
+	margin: 0px;
+}
+
+ul.selectableIcons li.ui-selecting {
+	background-color: #dddddd;
+	border: solid 1px #cccccc;
+	margin: 4px;
+}
+
+div.fileDetailsBox {
+	width: 200px;
+	border: solid 1px #cdcdcd;
+	padding: 5px;
+	position: absolute;
+	margin: 5px;
+	background-color: #ffffff;
+}
+
+div.fileDetailsBox p img {
+	text-align: left;
+	float: left;
+	margin-right: 5px;
+}
+
+div.fileDetailsBox p {
+	float: left;
+	padding-left: 5px;
+	padding-top: 0;
+	margin-top: 0;
+	width: 200px;
+}
+
+div.fileDetailsBox p span.fileText {
+	display: block;
+	width: 90px;
+	float: left;
+}
+
+div.fileDetailsBox p strong {
+	font-weight: bold;
+}
+
+p.fileSearchBox {
+	float: left;
+}
+
+p.fileUploadBox {
+	margin-left: 20px;
+	white-space: nowrap;
+	height: auto;
+	float: left;
+	display: block;
+	
+}
+
+hr {
+	clear: both;
+}
+
+div.uploaderCollection {
+	display: block;
+	float: left;
+	clear: right;
+}
+
+div#filePlane {
+	float: left;
+	width: 80%;
+	min-width: 700px;
+}
+
+div#selectedFiles, div#selectedFile {
+	float: left;
+	width: 18%;
+	min-width: 100px;
+	height: 100%;
+	padding-left: 5px;
+}
+
+div#selectedFiles h1, div#selectedFile h1 {
+	margin-top: 2px;
+}
+
+div#fileSelectMain {
+	display: block;
+	min-width: 900px;
+	float: left;
+	border: solid 1px #cccccc;
+	width: 100%;
+}
+
+div#fileSelectMain div.ui-tabs-panel {
+	border-top: none;
+	border-left: none;
+	border-bottom: none;
+}

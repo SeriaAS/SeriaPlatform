@@ -1,0 +1,81 @@
+div.SERIA_GuiVisualize.integer {
+	border: 1px solid #eee;
+	margin-bottom: 1px;
+	margin-right: 1px;
+}
+div.SERIA_GuiVisualize.integer div.value {
+	background-color: #eee;
+	margin: 2px; 
+	padding: 6px 8px;
+	width: 120px;
+	text-align: right;
+	font-weight: bold;
+	float: left;
+}
+
+div.SERIA_GuiVisualize.toolbar {
+	background-image: url('gradient.png');
+	background-position: bottom;
+	border: 1px solid #eee;
+	background-repeat: repeat-x;
+	border: 1px solid #ddd;
+        margin: 5px 0px;
+        border-bottom: 1px solid #aaa;
+        border-right: 1px solid #aaa;
+        color: #444;
+}
+
+div.SERIA_GuiVisualize.toolbar ul {
+	list-style-type: none;
+	margin: 0;
+	padding: 0;
+	height: 29px;
+}
+div.SERIA_GuiVisualize.toolbar li {
+	margin: 0;
+	padding: 0;
+	float: left;
+	height: 25px;
+}
+div.SERIA_GuiVisualize.toolbar input[type=button], div.SERIA_GuiVisualize.toolbar input[type=submit], div.SERIA_GuiVisualize.toolbar button {
+	padding: 0px 8px;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	margin: 2px;
+	margin-right: 0px;
+	height: 25px;
+	color: #444;
+	cursor: pointer;
+}
+div.SERIA_GuiVisualize.toolbar input[type=submit] {
+	font-weight: bold;
+}
+div.SERIA_GuiVisualize.toolbar a {
+	display: block;
+	display: inline-block;
+	padding: 0px 8px;
+	line-height: 22px;
+	text-decoration: none;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	margin: 2px;
+	margin-right: 0px;
+	height: 23px;
+	color: #444;
+	cursor: pointer;
+}
+div.SERIA_GuiVisualize.toolbar input:hover, div.SERIA_GuiVisualize.toolbar button:hover, div.SERIA_GuiVisualize.toolbar a:hover {
+	background-color: #f0f0f0;
+}
+div.SERIA_GuiVisualize.toolbar input[type=text] {
+	display: inline-block;
+	padding: 0px 8px;
+	line-height: 22px;
+	text-decoration: none;
+	background-color: #fff;
+	border: 1px solid #ddd;
+	margin: 2px;
+	margin-right: 0px;
+	height: 23px;
+	color: #444;
+}

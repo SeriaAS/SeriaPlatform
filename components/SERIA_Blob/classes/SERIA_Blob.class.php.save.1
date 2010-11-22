@@ -1,0 +1,34 @@
+<?php
+	/**
+	*	Represents a file. The following applies to special file types:
+	*
+	*/
+	class SERIA_Blob extends SERIA_MetaObject
+	{
+		public static function Meta($instance=NULL)
+		{
+			return array(
+				'table' => '{blob}',
+				'displayField' => 'name',
+				'fields' => array(
+					'name' => array('filename required', _t("Filename")),
+					'type' => array('SERIA_BlobType required', _t("Filetype")),
+					'filename' => array('filename required', _t("Physical filename")),
+					'createdBy' => 'createdBy',
+					'createdDate' => 'createdDate',
+				),
+			);
+		}
+
+		/**
+		*	Returns an url to the file, according to configurable params specified like a query string. 
+		*	Following parameters are legal:
+		*
+		*	For images: (look at WIPS)
+		*/
+		public function img($params=NULL)
+		{
+		}
+
+		public 
+	}

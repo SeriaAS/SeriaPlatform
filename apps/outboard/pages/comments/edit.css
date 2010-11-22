@@ -1,0 +1,6 @@
+@CHARSET "UTF-8";
+
+table.editAction td.text {
+	padding-top: 8px;
+	padding-bottom: 5px;
+}

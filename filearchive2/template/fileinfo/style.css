@@ -1,0 +1,20 @@
+@CHARSET "UTF-8";
+
+h2.multiselect_info_head:hover {
+	cursor: pointer;
+	text-decoration: underline;
+}
+
+div.multiselect_details {
+	position: absolute;
+	display: none;
+	border: 1px solid #CCCCCC;
+	background-color: white;
+}
+
+div.multiselect_details div.contentFrame {
+	margin-top: 15px;
+	margin-bottom: 15px;
+	margin-left: 15px;
+	margin-righT: 15px;
+}

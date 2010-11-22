@@ -1,0 +1,15 @@
+@CHARSET "UTF-8";
+
+table.google-analytics-settings {
+	margin-top: 20px;
+}
+
+/*
+ * Override padding to show a good looking form with a checkbox
+ */
+table.google-analytics-settings th {
+	padding-top: 8px;
+}
+table.google-analytics-settings td.padtop {
+	padding-top: 8px;
+}

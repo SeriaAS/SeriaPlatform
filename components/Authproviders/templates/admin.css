@@ -1,0 +1,16 @@
+@CHARSET "UTF-8";
+
+fieldset#authproviders_settings {
+	 margin-bottom: 15px;
+}
+
+fieldset#authproviders_settings div.aps {
+	margin-left: 10px;
+	margin-right: 10px;
+}
+fieldset#authproviders_settings div.aps_top {
+	margin-top: 10px;
+}
+fieldset#authproviders_settings div.aps_bottom {
+	margin-bottom: 10px;
+}

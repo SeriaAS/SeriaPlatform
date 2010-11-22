@@ -1,0 +1,96 @@
+@CHARSET "ISO-8859-1";
+
+/*
+ * Display comments:
+ */
+div.SERIA_Comments div.author > img {
+	margin-top: 10px;
+	border: 1px solid #aeaea6;
+}
+
+div.SERIA_Comments div.text > div.headline {
+	margin-top: 10px;
+	padding-top: 0px;
+	width: 400px;
+	clear: both;
+	overflow: hidden;
+}
+
+div.SERIA_Comments div.text > div.headline > div > * {
+	margin-top: 0px;
+	padding-top: 0px;
+}
+
+div.SERIA_Comments div.text > div.headline > div.heading {
+	float: left;
+	width: 220px;
+}
+
+div.SERIA_Comments div.text > div.headline > div.heading > h3 {
+	margin-top: 0px;
+	padding-top: 0px;
+}
+
+div.SERIA_Comments div.text > div.headline > div.admin {
+	float: right;
+	margin-right: 5px;
+}
+
+div.SERIA_Comments div.text > div.headline > div.rating {
+	float: right;
+	width: 100px;
+}
+
+/*
+ * Submit comment:
+ */
+div.comline > * {
+	display: block;
+	width: 400px;
+	float: left;
+}
+
+div.comline > label {
+	display: block;
+	width: 100px;
+	float: left;
+}
+
+div.comline {
+	width: 550px;
+	overflow: hidden;
+	clear: both;
+}
+
+div.submitcomment > form > div > p.error {
+	display: block;
+	clear: both;
+}
+
+div.submitcomment > form > div > button {
+	clear: both;
+}
+
+div.submitcomment textarea {
+	height: 220px;
+}
+
+div.submitcomment p {
+	margin-bottom: 10px;
+}
+
+div#addCommentForm > div > label {
+	float: left;
+	width: 70px;
+}
+
+div#addCommentForm > div > input, div#addCommentForm > div > textarea {
+	float: left;
+	width: 400px;
+}
+
+div#addCommentForm > div {
+	clear: both;
+	overflow: hidden;
+	width: 500px;
+}

@@ -1,0 +1,35 @@
+Writable location for Seria Platform. In addition to this, the /files/up will be used if SERIA_UPLOAD_ROOT is not defined
+
+SECURITY WARNING!
+
+To improve the security of your site, the following measures should be taken:
+
+1. Disable executable code from /files, but enable from /files/dyn.
+2. Disable web access to /files/priv.
+
+/files				(SERIA_UPLOAD_ROOT + SERIA_UPLOAD_HTTP_ROOT)
+/files/dyn			(SERIA_DYN_ROOT + SERIA_DYN_HTTP_ROOT) Dynamically created PHP code, per application/component. Will be world reachable and executable. Usually for specialized purposes.
+/files/priv			(SERIA_PRIV_ROOT) Automatically created files, per application/component. Make sure that this folder is not readable from the web, preferably relocate it outside of the www root.
+/files/priv/logs		(SERIA_LOG_ROOT) Log files for different purposes. Will be rotated automatically in the future by configurable setting in control panel.
+/files/priv/tmp			(SERIA_TMP_ROOT) Path to temporary files created by applications. Can be symlinked or mounted as tmpfs. Files here will be automatically deleted when they are one week old (unless deleted earlier by the component), and should therefore be automatically created if missing.
+/files/priv/tmp/cache		(SERIA_CACHE_ROOT)
+/files/priv/seria_live		Path to private files created by the Seria Live application. Will not be world reachable, and are never deleted.
+/files/priv/seria_mvc		Path to private files created by the Seria MVC Component. Will not be world reachable, and are never deleted.
+/files/priv/activerecord	(SERIA_DYNAMICCLASSES_ROOT)
+
+SCALABILITY STRATEGY
+
+Using a CDN or other server for serving static files
+
+All files in Seria Platform will be placed in a special sub-folder of the SERIA_FILES_ROOT according to this format: [year]/y/yourfilename.jpg.
+This allows us to create a filter that recognize file names and can rewrite them prior to sending the URL to the browser. For example, if the file
+in question is named 2010/y/yourfile.jpg it will be served from SERIA_FILES_ROOT/2010/y/yourfile.jpg, but we can easily rewrite this url to point
+to any path on an external server once it has been uploaded there.
+
+
+Resizing images
+
+When you need a 400x200 thumbnail of your image, simply add the query parameter 2010/y/yourfile.jpg?thumbnail=400x200 to your filename. Seria Platform will 
+intercept the url, rewrite it to dyn/tmp/2010/y/yourfile_thumbnail-400x200.jpg and of course also create the thumbnail for you, before sending the
+rewritten HTML to your users. 
+

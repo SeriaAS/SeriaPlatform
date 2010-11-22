@@ -1,0 +1,71 @@
+-Ta Fluent inn i produksjon
+-OBS: Hvis maintain kj0rer foer synkronisering kan ulumskheter skje.
+
+
+
+
+
+Implementer queue:
+
+class SQueue
+{
+	public static function Fluent() {
+		return array(
+			"table" => '{queues}',
+			"primaryKey" => "name",
+			"primaryKeyType" => array("name required", _t("Queue name")),
+			"fields" => array(
+				"description" => array('description', _t("Description")),
+			),
+		);
+	}
+
+	public static function maintain() {
+		// fetch from the queues and do the work!
+	}
+}
+
+class SQueueTask
+{
+	public static function Fluent() {
+		return array(
+			"queue" => array("SQueue required", _t("Queue")),
+			"payload" => array("blob required", _t("Payload")),
+			"weight" => array("weight default 0", _t("Weight")),
+			"status" => array(
+				"caption" => _t("Status"),
+				"type" => "smallint(1)",
+				"fieldtype" => "select",
+				"values" => array(
+					self::ENQUEUED => _t("Newly added"),
+					self::TAKEN => _t("Fetched for processing"),
+					self::FAILED => _t("Failed"),
+					self::COMPLETED => _t("Completed),
+				),
+			),
+		);
+	}
+}
+
+
+component.php
+SERIA_Hooks::listen('maintain', array('SQueue','maintain'));
+
+
+
+
+$queue => SFluent::load('SQueue', 'transcoding');
+$tasks = SFluent::all('SQueueTask')->where('queue=:name', $queue);
+
+$grid = new SFluentGrid($tasks);
+echo $grid->output(array('queue', 'weight', 'status'));
+
+new SFluentSelect($tasks, 'status')
+new SFluentTree($pages, 'parentId')
+new SFluentAutocomplete(SFluent::all('SUser'), 'displayName');
+
+$pl = new SFluentPropertyList(SUser::user())
+
+$pl->get("last_login');
+
+

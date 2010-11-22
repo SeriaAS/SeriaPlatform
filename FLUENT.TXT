@@ -1,0 +1,171 @@
+SERIA FLUENT IS DEPRECATED, SERIA META IS THE NEW!
+
+Seria Fluent is the database abstraction layer for Seria Platform. Seria Fluent is similar to Active Record
+and other implementations in that database rows are mapped to objects and their properties - and Seria Fluent
+helps with traversing the database without SQL syntax.
+
+
+Rationale for abstracting away the database
+-------------------------------------------
+A design decision was made that Seria Platform should by design help developers create scalable applications
+using pure PHP and little knowledge of the underlying storage. By abstracting away SQL we can more easily
+rewrite backend code without having to rewrite object code, and perhaps even use other forms of database
+storage in the application.
+
+Seria Platform has a long way to go before everything is described using the Seria Fluent API, but as the 
+specification evolves, more and more of central Seria Platform components will be rewritten to use the Fluent
+API.
+
+
+Seria Fluent components
+-----------------------
+Seria Fluent is composed of two key components that are utilized by all other Seria Fluent helper classes:
+
+SERIA_FluentObject: 
+An instance of a class that extends SERIA_FluentObject always represent one row of a certain database table. 
+The SERIA_FluentObject class contain meta data about each database field:
+
+- Caption
+- Validation rules
+- Database field type
+- Form field type
+
+As well as these key meta data elements, a SERIA_FluentObject-class contain information about database 
+relationships trough method calls designed by the developer. Relationships are declared using standard PHP
+code, usually by declaring a method that returns a SERIA_FluentQuery or another SERIA_FluentObject. The API
+does not itself know details about relationships, nor does it perform cascading deletes or updates.
+
+
+SERIA_FluentQuery: 
+Instances of this object represent a collection of SERIA_FluentObjects. The collection can be filtered using 
+simple SQL syntax, iterated and used in specialized helpers such as the SERIA_FluentGrid.
+
+- a "where" clause using simple SQL syntax.
+- sorting information
+
+
+Seria Fluent helper classes
+---------------------------
+Seria Fluent helpers are specialized classes that reduce repetitive coding of common problems such as table
+display, form building, item selectors and similar.
+
+SERIA_FluentGrid:
+A Seria FluentGrid accepts a SERIA_FluentQuery object, and allows quick and simple display of tabular data
+from each of the SERIA_FluentObjects stored in the query. The grid automatically takes care of letting the
+user select sorting and incremental loading from the database - by storing the SERIA_FluentQuery in the user
+session.
+
+SERIA_FluentForm:
+A Seria FluentForm simplifies building forms such as a login form, registering form or editing form. The Seria
+FluentForm utilize information from SERIA_FluentObjects regarding validation and form field representation.
+
+SERIA_FluentSelectorWidget: (BEING PLANNED)
+The FluentSelectorWidget is supposed to simplify selecting a certain instance of a Fluent object. It could be
+represented by a simple <select> HTML-tag, or an auto-completing text field, a popup window or any other means
+of selecting an item within a SERIA_FluentQuery.
+
+SERIA_FluentGridSelectorWidget: (BEING PLANNED)
+The FluentGridSelectorWidget will help creating master-detail forms such as Invoices with Product lines. It will
+allow selecting one or more items from a FluentQuery. Example of usage:
+
+$products = $invoice->getProductLines();
+$form = $invoice->form('edit');						// edit is the name of the action that this form will execute when submitted
+
+echo 
+	$form->begin().							// <form>
+	$form->label('customer').					// <label for='customer'>Customer</label>
+	$form->display('customer').					// <span id='customer'>Customer Name</span>
+	$form->error('customer').					// (returns empty string if no error exists for this form element)
+	$form->grid('some_fieldname', $invoice->getProductLines())	// outputs a html table with <option
+		->output(array(..columns..)).
+	$form->end();							// </form>
+
+Form handler design:
+
+Forms are an important part of the model-view-controller pattern.
+
+- The model is the FluentObject
+- The controller is a static method on the FluentObject that accepts a form object filled with values and 
+does whatever it pleases with this form object. For example it can save the data, login a user or return search
+results.
+- The view is the actual HTML where the form is built.
+
+Example model:
+
+class Customer extends SERIA_FluentObject {
+	static function Fluent($instance=NULL)
+	{/*FLUENT*/
+		return array(
+			'fields' => array(
+				'name' => array('name required', _t("Name")),
+				'address' => array('address', _t("Address")),
+				'country' => array('country', _t("Country")),
+			)
+		);
+	/*FLUENT*/} 
+}
+
+Example controller:
+
+	public static function edit($form)
+	{
+		$form->validate() || return false;
+		$this->consume($form) || return false;
+		return $this->save();
+	}
+
+	public static function login($form)
+	{
+		// database queries to check if username or password is correct
+		// begin user session
+		return true or false depending on success
+	}
+
+Todo in seria platform:
+
+Create mvc-model for:
+
+User: login, edit, forgotten password
+
+
+
+
+
+
+
+
+Use Cases:
+
+LOGIN FORM
+
+$form = $user->form('login');
+
+if($form->receive())
+{
+	$form->execute();
+	header('Location: redirect somewhere');
+	die();
+}
+
+echo $form->begin().
+	$form->error().										// displays a form wide error message, such as "Incorrect username or password"
+	$form->label('username').$form->text('username').$form->error('username')."<br>".	// displays validation errors for the username field
+	$form->label('password').$form->password('password').$form->error('password')."<br>".	// displays validation errors for the password field
+	$form->end();
+
+
+FORGOTTEN PASSWORD FORM
+
+$form = $user->form('reset_password');
+
+if($form->receive())
+{
+	$form->execute();
+	header('Location: password sent message');
+	die();
+}
+
+echo $form->begin().$form->label('username').$form->text('username').$form->end();
+
+
+

@@ -1,0 +1,19 @@
+@CHARSET "UTF-8";
+
+div.subscribe_form_container div.formfield div.label {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+div.subscribe_form_container div.formfield div.field {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+/*
+ * IE7 and IE6
+ */
+div.subscribe_form_container tr td {
+	padding-top: 5px;
+	padding-bottom: 5px;
+}

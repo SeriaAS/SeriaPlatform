@@ -1,0 +1,73 @@
+@CHARSET "UTF-8";
+
+ul#cats_disp {
+	display: block;
+	height: 300px;
+	overflow: auto;
+	width: 250px;
+}
+ul#cats_disp ul {
+	display: block;
+}
+ul#cats_disp li {
+	display: block;
+}
+li.seria_filedirectory {
+}
+li.seria_filedirectory div.folder {
+	background: url(/seria/filearchive2/icons/Folder.png) no-repeat;
+	cursor: hand;
+	cursor: pointer !important;
+}
+li.seria_filedirectory_open div.folder {
+	background: #CCDDEE url("/seria/filearchive2/icons/Folder Search.png") no-repeat;
+}
+li.seria_filedirectory_open li div.folder {
+	background: url(/seria/filearchive2/icons/Folder.png) no-repeat;
+}
+li.seria_filedirectory div.folder span.name {
+	display: block;
+	margin-left: 20px;
+}
+
+li.seria_filedirectory_hover div.folder span.name {
+	background: #CCDDEE;
+}
+li.seria_filedirectory_hover li div.folder span.name {
+	background: none;
+}
+li.seria_filedirectory span.seria_filedirectory_drophover span.name {
+	border: 1px solid gray;
+	background: #BBCCDD;
+}
+
+div.dirname_edit_new_container1 {
+	overflow: visible;
+	width: 32px;
+	height: 32px;
+}
+div.dirname_edit_new_container2 {
+	position: absolute;
+	overflow: hidden;
+	border: 1px solid #dddddd;
+	background-color: white;
+	height: 32px;
+	width: 245px;
+	z-Index: 1;
+}
+
+input.dirname_edit_new {
+	margin-top: 5px;
+	margin-left: 5px;
+	width: 100px;
+}
+
+/*
+ * Grayed out content
+ */
+div.cats_disp_disable {
+	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+	filter: alpha(opacity=50);
+	opacity: .5;
+	background-color: white;
+}

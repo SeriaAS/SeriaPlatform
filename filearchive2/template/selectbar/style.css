@@ -1,0 +1,36 @@
+@CHARSET "UTF-8";
+
+div#filearchive2_select_container {
+	display: table;
+	overflow: hidden;
+	width: 100%;
+}
+div#filearchive2_select_container > div {
+	display: table-row;
+}
+div#filearchive2_select_container > div > * {
+	display: table-cell;
+}
+div#filearchive2_select_container > div > label {
+	width: 90px;
+}
+div#filearchive2_select_container > div > button {
+	margin-left: 2px;
+	margin-right: 2px;
+}
+
+td.filearchive2_select_label {
+	width: 90px;
+}
+td.filearchive2_select_input {
+	width: 650px;
+}
+td.filearchive2_select_div {
+	width: 50px;
+}
+td.filearchive2_select_button {
+}
+
+input#openTheseFiles {
+	min-width: 650px;
+}

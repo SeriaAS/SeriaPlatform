@@ -1,0 +1,115 @@
+@CHARSET "UTF-8";
+
+iframe.noborder {
+	border: 0px solid white;
+}
+
+div.file_icon {
+	float: left;
+	text-align: center;
+	overflow: hidden;
+	width: 122px;
+	height: 103px;
+	margin-left: 0px;
+	margin-right: 0px;
+	margin-top: 0px;
+	margin-bottom: 0px;
+	padding-left: 0px;
+	padding-right: 0px;
+	padding-top: 0px;
+	padding-bottom: 0px;
+}
+div.filelist_container div.file_icon_selected {
+}
+div.filelist_container div.file_icon_selected {
+	background-color: #DDEEFF;
+}
+div.filelist_container div.file_icon_selected {
+	border: 1px solid #4444AA;
+}
+
+div.file_icon {
+	display: table;
+	overflow: hidden;
+	width: 114px;
+	height: 94px;
+	border: 1px solid white;
+	margin-left: 6px;
+	margin-top: 6px;
+}
+div.file_icon:hover {
+	border: 1px solid #222299;
+}
+div.file_icon > div {
+	display: table-row;
+	border: none;
+}
+div.file_icon > div > div {
+	display: table-cell;
+	border: none;
+}
+
+div.the_icon {
+	width: 114px;
+	height: 72px;
+	vertical-align: bottom;
+}
+td.the_icon div.the_icon {
+	width: auto;
+	height: auto;
+}
+td.the_icon {
+	width: 114px;
+	height: 72px;
+	vertical-align: bottom;
+}
+div.the_icon img {
+	border: none;
+}
+div.the_name {
+	font-size: 14px;
+	line-height: 22px;
+	width: 114px;
+	height: 22px;
+	vertical-align: bottom;
+}
+td.the_name div.the_name {
+	width: auto;
+	height: auto;
+}
+th.the_name {
+	width: 114px;
+	height: 22px;
+	vertical-align: bottom;
+}
+
+div.bottomPager {
+	margin-top: 30px;
+}
+
+div.statusbar {
+	height: 30px;
+	border-bottom: 1px solid #DDDDDD;
+}
+div.uploadsys {
+	width: 395px;
+	height: 30px;
+	overflow: hidden;
+	float: left;
+}
+div.uploadcounter {
+	float: right;
+	height: 30px;
+	font-size: 14px;
+	line-height: 30px;
+	margin-right: 5px;
+}
+div.filelist_container {
+	height: 268px;
+	overflow: auto;
+	position: relative; /* Work around IE7-bug */
+}
+
+div.bottomPager {
+	height: 30px;
+}

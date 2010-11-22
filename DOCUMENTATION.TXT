@@ -1,0 +1,10 @@
+Documentation in Seria Platform is extremely lacking. All classes should be documented using phpDocumentor:
+http://manual.phpdoc.org/HTMLSmartyConverter/HandS/phpDocumentor/tutorial_phpDocumentor.pkg.html
+
+Audience of your documentation: Other developers, both developers of applications and developers of the simplest
+websites. Ofcourse this depends on what you are developing; if you are developing an API for RPC communication
+your audience is more technical.
+
+Generally, documentation of a class need both a functional specification of the class, atleast one example of
+usage and explanation of all public and protected class methods.
+

@@ -1,0 +1,101 @@
+SERIA PLATFORM 1.0 (c) 2010 Seria AS, Norway
+
+This document describes some general guidelines regarding Seria Platform and development within this framework.
+Whenever this document is updated, you are responsible for reading the changes. You can do this by performing 
+"svn diff README.NOW".
+
+
+UNINTENDED USAGE
+
+Beware that although API's should not change, usage of API's for what it is not intended for may be punished. For 
+example if you use SERIA_Cache to store session data, or something similar. A consequence of storing session data
+in SERIA_Cache could be that session data is lost due to the system deciding to clean up caches. 
+
+There may be many more examples of unintended usage of classes in Seria Platform; you will risk having to rewrite
+your code if you use it in a way that it has not been intended for. This is because "features" of the object are
+designed with its intended usage in mind. If a site experienses cache trashing, because it receives a lot of unique
+requests, cache may be temporarily disabled.
+
+
+CHANGES AND ADDITIONS TO THE CORE
+
+Changes and additions to the core /seria/platform/ may only be developed by the head developer, or a developer 
+assigned to the task by the head developer. Certain code in the /seria/platform/-folder are scheduled for removal,
+meaning that they will be moved to /seria/frameworks/ in the future.
+
+
+FRAMEWORKS
+
+The /seria/frameworks/-folder is a special folder providing backward compatability for code that relies on certain
+classes to exist. 
+
+The problem with relying on frameworks is that your application may prevent the customer from
+using certain future features - because of design issues. 
+
+For example, relying on the ActiveRecord-framework means that your application cannot use a future "table routing"-
+feature of the database layer. The "table routing"-feature allows certain database tables to be hosted on dedicated
+machines. Since the ActiveRecord-implementation allows certain advanced queries that are incompatible with table
+routing, the current ActiveRecord implementation is scheduled to be replaced with Meta-APIs.
+
+
+PLANNED CHANGES
+
+ActiveRecord		The ActiveRecord-implementation is scheduled for removal. It will be moved to frameworks,
+			where it will be permanently available. Code in the platform relying on ActiveRecord must
+			be rewritten to use the Meta-API's.
+			- Multiple classes depend on ActiveRecord
+
+BML			Code relying on BML inside the platform must be rewritten to not require the BML-framework.
+			- Remove BML-dependancies from /platform/widgets/SERIA_Comments
+			- Remove BML-dependancies from /platform/widgets/SERIA_RecommendByEMail
+			- Remove BML-dependancies from /platform/widgets/SERIA_FormBuilder
+			- Remove BML-dependancies from /platform/classes/SERIA_FormBuilder
+
+/platform/widgets	Widgets are small programs that can be embedded within the context of a web page. Many apps
+			in Seria Platform can support widgets, and with the arrival of the "Component" context, 
+			these widgets should move to the /components/-folder.
+
+			Implementation of widgets should be changed; easy usage within Seria Template and remote
+			hosting of widgets should be accomodated for.
+
+			The implementation must not rely on ActiveRecord.
+
+			The widgets should be located in /components/webwidgets/, since they are shared among both
+			Seria TV, Seria Platform, Seria Live and more web applications.
+
+			Widgets must have a straight forward implementation, allowing for easy templating - for
+			example like this:
+
+			SERIA_Widget::createObject('Poll', $myNamedObject)->render('path/to/template');
+
+
+
+
+CODING CONTEXTS
+
+In general, all functionality should be developed in one of these contexts:
+
+1. Site			Outside of the /seria/-folder. There are no guidelines for code here, as long
+			as you abide to the unintended usage statement above.
+			
+2. Application		Inside the /seria/apps/-folder. Applications should not register themself if they depend
+			on an application that is not installed. Applications should have their own config file:
+			_config.applicationname.php in the root folder. If this configfile is missing, the application
+			should disable itself.
+
+3. Components		Inside the /seria/components/-folder. Components are features that may be shared among multiple 
+			other contexts, but not the core system. Examples of components may be file conversion tools, streaming
+			server API's, payment providers, etcetera.
+
+			Components are features added to the platform, or code that extends the features of Seria Platform.
+
+4. Frameworks		Frameworks in /seria/frameworks/ is a feature allowing including functions into Seria Platform 
+			that are not part of the official framework. The purpose of this is to allow for "friendly 
+			outphasing" of functions that have been developed in the early days of Seria Platform and its 
+			applications. Using a framework generates a Seria Platform warning.
+
+5. Platform		Developing in the /seria/platform/-folder is not allowed, unless approved or requested by head 
+			developer at Seria AS
+
+
+/

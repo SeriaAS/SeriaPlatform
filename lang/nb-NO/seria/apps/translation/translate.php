@@ -1,0 +1,17 @@
+<?php $Giant_list_lang = array_merge($Giant_list_lang, array (
+  'f323c7c1938c387b99e70adf55def1bd' => 'Logg ut',
+  'ae559db2810902efd71799d12486d33e' => 'Seria Platform Oversettingsverktøy gjør det mulig å oversette _t-tekst for din webside.',
+  '07cd2b50f1e3250035eb9ed07c5edd77' => 'Filnavn',
+  '955c17dcaff5665e8ad78b89cd87234f' => 'Oversatte fraser',
+  '9ee0405e634ed689d515b6f4959059cc' => 'Registrerte fraser',
+  '91920e1556f85f3ac258632dfb386ee0' => 'Fraser som må oversettes',
+  'c627cbba7e0e07b89219db8e94930f4a' => 'Standard tekst: %TEXT%',
+  'b4e26e6ef2bfb1f1a836942d8abe19a8' => 'Oversett fil %FILE%',
+  'f5828c14983ea30d906eefa61dfebf61' => 'Oversett til %LANG%',
+  'bd4df032805420b4e4721d48869b0e7c' => 'Oversett til %LANG%:',
+  'd7fc7481f125c6aebdccdcfc9aaff60e' => 'Send inn',
+  '7139fe3c87e887249829cfa6b471c8d4' => 'Vis alle filer. (også de som ikke trenger oversetting.)',
+  'eabeb1168dfd3f915ff25b1f47f0df2d' => 'Oppdater',
+  '5493be742dbf7d5efa3895fbe3ede1dc' => 'Vis alle filer. (Også de som ikke trenger oversetting.)',
+  'a617eaafa7ab00758ea8063622f84142' => 'Oppdater',
+)); ?>

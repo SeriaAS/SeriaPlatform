@@ -1,0 +1,102 @@
+	*[mnu] {
+		cursor: default;
+	}
+
+	div.contextMenu {
+		background-color: #eeeeee;
+		border: 1px solid #cccccc;
+		padding: 2px;
+	}
+
+	div.contextMenuSplit {
+		margin: 1px;
+		padding: 0px;
+		overflow: hidden;
+		height: 1px;
+		border-top: 1px dashed #cccccc;
+		background-color: #ffffff;
+	}
+
+	a.contextMenu {
+		padding: 0px;
+		margin: 0px;
+		padding-top: 3px;
+		padding-bottom: 3px;
+		font-size: 11px;
+		text-align: left;
+		text-decoration: none;
+		background-color: #ffffff;
+		font-weight: normal;
+		color: #000000;
+		display: block;
+		margin-left: 16px;
+		padding-left: 2px;
+	}
+
+	a:hover.contextMenu {
+		padding: 0px;
+		margin: 0px;
+		padding-top: 3px;
+		padding-bottom: 3px;
+		font-size: 11px;
+		text-align: left;
+		text-decoration: none;
+		font-weight: normal;
+		display: block;
+		padding-left: 18px;
+		color: #ffffff;
+		background-color: #93b5d5;
+	}
+
+	a.contextMenuImage {
+		padding: 0px;
+		margin: 0px;
+		padding-top: 3px;
+		padding-bottom: 3px;
+		font-size: 11px;
+		text-align: left;
+		text-decoration: none;
+		background-color: #ffffff;
+		font-weight: normal;
+		color: #000000;
+		display: block;
+		padding-left: 2px;
+	}
+
+	a:hover.contextMenuImage {
+		padding: 0px;
+		margin: 0px;
+		padding-top: 3px;
+		padding-bottom: 3px;
+		font-size: 11px;
+		text-align: left;
+		text-decoration: none;
+		font-weight: normal;
+		display: block;
+		padding-left: 2px;
+		color: #ffffff;
+		background-color: #93b5d5;
+	}
+
+	a.contextMenuImage img {
+		margin-left: 3px; 
+		margin-right: 6px;
+		border: 0px solid black;
+	}
+
+	a.contextMenuDisabled, a:hover.contextMenuDisabled {
+		padding: 0px;
+		margin: 0px;
+		padding-top: 3px;
+		padding-bottom: 3px;
+		font-size: 11px;
+		text-align: left;
+		text-decoration: none;
+		background-color: #ffffff;
+		font-weight: normal;
+		color: #aaaaaa;
+		display: block;
+		margin-left: 16px;
+		padding-left: 2px;
+	}
+

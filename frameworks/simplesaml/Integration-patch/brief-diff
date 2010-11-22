@@ -1,0 +1,34 @@
+Files simplesamlphp-1.5.1.orig/config/authsources.php and simplesamlphp-1.5.1/config/authsources.php differ
+Files simplesamlphp-1.5.1.orig/config/config.php and simplesamlphp-1.5.1/config/config.php differ
+Files simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php and simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php differ
+Files simplesamlphp-1.5.1.orig/lib/Auth/Yadis/ParanoidHTTPFetcher.php and simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php differ
+Files simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php and simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php differ
+Files simplesamlphp-1.5.1.orig/lib/SimpleSAML/Session.php and simplesamlphp-1.5.1/lib/SimpleSAML/Session.php differ
+Only in simplesamlphp-1.5.1/modules/openid: enable
+Files simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDConsumer.php and simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php differ
+Files simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php and simplesamlphp-1.5.1/modules/openid/www/consumer.php differ
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: accept.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: bino.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: bomb_l.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: bomb.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: bullet16_grey.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: caution.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: checkmark48.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: compass_l.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: debug.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: delete.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: favicon.ico
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: gn
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: lock.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: openid.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: pencil.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: service.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: silk
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: ssplogo-fish.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: ssplogo-fish-small.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: star.png
+Only in simplesamlphp-1.5.1.orig/www/resources/icons: timeout.png
+Only in simplesamlphp-1.5.1/www/resources/uitheme/images: Thumbs.db
+Only in simplesamlphp-1.5.1/www/resources/uitheme/images: _x_
+Only in simplesamlphp-1.5.1.orig/www/resources/uitheme/images: _x_.
+Only in simplesamlphp-1.5.1/www/resources/uitheme16/images: Thumbs.db

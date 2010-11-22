@@ -1,0 +1,11 @@
+Seria Platform standards in use
+
+This documents list ISO and other standards in use. When a standard is 
+selected, all API's must adhere this ISO standard where appropriate. 
+This applies to country codes, language codes, currency symbols etc.
+
+CODE			USAGE AND URL
+
+ISO 3166-1-alpha-2	Country codes, two characters. http://www.iso.org/iso/english_country_names_and_code_elements
+ISO 639-1		Language codes, see IETF language tag.
+IETF language tag	Identifies a language. Composed of ISO 639-1 and ISO 3166-1-alpha-2. http://en.wikipedia.org/wiki/IETF_language_tag

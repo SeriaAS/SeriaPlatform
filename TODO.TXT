@@ -1,0 +1,11 @@
+This document contains a list of tasks planned for Seria Platform. Please update it with your name if
+you complete any of these tasks.
+
+TASK								DEVELOPER		DATE
+
+Remove /filearchive and rename /filearchive2 to /filearchive
+
+Move /icons/ into /frameworks/bml/ where it is used from, since
+these icons are are depending on a framework. Frameworks are by
+definition not required by Seria Platform.
+

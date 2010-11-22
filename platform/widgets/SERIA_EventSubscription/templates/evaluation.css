@@ -1,0 +1,25 @@
+
+div#evalmaster_content h2 {
+	margin-bottom: 10px;
+}
+
+div#evalmaster_content p {
+	margin-bottom: 15px;
+}
+
+div#evalmaster_content div.form_radiogroup {
+	overflow: hidden;
+}
+div#evalmaster_content div.form_radiogroup div.form_radiobutton {
+	float: left;
+	width: 50px;
+}
+
+div#evalmaster_content textarea {
+	width: 300px;
+	height: 60px;
+}
+
+div#evalmaster_content div.formfield {
+	margin-bottom: 15px;
+}

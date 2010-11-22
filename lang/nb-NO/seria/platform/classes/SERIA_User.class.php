@@ -1,0 +1,16 @@
+<?php $Giant_list_lang = array_merge($Giant_list_lang, array (
+  '29e7f1b6b806c8efe016258f51b32308' => 'Rediger bruker <strong>%DISPLAY_NAME%</strong>',
+  '19227f6b5964662bd71ae9b3d9f55b31' => 'Fornavn',
+  '52f0f58d86ba118a5e9b5a9d589cc64c' => 'Venligst skriv inn ditt fornavn',
+  'bdaae71280f11c59c9ff482a9c725db4' => 'Etternavn',
+  '3a467ce396650797b8a58b1b73037e87' => 'Venligst skriv inn ditt etternavn',
+  '903f50db17669b1700ea64cc13699ea0' => 'Visningsnavn',
+  'aeea2a59204e59222d555f835dc047b3' => 'Venligst skriv inn ditt visningsnavn',
+  '7b215201f80361bb4dd264543006bfdb' => 'Brukernavn',
+  'bf5bc6a351e81f015086a5532f56493e' => 'Venligst skriv inn ditt brukernavn',
+  'f15abd57801840f3348ddccafb677f6a' => 'Passord',
+  '06c64f91cdc2985bf039a19f87c8fe37' => 'Vensligst skriv inn ditt passord',
+  '8e5fc272226b990bba0000ad78e9462c' => 'Epost',
+  '446dd3b2a39aaf32e802ce20ec676c79' => 'Venligst skriv inn din epost-adresse',
+  '91073737daec42b23c6e7a571fe08882' => 'Er administrator',
+)); ?>

@@ -1,0 +1,27 @@
+@CHARSET "ISO-8859-1";
+
+div.SERIA_RecommendByEMail {
+	display: none;
+	position: absolute;
+	background-color: white;
+	border: 1px solid gray;
+	width: 250px;
+}
+
+div.SERIA_RecommendByEMail > form > div {
+	margin: 5px;
+}
+
+div.SERIA_RecommendByEMail > form > div > label {
+	float: left;
+	width: 90px;
+	clear: left;
+}
+div.SERIA_RecommendByEMail > form > div > input {
+	float: left;
+}
+div.SERIA_RecommendByEMail > form > div > div.buttons {
+	float: left;
+	clear: left;
+	margin-left: 50px;
+}

@@ -1,0 +1,16 @@
+<?php
+	/**
+	*	Simple config file for the CDN application.
+	*
+	*	Copy this file to the SERIA_ROOT folder
+	*/
+
+	function seriacdn_rewrite_path($host, $path)
+	{
+		if(($offset = strpos($host, '.seriacdn.com'))===false)
+			throw new Exception('Not rewritten');
+
+		$host = substr($host, 0, $offset);
+
+		return array($host, $path);
+	}
