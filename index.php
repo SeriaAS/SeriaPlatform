@@ -1,6 +1,6 @@
 <?php
 /**
- *	This file simply redirects the user to the application with the highest weight.
+ *	This file simply redirects the user to the application with the lowest weight.
  *	@package SeriaPlatform
  */
 	require(dirname(__FILE__).'/main.php');
@@ -27,7 +27,7 @@
 		$menuItem = false;
 		$menuItems = $gui->getMenuItems();
 		foreach ($menuItems as $item) {
-			if ($menuItem === false || $item['weight'] > $menuItem['weight'])
+			if ($menuItem === false || $item['weight'] < $menuItem['weight'])
 				$menuItem = $item;
 		}
 		SERIA_Template::disable();
