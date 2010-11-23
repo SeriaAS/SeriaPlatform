@@ -4,7 +4,7 @@
 	*/
 	class SERIA_MetaGrid
 	{
-		private $_query, $_buttons = array(), $rowClick=false;
+		protected $_query, $_buttons = array(), $rowClick=false;
 
 		function __construct(SERIA_MetaQuery $query)
 		{
@@ -17,9 +17,14 @@
 			return $this;
 		}
 
+		/**
+		*	Makes all rows clickable with the default template. Format:
+		*	->rowClick('edit.php?id=%id%')
+		*/
 		function rowClick($urlTemplate)
 		{
 			$this->_rowClick = $urlTemplate;
+			return $this;
 		}
 
 		function output($columnSpec, $templateOrCallback = NULL, $pageSize=false)
@@ -109,10 +114,39 @@
 			}
 			else
 			{
+				if($this->_rowClick)
+				{
+					$m = call_user_func($this->_query->className, "Meta");
+					$find = array_keys($m['fields']);
+					if(isset($m['primaryKey']) && !isset($m['fields'][$m['primaryKey']]))
+					{ // field name of primary key must be replacable.
+						$find[] = $m['primaryKey'];
+					}
+					else if(!isset($m['fields']['id']))
+					{ // id must be replacable, even if it is not specified in fields
+						$find[] = 'id';
+					}
+					foreach($find as $k => $v)
+						$find[$k] = "%".$v."%";
+				}
 				foreach($this->_query as $row)
 				{
 					$rowNumber++;
-					$r .= "<tr>";
+					if($this->_rowClick)
+					{
+						$replace = array();
+						foreach($find as $k => $v)
+						{
+							// possibly this gives error in case of objects returned, should
+							// then use $row->get($k)->_toString()
+							$replace[] = rawurlencode($row->get(trim($v, "%")));
+						}
+						$r .= "<tr onclick=\"location.href='".str_replace($find,$replace,$this->_rowClick)."'\">";
+					}
+					else
+					{
+						$r .= "<tr>";
+					}
 					foreach($columnFields as $i => $fieldName)
 					{
 						$r .= "<td>".(!empty($fieldSpec[$fieldName]['tpl'])?str_replace('%%', htmlspecialchars($row->get($fieldName, true)), $fieldSpec[$fieldName]['tpl']):htmlspecialchars($row->get($fieldName, true)))."</td>";

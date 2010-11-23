@@ -26,6 +26,16 @@
 		}
 
 		/**
+		*	Special method to filter queries for an extra level of access control. For example
+		*	you should check if(SERIA_Base::viewMode()=="public") and return 'isPublished=1'.
+		*	isPublished=1 will then be added to the queries by SERIA_MetaQuery if the website
+		*	is being viewed in the public context.
+		*/
+		public static function MetaSelect() {
+			return NULL;
+		}
+
+		/**
 		*	Special method to check if the object is deletable. Use SERIA_Meta::isDeletable($instance) to check.
 		*	@return boolean
 		*/

@@ -16,7 +16,7 @@
 		public function count()
 		{
 			$sql = $this->buildSQL('COUNT('.$this->primaryKey.')');
-			return SERIA_Base::db()->query($sql, $this->args)->fetch(PDO::FETCH_COLUMN, 0);
+			return intval(SERIA_Base::db()->query($sql, $this->args)->fetch(PDO::FETCH_COLUMN, 0));
 		}
 
 		/**

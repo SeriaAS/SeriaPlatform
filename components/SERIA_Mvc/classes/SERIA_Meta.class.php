@@ -320,6 +320,21 @@
 							$spec['fields'][$key]['caption'] = _t("Enabled");
 							$spec['fields'][$key]['special'] = $info;
 							break;
+						case "parent" : case "parent required" :
+							// try to identify the primary key spec here, without causing a loop
+							$res = array(
+								"type" => self::$_primaryKeySpecs[$item],
+								"validator" => new SERIA_Validator(array(array(SERIA_Validator::META_OBJECT, $item))),
+								"class" => $item,
+								"caption" => _t("Parent"),
+								"special" => $info,
+							);
+							if($info=='parent required')
+							{
+								$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
+							}
+							$spec['fields'][$key] = $res;
+							break;
 						default :
 							throw new SERIA_Exception("Unknown special type '$info'.");
 					}
@@ -448,6 +463,23 @@
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
+				case "internetmediatype" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(50)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::INTERNET_MEDIA_TYPE),
+						)),
+					);
+				case "fileextension" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(20)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MAX_LENGTH, 20),
+							array(SERIA_Validator::MIN_LENGTH, 1),
+						)),
+					);
 				case "username" :
 					return array(
 						"fieldtype" => "text",
@@ -532,6 +564,12 @@
 						"fieldtype" => "text",
 						"type" => "varchar(150)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::URL))),
+					);
+				case "rtmp_url" : 
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(150)",
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::RTMP_URL))),
 					);
 				case "gender" :
 					return array(

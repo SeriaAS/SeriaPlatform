@@ -209,7 +209,10 @@ $form->begin()."<table><thead>';
 		{
 			if(!isset($this->_spec[$name]))
 				throw new SERIA_Exception('No such field "'.$name.'".');
+
+			// no field type defined
 			if(!isset($this->_spec[$name]['fieldtype'])) {
+
 				if (isset($this->_spec[$name]['class'])) {
 					if (in_array('SERIA_IMetaField', class_implements($this->_spec[$name]['class']))) {
 						$obj = $this->get($name);
@@ -219,11 +222,17 @@ $form->begin()."<table><thead>';
 							throw new SERIA_Exception('The object is not a SERIA_IMetaField (interface). The spec has a valid class.');
 							return $obj->renderFormField($name, $attributes);
 					}
+					else
+					{
+						throw new SERIA_Exception('There is no fieldtype specified for the field "'.$name.'" and the class "'.$this->_spec[$name]['class'].'" does not implement the SERIA_IMetaField interface.');
+					}
 				}
 			}
-			if(!is_callable(array($this, $this->_spec[$name]['fieldtype'])))
-				throw new SERIA_Exception('Unknown fieldtype "'.$this->_spec[$name]['fieldtype'].'" for field "'.$name.'".');
 
+			if(!is_callable(array($this, $this->_spec[$name]['fieldtype'])))
+			{
+				throw new SERIA_Exception('Unknown fieldtype "'.$this->_spec[$name]['fieldtype'].'" for field "'.$name.'".');
+			}
 			return call_user_func(array($this, $this->_spec[$name]['fieldtype']), $name, $attributes);
 		}
 
@@ -327,7 +336,7 @@ $form->begin()."<table><thead>';
 						$value = $value->__toString();
 					$options[] = '<option value="'.htmlspecialchars($key).'">'.htmlspecialchars($value).'</option>';
 				}
-			} 
+			}
 			else if(!isset($this->_spec[$name]['values']))
 			{
 				throw new SERIA_Exception('No values defined for field "'.$name.'".');

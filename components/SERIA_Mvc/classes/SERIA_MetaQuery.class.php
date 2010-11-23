@@ -17,6 +17,14 @@
 			$this->_data = new SERIA_DbData($this->spec['table'], $this->spec['primaryKey']);
 			if(!empty($this->spec['selectWhere'])) $this->_data->where($this->spec['selectWhere']);
 			if($where !== NULL) $this->_data->where($where, $args);
+			if(method_exists($className, 'MetaSelect'))
+			{
+				if($whereTmp = call_user_func(array($className, 'MetaSelect')))
+				{
+					$this->where($whereTmp);
+				}
+			}
+
 		}
 
 		/**
@@ -36,6 +44,11 @@
 
 		function grid() {
 			return new SERIA_MetaGrid($this);
+		}
+
+		function treeGrid($parentIdColumn)
+		{
+			return new SERIA_MetaTreeGrid($this, $parentIdColumn);
 		}
 
 		/**
