@@ -34,13 +34,12 @@
 		function router($url)
 		{
 			// if url exists, then we start building the page
-			
 		}
 
 		// hook for adding icon to the user interface
 		function guiEmbed($gui)
 		{
-			$gui->addMenuItem('publisher', $this->getName(), _t('Use Seria Publisher to publish content on your website.'), SERIA_HTTP_ROOT.'/seria/apps/publisher/', SERIA_HTTP_ROOT.'/seria/apps/publisher/icon.png', 100);
+			$gui->addMenuItem('publisher', $this->getName(), _t('Use Seria Publisher to publish content on your website.'), SERIA_HTTP_ROOT.'/seria/apps/publisher/', SERIA_HTTP_ROOT.'/seria/apps/publisher/icon.png', -100);
 
 //		        if((sizeof(SERIA_Applications::getApplication('seria_publisher')->getArticleTypes())>0) && ((SERIA_Base::hasRight("create_article") || SERIA_Base::hasRight("publish_article") || SERIA_Base::hasRight("edit_others_articles"))))
 			{

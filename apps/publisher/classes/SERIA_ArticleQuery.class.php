@@ -462,7 +462,7 @@
 			if(!($rows = $cache->get(md5($sql))))
 			{
 				$rows = $db->query($sql)->fetchAll(PDO::FETCH_ASSOC);
-				$cache->set(md5($sql), $rows, 300); // only cache for five minutes
+				$cache->set(md5($sql), $rows, 60); // only cache for five minutes
 			}
 
 
