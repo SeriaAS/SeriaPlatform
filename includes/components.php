@@ -10,8 +10,19 @@
 	{
 		require($c."/component.php");
 		$bn = basename($c);
-		if(function_exists($bn.'_init'))
+		if(function_exists($bn.'Init'))
+		{
+			$callbacks[] = $bn.'Init';
+		}
+		else if(function_exists($bn.'_init'))
+		{
+			SERIA_Base::debug("<strong>"._t("Component '%component%' is using deprecated callback '%wrong_callback%' to initialize. Rename function to '%callback%'.", array(
+				'component' => $c,
+				'wrong_callback' => $bn.'_init()',
+				'callback' => $bn.'Init()',
+			))."</strong>");
 			$callbacks[] = $bn.'_init';
+		}
 	}
 
 	foreach($callbacks as $callback)
