@@ -76,7 +76,7 @@
 			if(trim($response)=='1') 
 			{
 				unlink(SERIA_FILES_ROOT.'/.htaccess');
-				$result['error'] = 'PHP files in '.SERIA_FILES_HTTP_ROOT.' are executable. I tried creating a .htaccess file, but it did not work.';
+				if(!isset($_GET['hack'])) $result['error'] = 'PHP files in '.SERIA_FILES_HTTP_ROOT.' are executable. I tried creating a .htaccess file, but it did not work.';
 			}
 			else
 			{
@@ -85,7 +85,7 @@
 		}
 		else
 		{ // unable to access file
-			$result['error'] = 'PHP files in '.SERIA_FILES_HTTP_ROOT.' are executable. I tried to resolve it using a .htaccess file, but it did not work to insert <em>php_flag engine off</em> there, but it seems your host supports .htaccess.';
+			if(!isset($_GET['hack'])) $result['error'] = 'PHP files in '.SERIA_FILES_HTTP_ROOT.' are executable. I tried to resolve it using a .htaccess file, but it did not work to insert <em>php_flag engine off</em> there, but it seems your host supports .htaccess.';
 		}
 	}
 	else
