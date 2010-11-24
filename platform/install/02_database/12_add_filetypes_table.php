@@ -1,5 +1,5 @@
 <?php
-
+try {
 SERIA_Base::db()->query('
 CREATE TABLE `' . SERIA_PREFIX . '_filetypes` (
   `id` int(11) NOT NULL auto_increment,
@@ -12,7 +12,10 @@ CREATE TABLE `' . SERIA_PREFIX . '_filetypes` (
   PRIMARY KEY  (`id`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8;
 ');
-
+}
+catch (PDOException $e)
+{
+}
 $filetypes = array(
 	array('image/pjpeg',					'jpg',	'images',		'Bilder',			'documentJPEG.gif'),
 	array('image/gif',						'gif',	'images',		'Bilder',			'documentGIF.gif'),
@@ -25,11 +28,11 @@ $filetypes = array(
 	array('audio/mpeg',						'mp3',	'audio',		'Lydfiler',			'documentMP3.gif'),
 	array('application/vnd.ms-powerpoint', 	'ppt',	'powerpoint',	'PPT- filer',		'documentPPT.gif'),
 	array('image/jpeg',						'jpg',	'images',		'Bilder',			'documentJPEG.gif'),
+	array('jpeg',							'jpg',	'images',		'Bilder',			'documentJPEG.gif'),
 	array('text/plain',						'txt',	'textdocs',		'Tekstdokumenter',	'documentTXT.gif'),
 	array('application/x-zip-compressed',	'zip',	'zipfiles',		'ZIP- filer',		'documentZIP.gif'),
 	array('message/rfc822',					'mht',	'powerpoint',	'Presentasjon',		'documentPPT.gif'),
 	array('message/rfc822',					'mhtm',	'powerpoint',	'Presentasjon',		'documentPPT.gif'),
-	array('image/pjpeg',					'jpg',	'images',		'Bilder',			'documentJPEG.gif'),
 	array('image/png',						'png',	'images',		'Bilder',			'documentJPEG.gif'),
 	array('application/x-shockwave-flash',	'swf',	'video',		'Video',			'documentSWF.gif'),
 	array('application/vnd.ms-excel',		'xls',	'spreadsheet',	'Regneark',			'documentXLS.gif'),
@@ -57,7 +60,6 @@ $filetypes = array(
 	array('audio/mp3',						'mp3',	'audio',		'Lydfiler',			'documentMP3.gif'),
 	array('application/octet-stream',		'flv',	'video',		'Video',			'documentSWF.gif'),
 	array('video/quicktime',				'mov',	'video',		'Video',			'documentMOV.gif'),
-	array('jpeg',							'jpg',	'images',		'Bilder',			'documentJPEG.gif'),
 	array('text/x-vcard',					'vcf',	'calendar',		'Kalender',			null),
 	array('text/x-vcard',					'vcard','calendar',		'Kalender',			null),
 	array('video/mp4',						'mp4',	'video',		'Video',			'documentJPEG.gif'),

@@ -237,7 +237,7 @@
 					foreach ($ftpServerGroup as $ftpServer) {
 						$add = false;
 						
-						if ($checkedFiles[$ftpServer_id = $ftpServer->id][$filename] === null) {
+						if (isset($checkedFiles[$ftpServer->id]) && isset($checkedFiles[$ftpServer->id][$filename]) && ($checkedFiles[$ftpServer_id = $ftpServer->id][$filename] === null)) {
 							if ($ftpServer->checkFilenameSupport($filename)) {
 								$add = true;
 							}

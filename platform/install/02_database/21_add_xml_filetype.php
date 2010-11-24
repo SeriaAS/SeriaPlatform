@@ -29,7 +29,9 @@ foreach ($filetypes as $index => $row) {
 		if ($row[$valindex] !== null)
 			$values[$name] = SERIA_Base::db()->quote($row[$valindex]);
 	}
-	SERIA_Base::db()->exec('INSERT INTO `' . SERIA_PREFIX . '_filetypes` ('.implode(', ', array_keys($values)).') VALUES ('.implode(', ', $values).')'); 
+	try {
+		SERIA_Base::db()->exec('INSERT INTO `' . SERIA_PREFIX . '_filetypes` ('.implode(', ', array_keys($values)).') VALUES ('.implode(', ', $values).')'); 
+	} catch (PDOException $e) {}
 }
 
 ?>

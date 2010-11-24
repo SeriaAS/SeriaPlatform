@@ -17,10 +17,12 @@
 		}
 		
 		public static function publishMessage($level, $content, $category = 'system', $key = null) {
+			return;
 			self::publishHtmlMessage($level, htmlspecialchars($content), $category, $key);
 		}
 		
 		public static function publishHtmlMessage($level, $content, $category = 'system', $key = null) {
+			return;
 			if ($level < 1 || $level > 3) {
 				throw new SERIA_Exception('Status message publish failed');
 			}
@@ -45,6 +47,8 @@
 		}
 		
 		public static function getMessageCount() {
+			return array(0,0,0);
+
 			$query = 'SELECT level, COUNT(id) FROM ' . SERIA_PREFIX . '_systemstatusmessages WHERE status=0 GROUP BY level';
 			$result = SERIA_Base::db()->query($query)->fetchAll(PDO::FETCH_NUM);
 			
@@ -71,6 +75,7 @@
 		}
 		
 		public static function getMessages() {
+			return array();
 			$messages = SERIA_SystemStatusMessages::find_all_by_status(0, array('order' => array('time' => 'DESC'), 'limit' => 10000));
 			return $messages;
 		}

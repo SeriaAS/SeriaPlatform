@@ -1,5 +1,5 @@
 <?php
-
+try {
 SERIA_Base::db()->exec('ALTER TABLE `'.SERIA_PREFIX.'_filetypes` ADD COLUMN (en VARCHAR(50))');
 
 $filetypes = array(
@@ -49,4 +49,5 @@ foreach ($filetypes as $index => $row) {
 	SERIA_Base::db()->exec('INSERT INTO `' . SERIA_PREFIX . '_filetypes` ('.implode(', ', array_keys($values)).') VALUES ('.implode(', ', $values).')'); 
 }
 
-?>
+}
+catch (PDOException $e) {}
