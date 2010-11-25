@@ -14,8 +14,8 @@
 
 SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/UserRoles/classes/*.class.php');
 
-UserRoles::boot();
-
-SERIA_Components::addComponent($comp = new UserRolesComponent());
-
-SERIA_Hooks::dispatch('UserRolesComponent', $comp);
+function UserRolesInit() {
+	UserRoles::boot();
+	SERIA_Components::addComponent($comp = new UserRolesComponent());
+	SERIA_Hooks::dispatch('UserRolesComponent', $comp);
+}
