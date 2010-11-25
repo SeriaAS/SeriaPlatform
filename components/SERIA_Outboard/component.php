@@ -1,6 +1,12 @@
 <?php
 	SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/SERIA_Outboard/classes/*.class.php');
 
+	function SERIA_OutboardInit()
+	{
+		SERIA_Router::instance()->addRoute('SERIA_Outboard', 'SERIA_Outboard pages', 'SERIA_Outboard_comments_show_template', 'outboard/comments/:template');
+		SERIA_Hooks::listen(SERIA_Gui::EMBED_HOOK, 'SERIA_Outboard_guiEmbed');
+	}
+
 	function SERIA_Outboard_comments_show_template($vars)
 	{
 		$tpl = str_replace(array('/', '\\'), array('', ''), $vars['template']);
@@ -13,10 +19,7 @@
 			throw new SERIA_Exception('Not found', SERIA_Exception::NOT_FOUND);
 	}
 
-	SERIA_Router::instance()->addRoute('SERIA_Outboard', 'SERIA_Outboard pages', 'SERIA_Outboard_comments_show_template', 'outboard/comments/:template');
-
-	SERIA_Hooks::listen(SERIA_Gui::EMBED_HOOK, 'so_guiembed');
-	function so_guiembed($gui)
+	function SERIA_Outboard_guiEmbed($gui)
 	{
 		$gui->addMenuItem('controlpanel/outboard', _t("Outboard"), _t("Outboard is special features that can be attached to any content type. Examples are comments, rating, voting and much more."), SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/', SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/icon.png');
 		$gui->addMenuItem('controlpanel/outboard/comments', _t("Comments"), _t("Commenting feature."), SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/comments.php', SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/icon.png');
