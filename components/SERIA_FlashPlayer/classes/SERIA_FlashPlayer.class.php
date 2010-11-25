@@ -14,8 +14,7 @@
 					type="application/x-shockwave-flash">
 
 					<!-- load configuration from config.jsp -->
-					<param name="flashvars" value=\'httpRoot='.urlencode(SERIA_HTTP_ROOT).'&amp;objectKey='.SERIA_NamedObjects::getPublicKey($this->_object).'\' />
-
+					<param name="flashvars" value=\''.(($_GET["debugMode"] && SERIA_Base::isLoggedIn()) ? 'debugMode=true' : '').'&httpRoot='.urlencode(SERIA_HTTP_ROOT).'&amp;objectKey='.SERIA_NamedObjects::getPublicKey($this->_object).'\' />
 					<param name="movie" value="'.SERIA_HTTP_ROOT.'/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf" />
 					<param name="allowfullscreen" value="true" />
 				</object>';
