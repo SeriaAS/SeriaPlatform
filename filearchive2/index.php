@@ -10,6 +10,10 @@ SERIA_Base::pageRequires("login");
 SERIA_Base::pageRequires("javascript");
 SERIA_Base::viewMode("admin");
 
+SERIA_ScriptLoader::loadScript('SERIA-Platform-Private');
+SERIA_ScriptLoader::loadScript('SERIA-Platform-Common');
+
+
 SERIA_Template::title(_t('File archive'));
 
 
