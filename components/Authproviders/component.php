@@ -2,7 +2,7 @@
 
 SERIA_Base::addClassPath(dirname(__FILE__)."/classes/*.class.php");
 
-function Authproviders_init()
+function AuthprovidersInit()
 {
 	$component = new SERIA_AuthprovidersComponent();
 	SERIA_Components::addComponent($component);
