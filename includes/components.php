@@ -5,6 +5,7 @@
 	$GLOBALS['seria']['components'] = array();
 
 	$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
+	shuffle($components);
 	$callbacks = array();
 	foreach($components as $c)
 	{
