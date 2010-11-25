@@ -14,8 +14,6 @@
 *	All defines here are required, unless they are already commented out - in which case a sensible default is used.
 */
 
-	define('SERIA_COMPATIBILITY',	2);
-
 // PATHS:
 	define('SERIA_HTTP_ROOT', 	'http://example.com');			// http path for the website. Only use https:// here if you do not want to support http://. https:// is automatically used otherwise.
 	define('SERIA_ROOT',		dirname(__FILE__));			// the root folder for the entire website.
@@ -71,6 +69,10 @@
 // 	define('SERIA_FFMPEG_PATH', '	/path/to/ffmpeg');				// path to ffmpeg for transcoding video
 //	define('SERIA_TRANSLATION_APPLICATION_ENABLE', 1);			// enable translation application?
 //	define('SERIA_MEMCACHED_KEY', 	'');					// key to use to separate from other uses of the same memcache server
+
+
+	define('SERIA_COMPATIBILITY',	2);					// This define is for keeping backward compatability. Sometimes APIs change, and we need to know what APIs your site is depending on.
+
 
 
 /**
