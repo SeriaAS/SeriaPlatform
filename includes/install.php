@@ -36,6 +36,7 @@
 				'action' => 'Create folder "'.$path.'"',
 				'description' => $spec[0],
 			);
+			clearstatcache();
 			if(!file_exists($path))
 			{
 				if(!mkdir($path, 0777, true))
@@ -62,12 +63,16 @@
 		'action' => 'HTTP fetch on "'.SERIA_FILES_HTTP_ROOT.'"',
 		'description' => 'Is "'.SERIA_FILES_HTTP_ROOT.'" accessible?',
 	);
+	clearstatcache();
 	file_put_contents(SERIA_FILES_ROOT.'/delete_me.php', '<'.'?php echo "1";');
+
 	if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
+
 
 	if(($response = SERIA_WebBrowser::fetchUrlContents(SERIA_FILES_HTTP_ROOT.'/delete_me.php?prevent_loop='.rawurlencode($_SERVER['REQUEST_URI']), 5))!==false)
 	{
 		// try to resolve this issue
+		clearstatcache();
 		file_put_contents(SERIA_FILES_ROOT.'/.htaccess', 'AddType text/plain php');
 		if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
 
@@ -101,12 +106,15 @@
 		'description' => 'Is dynamically created PHP files accessible?',
 	);
 
+	clearstatcache();
 	file_put_contents(SERIA_DYN_ROOT.'/delete_me.php', '<'.'?php echo "1";');
 	if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
+
 	if(($response = SERIA_WebBrowser::fetchUrlContents(SERIA_DYN_HTTP_ROOT.'/delete_me.php?prevent_loop=1', 5))!==false)
 	{
 		if(trim($response)!='1')
 		{ // try to enable php via .htaccess
+			clearstatcache();
 			file_put_contents(SERIA_DYN_ROOT.'/.htaccess', 'AddType application/x-httpd-php .php .php3 .php4 .php5 .phtml');
 			if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
 			if(($response = SERIA_WebBrowser::fetchUrlContents(SERIA_DYN_HTTP_ROOT.'/delete_me.php?prevent_loop', 5))!==false)
@@ -138,6 +146,7 @@
 	/**
 	*	Called when Seria Platform is installed. Allows you to create folders and other stuff that you need.
 	*/
+	clearstatcache();
 	$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
 	foreach($components as $component) if(file_exists($component."/install.php"))
 		require($component."/install.php");
@@ -154,7 +163,7 @@
 
 	if(!$errors)
 	{
-		$contents = "<h1 class='legend'>Seria Platform installed successfully</h1><p>Please <a href='javascript:location.href=location.href'>reload this page</a> to continue. The installation has finished.</p>".$contents;		
+		$contents = "<h1 class='legend'>Seria Platform installed successfully</h1><p>Please <a href='".SERIA_HTTP_ROOT."/seria/platform/maintain.php'>run the maintain script</a> to continue. The installation has finished.</p>".$contents;		
 		require(SERIA_ROOT.'/seria/platform/install/base.php');
 		$version = 1;
 		SERIA_Base::debug('Seria Install version '.(isset($GLOBALS["seria_install"]) ? ($GLOBALS["seria_install"]['version']) : '-'));

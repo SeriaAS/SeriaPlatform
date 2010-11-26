@@ -1,0 +1,12 @@
+<?php
+//	define('SERIA_MULTISITE_DOMAIN','example.com');				// the domain name of the primary site
+	define('SERIA_ROOT',		dirname(__FILE__));
+
+	define('SERIA_PREFIX',		'seria');
+	define('SERIA_DB_HOST', 	'localhost');				// database hostname or IP. (IP is often faster than hostname)
+//	define('SERIA_DB_PORT', 	'3306');				// database port (will use engine default if not specified)
+	define('SERIA_DB_NAME', 	'dbname');				// database name
+	define('SERIA_DB_USER', 	'dbuser');					// username
+	define('SERIA_DB_PASSWORD', 	'dbpassword');					// password
+	define('SERIA_DB_TYPE',		'mysql');				// database engine type. Currently only mysql have been tested.
+

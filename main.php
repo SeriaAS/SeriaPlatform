@@ -24,8 +24,6 @@
  */
 
 // Debugger
-if(isset($_GET['frode']))
-	seria_debugger();
 function seria_debugger()
 {
 	declare(ticks=1);
@@ -84,8 +82,19 @@ if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
  *	Load the configuration file for Seria Platform
  */
 
-if(!include($dirname.'/../_config.php'))
-	die("$dirname/../_config.php not found.");
+if(file_exists($dirname.'/../_config.multisite.php'))
+{
+	require_once($dirname.'/platform/classes/SERIA_Base.class.php');
+	require_once($dirname.'/platform/classes/SERIA_DB.class.php');
+	require_once($dirname.'/platform/classes/SERIA_Exception.class.php');
+	include($dirname.'/../_config.multisite.php');
+	require($dirname.'/includes/multisite.php');
+}
+else
+{
+	if(!include($dirname.'/../_config.php'))
+		die("$dirname/../_config.php not found.");
+}
 
 /**
  *	For constants not defined in the configuration file, config_defaults.php sets default values.
