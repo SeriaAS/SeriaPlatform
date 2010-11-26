@@ -40,11 +40,11 @@
 			while(true)
 			{
 				$tn++;
-				$db->exec('LOCK TABLES {semaphores} WRITE');
+//				$db->exec('LOCK TABLES {semaphores} WRITE');
 				try
 				{
 					$db->exec('INSERT INTO {semaphores} (id, createdTime) VALUES (:id, NOW())', array('id' => $key));
-					$db->exec('UNLOCK TABLES');
+//					$db->exec('UNLOCK TABLES');
 					self::$semaphores[] = $key;
 					return; // exit this eternal loop
 				} catch (PDOException $e) {
@@ -56,15 +56,15 @@
 						if($time < time()-$maxAge)
 						{ // this semaphore has expired, grab it
 							$exec = $db->exec('UPDATE {semaphores} SET createdTime = NOW() WHERE id=:id AND createdTime = :ctime', array('id' => $key, 'ctime' => $time));
-							$db->exec('UNLOCK TABLES');
+//							$db->exec('UNLOCK TABLES');
 							if ($exec) {
 								self::$semaphores[] = $key;
 								return;
 							}
 						}
-						$db->exec('UNLOCK TABLES');
+//						$db->exec('UNLOCK TABLES');
 					} catch (Exception $doublefault) {
-						$db->exec('UNLOCK TABLES');
+//						$db->exec('UNLOCK TABLES');
 						throw $doublefault;
 					}
 					/*
@@ -75,7 +75,7 @@
 					// sleep between 0.1 and 0.5 seconds before trying again
 					usleep(mt_rand(100000,500000));
 				} catch (Exception $e) {
-					$db->exec('UNLOCK TABLES');
+//					$db->exec('UNLOCK TABLES');
 					throw $e;
 				}
 			}
@@ -99,9 +99,9 @@
 			$db->exec('LOCK TABLES {semaphores} WRITE');
 			try {
 				$this->released = $db->exec('DELETE FROM {semaphores} WHERE id=:id', array('id' => $this->key));
-				$db->exec('UNLOCK TABLES');
+//				$db->exec('UNLOCK TABLES');
 			} catch (Exception $e) {
-				$db->exec('UNLOCK TABLES');
+//				$db->exec('UNLOCK TABLES');
 				throw $e;
 			}
 			if ($this->released)
