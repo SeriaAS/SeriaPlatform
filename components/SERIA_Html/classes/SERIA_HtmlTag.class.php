@@ -6,13 +6,56 @@
 	class SERIA_HtmlTag
 	{
 		public $tagName;
+
+		protected static $_bytesConsumed = NULL;	// number of bytes consumed from the passed html for the last call to consumeTag
+
 		protected $_isClosingTag=false, $_isSelfClosed=false, $_properties=array();
-		public function __construct($html)
+		public function __construct($html, $skipWhitespace=false)
 		{
+			if($skipWhitespace)
+			{
+				$l = strlen($html);
+				$html = ltrim($html);
+				$consumed = $l - strlen($html);
+			}
+			else
+				$consumed = 0;
+
 			if(empty($html)) throw new SERIA_Exception('$html required for constructor');
 			if($html[0] != '<') throw new SERIA_Exception('HTML tags start with "<", got: "'.htmlspecialchars(substr($html, 0, 50)).'".');
 
+			$l = strlen($html);
+
+			// STATES:
+			// <example attribute='hello' attribute = "there" >
+
+			$quoted = false;
+			$newHtml = '<';
+			for($i = 1; $i < $l; $i++)
+			{
+				$c = $html[$i];
+				$newHtml .= $c;
+				if($quoted && $c === $quoted)
+				{
+					$quoted = false;
+				}
+				else if($c === "'" || $c === '"')
+				{
+					$quoted = $c;
+				}
+				else if($c === '>')
+				{ // found end of tag
+					break;
+				}
+			}
+			self::$_bytesConsumed = $consumed + strlen($newHtml);
+
+			$html = $newHtml;
+
+
 			if($html[strlen($html)-1] != '>') throw new SERIA_Exception('HTML tags end with ">".');
+
+
 
 			// remove the < and >
 			$html = mb_substr($html, 1, mb_strlen($html)-2);
@@ -31,7 +74,7 @@
 			{
 				// get the property name
 				preg_match('|([a-zA-Z0-9\:]*)|', $html, $matches);
-				$propertyName = $matches[1];
+				$propertyName = strtolower($matches[1]);
 				$html = ltrim(substr($html, strlen($propertyName)));
 				if($html[0] == "=")
 				{ // the property has a value
@@ -60,6 +103,11 @@
 				}
 			}
 			$this->_isSelfClosed = $html=="/";
+		}
+
+		public static function getBytesConsumed()
+		{
+			return self::$_bytesConsumed;
 		}
 
 		public function __toString()
