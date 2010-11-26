@@ -1,0 +1,9 @@
+SERIA_Counter is HIGHLY optimized for performance. There should be almost no performance penalties in using SERIA_Counter
+for generating great statistics for your users. The performance is achieved by a few methods:
+
+1. Updates are batched together and executed in the destructor of the last instance.
+2. Updates are sent to a memory based mysql-table.
+3. Fetches are sent to both the memory table and the persistent table.
+4. The memory table is commited to the persistent table on maintenance.
+
+The risk is losing statistics when the database server is restarted
