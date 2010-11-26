@@ -8,12 +8,10 @@
 		{
 			return array(
 				'table' => '{blobtypes}',
-				'displayField' => 'name',
+				'displayField' => 'extension',
 				'fields' => array(
-					'name' => array('name required', _t("Name")),
-					'extension' => array('fileextension', _t("File extension")),
-					'mimetype' => array('mimetype required', _t("Mime")),
-					'icon' => array('name', _t("Icon")),
+					'extension' => array('fileextension required unique', _t("File extension")),
+					'mediatype' => array('internetmediatype required', _t("Internet media type")),
 				),
 			);
 		}
@@ -25,7 +23,7 @@
 
 		public function editAction()
 		{
-			return SERIA_Meta::editAction('edit', $this, array('name','extension','mimetype','icon'));
+			return SERIA_Meta::editAction('edit', $this, array('extension','mediatype'));
 		}
 
 		public function deleteAction($reload=true)
