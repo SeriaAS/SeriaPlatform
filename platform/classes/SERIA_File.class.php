@@ -604,7 +604,7 @@
 		
 		public function populateObjectFromFilePath($filePath, $targetFileName, $overwrite, $copyMethod='copy') {
 			$db = SERIA_Base::db();
-			
+
 			// this is a new file to be added to SERIA Publisher, check that the parameter did not come from the query string (extra security)
 			if(stripos($_SERVER["QUERY_STRING"], $filePath)!==false)
 				throw new SERIA_Exception("Filename passed trough URL, access denied.");
@@ -740,7 +740,7 @@
 			}
 		}
 
-		function __construct($filePath=null, $targetFileName=false, $overwrite=false, $subFileOf = null, $subFileRelation = null)
+		function __construct($filePath=null, $targetFileName=false, $overwrite=false, $subFileOf = null, $subFileRelation = null, $moveUploadedFile=true)
 		{
 			$this->protocolhandlers = array();
 			
@@ -767,7 +767,10 @@
 					
 					$this->populateObjectFromFilePath($filePath, $targetFileName, $overwrite, 'rename');
 				} else {
-					$this->populateObjectFromFilePath($filePath, $targetFileName, $overwrite, 'move_uploaded_file');
+					if($moveUploadedfile)
+						$this->populateObjectFromFilePath($filePath, $targetFileName, $overwrite, 'move_uploaded_file');
+					else
+						$this->populateObjectFromFilePath($filePath, $targetFileName, $overwrite, 'rename');
 				}
 			}
 			elseif ($filePath === null) {
