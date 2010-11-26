@@ -1,12 +1,14 @@
 <?php
 	function files_maintain_ftpSync() {
+		if(!class_exists('SERIA_FTPs'))
+			return;
 		// Create arrays of filenames and objects for local files
 		$ftpServers = SERIA_FTPs::find_all(array('include' => array('FileProtocols', 'Filetypes')));
 		if (!sizeof($ftpServers)) {
 			SERIA_Base::debug(' - No FTP servers configured');
 			return;
 		}
-		
+
 		// If it is more than 24 hours since last recalculation of ftp server storage usage - recalculate
 		foreach ($ftpServers as $ftpServer) {
 			try {
@@ -19,16 +21,16 @@
 				SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::WARNING, _t('Recalculation of storage usage on FTP server %SERVER% failed: ' . $exception->getMessage(), array('SERVER' => $ftpServer->host . '/' . $ftpServer->username)));
 			}
 		}
-		
+
 		// Create a list of id => filename for each file in the database.
 		$localFiles = array();
 		$query = 'SELECT id, filename FROM ' . SERIA_PREFIX . '_files';
-		
+
 		$rows = SERIA_Base::db()->query($query)->fetchAll(PDO::FETCH_NUM);
 		foreach ($rows as $row) {
 			$localFiles[$id = (int) $row[0]] = $row[1];
 		}
-		
+
 		// Create a list of all ftp server group.
 		// Each group contain one or more servers supporting one particular protocol
 		// Each of the configured servers can exist in different groups if they support
@@ -44,7 +46,7 @@
 				$ftpServerGroups[strtolower($protocol)][$ftpServer->id] = $ftpServer;
 			}
 		}
-		
+
 		// Check if the file type configuration has been changed since last maintain run
 		// if it hasn't changed there is no need to check if files allready uploaded still matching
 		// configured file patterns.
@@ -65,12 +67,12 @@
 				$ftpServer->save();
 			}
 		}
-		
+
 		foreach ($ftpServerGroups as $ftpServerGroup) {
 			$deleteQueue = array();
 			$addRecordQueue = array();
 			$ftpFiles = array();
-			
+
 			if (sizeof($ftpServerGroup)) {
 				// Create array of all files currently on any ftp servers in current group
 				foreach ($ftpServerGroup as $inGroupId => &$ftpServer) {
@@ -80,7 +82,7 @@
 						if (!is_array($currentFtpFiles)) {
 							$currentFtpFiles = array();
 						}
-						
+
 						// Check if files uploaded to server still matching
 						// the configured file patterns. This block is only run if the server
 						// has different file type configuration after last maintain run.
@@ -89,11 +91,11 @@
 						if ($filePatternsChanged[$ftpServer->id]) {
 							foreach ($currentFtpFiles as $ftpFile) {
 								$ftpFile = basename($ftpFile);
-							
+
 								// Delete files no longer matching upload patterns
 								if (!$ftpServer->checkFilenameSupport($ftpFile)) {
 									SERIA_Base::debug('Filename ' . $ftpFile . ' does no longer match pattern on server ' . $ftpServer->host . '/' . $ftpServer->username . '. Deleting.');
-									
+
 									// Search for file ID
 									$file_id = 0;
 									foreach ($localFiles as $id => $filename) {
@@ -101,21 +103,21 @@
 											$file_id = $id;
 										}
 									}
-									
+
 									if ($file_id) {
-										$filesToDelete[$file_id] = $ftpFile; 
+										$filesToDelete[$file_id] = $ftpFile;
 									}
 								}
 							}
 						}
+
 						$ftpFiles = array_merge($ftpFiles, $currentFtpFiles);
-						
 						// Find files existing in server, but not in local file list.
 						// Files not existing in local list will be deleted from server.
 						foreach (array_diff($currentFtpFiles, $localFiles) as $key => $value) {
 							$filesToDelete[$key] = $value;
 						}
-						
+
 						// Find all files on FTP server but not stored in database FTP server file list
 						$query = 'SELECT files.id file_id, files.filename filename, ftpfiles.ftp_server_id ftpServer_id FROM ' . SERIA_PREFIX . '_ftp_files ftpfiles RIGHT JOIN ' . SERIA_PREFIX . '_files files ON files.id = ftpfiles.file_id WHERE ftpfiles.ftp_server_id IS NULL OR ftpfiles.ftp_server_id = ' . $ftpServer->id;
 						$fileListRaw = SERIA_Base::db()->query($query)->fetchAll(PDO::FETCH_ASSOC);
@@ -127,21 +129,21 @@
 							}
 							$invertedFileList[$file['filename']] = $file['file_id'];
 						}
-						
+
 						$filesWithoutRecord = array_diff($currentFtpFiles, $fileList);
-						
+
 						foreach ($filesWithoutRecord as $filename) {
 							if (isset($invertedFileList[$filename])) {
 								$id = $invertedFileList[$filename];
 								if (!$filesToDelete[$id]) {
-									
+
 									$ftpFileSize = -1;
 									foreach ($currentFtpFileObjects as $item) {
 										if ($item->filename == $filename) {
 											$ftpFileSize = $item->size;
 										}
 									}
-									
+
 									if (($ftpFileSize >= 0) && (filesize(SERIA_UPLOAD_ROOT . '/' . $filename) == $ftpFileSize)) {
 										SERIA_Base::debug('Found file on FTP server not having local database record (' . $filename . '/' . $id . '). File size match. Add record.');
 										$filesToAddRecord[] = $id;
@@ -152,8 +154,8 @@
 								}
 							}
 						}
-						
-						
+
+
 						foreach ($filesToDelete as $id => $filename) {
 							$deleteQueue[$id] = array($filename, $ftpServer);
 						}
@@ -163,23 +165,23 @@
 					} catch (Exception $exception) {
 						SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::ERROR, _t('Ftp server %HOST%/%USERNAME% failed: ' . strip_tags($exception->getMessage()), array('HOST' => $ftpServer->host, 'USERNAME' => $ftpServer->username)));
 						SERIA_Base::debug('FTP server ' . $ftpServer->host . '/' . $ftpServer->username . ' failed: ' . strip_tags($exception->getMessage()));
-						
+
 						// Remove FTP server from group
 						unset($ftpServerGroup[$inGroupId]);
 					}
 				}
 				unset($ftpServer);
-				
+
 				// Get a list of all local files not existing on the FTP server.
 				$filesNotOnFtp = array_diff($localFiles, $ftpFiles);
 				if (!is_array($filesNotOnFtp)) {
 					$filesNotOnFtp = array();
 				}
-				
+
 				SERIA_Base::debug(sizeof($filesNotOnFtp) . ' files to check for possible FTP server upload');
-				
+
 				$cache = new SERIA_Cache('filematch');
-				
+
 				// Add records for found files on FTP server not having any database record for FTP server existence
 				$fileObjects = SERIA_File::createObjects(array_keys($addRecordQueue));
 				foreach ($addRecordQueue as $id => $ftpServer) {
@@ -189,14 +191,14 @@
 						}
 					}
 				}
-				
+
 				// Find file objects for all files not on FTP
 				$localFileObjects = array();
 				$ids = array();
 				$ftpServerToUploadTo = array();
 				$shuffleCounter = 10;
 				$filematchCache = array();
-				
+
 				$checkedFiles = array();
 				foreach ($ftpServerGroup as $ftpServer) {
 					if (!$filePatternsChanged[$ftpServer->id]) {
@@ -209,20 +211,20 @@
 						$checkedFiles[$ftpServer->id] = $fromCache;
 					}
 				}
-				
+
 				$fileCounter = 0;
 				$startTime = microtime(true);
 				$remainingFiles = sizeof($filesNotOnFtp);
-				
+
 				foreach ($filesNotOnFtp as $id => $filename) {
 					$add = false;
-					
+
 					// Shuffle ftp server group for each 10th file to randomize which server to upload to
 					if (++$shuffleCounter >= 10) {
 						shuffle($ftpServerGroup);
 						$shuffleCounter = 0;
 					}
-					
+
 					if (SERIA_DEBUG) {
 						$remainingFiles--;
 						if (++$fileCounter == 1000) {
@@ -401,6 +403,8 @@
 	}
 	
 	function files_maintain_transcoding() {
+		if(!class_exists('SERIA_FileTranscodings'))
+			return;
 		$transcodingQueue = SERIA_FileTranscodings::find_all_by_status(SERIA_FileTranscoder::STATUS_QUEUED)->toKeyArray();
 		SERIA_Base::debug(' - ' . sizeof($transcodingQueue) . ' file(s) to transcode');
 		
