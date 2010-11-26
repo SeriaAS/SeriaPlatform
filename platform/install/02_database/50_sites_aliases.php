@@ -1,3 +1,4 @@
+<?php
 SERIA_Base::db()->exec('CREATE TABLE {sites_aliases} (
 	`id` INTEGER NOT NULL,
 	`siteId` INTEGER NOT NULL,
