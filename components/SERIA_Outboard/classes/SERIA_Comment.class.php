@@ -46,6 +46,7 @@
 					// Is the comment approved?
 					'approved' => array('boolean', _t('Approved')),
 					'rejected' => array('boolean', _t('Rejected')),
+					'flagged' => array('boolean', _t("Flagged by user")),
 
 					'createdDate' => 'createdDate',
 					'createdBy' => 'createdBy',
@@ -139,5 +140,27 @@
 		public function deleteAction()
 		{
 			return SERIA_Meta::deleteAction('delete', $this);
+		}
+
+		public function unflagAction()
+		{
+			$a = new SERIA_ActionUrl('unflag', $this);
+			if($a->invoked())
+			{
+				$this->set('flagged', false);
+				$a->success = SERIA_Meta::save($this);
+			}
+			return $a;
+		}
+
+		public function flagAction()
+		{
+			$a = new SERIA_ActionUrl('flag', $this);
+			if($a->invoked())
+			{
+				$this->set('flagged', true);
+				$a->success = SERIA_Meta::save($this);
+			}
+			return $a;
 		}
 	}

@@ -49,6 +49,9 @@ if (!isset($this)) {
 					SERIA_Base::redirectTo($this->return->__toString());
 					die();
 				}
+				$unflagAction = $this->comment->unflagAction();
+				if($unflagAction->success)
+					SERIA_HtmlFlash::notice(_t("Comment was unflagged"));
 				$action = $this->comment->editAction();
 				if ($action->success) {
 					SERIA_Base::redirectTo($this->return->__toString());
@@ -101,17 +104,16 @@ if (!isset($this)) {
 					</tr>
 					<tr>
 						<th>{{'Approval'|_t}}</th>
-						<?php
-							if ($this->comment->get('approved')) {
-								?><td class='text'>{{'Approved'|_t}}</td><?php
-							} else {
-								if ($this->comment->get('rejected')) {
-									?><td class='text'>{{'Rejected'|_t}}</td><?php
-								} else {
-									?><td class='text'>{{'Awaiting approval'|_t}}</td><?php
-								}
-							}
-						?>
+						<td class="text"><?php
+							if($this->comment->get('rejected'))
+								echo _t("Rejected");
+							else if($this->comment->get('flagged'))
+								echo _t("Flagged")." <a href='".$unflagAction."'>"._t("Unflag")."</a>";
+							else if($this->comment->get('approved'))
+								echo _t("Approved");
+							else
+								echo _t("Awaiting approval");
+						?></td>
 					</tr>
 				</tbody>
 			</table>

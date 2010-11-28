@@ -63,7 +63,16 @@
 					?>
 				</td>
 				<td><?php echo $row->get('title'); ?></td>
-				<td><?php echo _t($row->get('approved') ? 'Approved' : ($row->get('rejected') ? 'Rejected' : 'Awaiting approval')); ?></td>
+				<td><?php 
+					if($row->get('flagged'))
+						echo _t("Flagged");
+					else if($row->get('approved'))
+						echo _t("Approved");
+					else if($row->get('rejected'))
+						echo _t("Rejected");
+					else
+						echo _t("Awaiting approval");
+				?></td>
 				<td>
 					<?php
 						$approveAction = $row->approveAction();
@@ -122,7 +131,7 @@
 									$approval = $_GET['approval'];
 								else
 									$approval = false;
-								$approval_ch = array('all', 'unmoderated', 'approved', 'rejected');
+								$approval_ch = array('all', 'unmoderated', 'approved', 'rejected', 'flagged');
 								if (!in_array($approval, $approval_ch))
 									$approval = $approval_ch[0];
 							?>
@@ -131,6 +140,7 @@
 								<option value='unmoderated'<?php if ($approval == 'unmoderated') echo ' selected=\'selected\''; ?>><?php echo _t('Unmoderated'); ?></option>
 								<option value='approved'<?php if ($approval == 'approved') echo ' selected=\'selected\''; ?>><?php echo _t('Approved'); ?></option>
 								<option value='rejected'<?php if ($approval == 'rejected') echo ' selected=\'selected\''; ?>><?php echo _t('Rejected'); ?></option>
+								<option value='flagged'<?php if ($approval == 'flagged') echo ' selected=\'selected\''; ?>><?php echo _t('Flagged'); ?></option>
 							</select>
 						</td>
 					</tbody>
@@ -162,6 +172,8 @@
 			$comments->where('approved != 0');
 		else if ($approval == 'rejected')
 			$comments->where('rejected != 0');
+		else if ($approval == 'flagged')
+			$comments->where('flagged = 1');
 	}
 	$comments->order('-createdDate');
 	$grid = new SERIA_MetaGrid($comments);

@@ -257,7 +257,10 @@
 				return self::_getSpec(get_class($item));
 
 			if(!class_exists($item))
-				throw new SERIA_Exeption('No such outboard class "'.$item.'"');
+			{
+				throw new SERIA_Exception('No such outboard class "'.$item.'"');
+			}
+			
 
 			if(isset(self::$_specCache[$item]))
 			{
