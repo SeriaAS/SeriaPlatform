@@ -48,6 +48,8 @@
 					'rejected' => array('boolean', _t('Rejected')),
 					'flagged' => array('boolean', _t("Flagged by user")),
 
+					'notFlaggable' => array('boolean', _t("Not flaggable")),
+
 					'createdDate' => 'createdDate',
 					'createdBy' => 'createdBy',
 					'alteredDate' => 'modifiedDate',
@@ -163,4 +165,13 @@
 			}
 			return $a;
 		}
+
+		public function getLastFlagLog()
+		{
+			$fl = SERIA_Meta::all('SERIA_CommentLog');
+			$fl->where('comment=:id', $this);
+			$fl->order('createdDate DESC');
+			return $fl->current();
+		}
+
 	}

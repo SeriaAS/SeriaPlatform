@@ -15,6 +15,7 @@
 						),
 						'type' => 'enum("flag")',
 					)),
+					'createdDate' => 'createdDate',
 					'flagSpam' => array('boolean', _t("Spam")),
 					'flagPersonalAttack' => array('boolean', _t("Personal attack")),
 					'flagRacist' => array('boolean', _t("Racist")),

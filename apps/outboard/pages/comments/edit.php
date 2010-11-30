@@ -108,7 +108,18 @@ if (!isset($this)) {
 							if($this->comment->get('rejected'))
 								echo _t("Rejected");
 							else if($this->comment->get('flagged'))
-								echo _t("Flagged")." <a href='".$unflagAction."'>"._t("Unflag")."</a>";
+							{
+								$fl = $this->comment->getLastFlagLog();
+$reasons = array();
+if($fl->get('flagSpam')) $reasons[] = _t("Spam");
+if($fl->get('flagPersonalAttack')) $reasons[] = _t("Personal attack");
+if($fl->get('flagRacist')) $reasons[] = _t("Racist");
+if($fl->get('flagPorn')) $reasons[] = _t("Pornographic");
+if($fl->get('flagCopyright')) $reasons[] = _t("Copyrighted");
+if($fl->get('flagOther')) $reasons[] = _t("Other");
+
+								echo _t("Flagged, because of: %REASONS%", array('REASONS' => implode(', ', $reasons)))." <br><a href='".$unflagAction."'>"._t("Unflag this comment")."</a>";
+							}
 							else if($this->comment->get('approved'))
 								echo _t("Approved");
 							else

@@ -40,7 +40,7 @@
 						if ($resUrl) {
 							$eid = 'eid'.mt_rand();
 							?>
-								<a id='<?php echo $eid; ?>' target='_blank' href="<?php echo htmlspecialchars($obj['url']); ?>"><?php echo $id; ?></a>
+								<a id='<?php echo $eid; ?>' target='_blank' href="<?php echo htmlspecialchars($obj['url']); ?>"><?php echo $obj['url']; ?></a>
 								<script type='text/javascript'>
 									(function (element) {
 										var cancelBubble = function (e) {
