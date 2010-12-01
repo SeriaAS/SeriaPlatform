@@ -87,11 +87,12 @@
 	}
 	/**
 	 * A function that protects the namespace of the _t function from modification of Giant_list-strings.
+	 * This is because previously the giant-list was flat and we loaded files directly by require.
 	 *
 	 * @param $filename
 	 * @return unknown_type
 	 */
-	function _t_loadDefaultLangFile($filename)
+	function _t_loadLangFile($filename)
 	{
 		$Giant_list_lang = array();
 		require($filename);
@@ -111,17 +112,20 @@
 	{
 		static $Giant_list_lang = array();
 		static $file_loaded = array();
+		static $realpaths = array();
 
 		if (!$filename)
 			throw new Exception('Filename not specified.');
+		if (!isset($realpaths[$filename]))
+			$realpaths[$filename] = realpath($filename);
+		$filename = $realpaths[$filename];
 
 		/* PHASE I: Encoding */
 		$string = mb_convert_encoding($string, "UTF-8", "UTF-8, ISO-8859-1");
 
 		/* PHASE II: Translate */
 		$hash = hash('md4', $string.($key === null ? '' : $key)); /* MD4 has been claimed to be the fastest hash function */
-		if (!isset($Giant_list_lang[$hash])) {
-			$filename = realpath($filename);
+		if (!isset($Giant_list_lang[$filename]) || !isset($Giant_list_lang[$filename][$hash])) {
 			/* PHASE IIb: Check if language def is loaded */
 			$file_hash = hash('md4', $filename);
 			if (!isset($file_loaded[$file_hash]))
@@ -146,25 +150,27 @@
 				/* PHASE IIc: Load locale language file */
 				if ($file_loaded[$file_hash] == 0) {
 					$file_loaded[$file_hash]++; /* 1 = locale loaded */
-					$filename = $lang_root.'/'.SERIA_Template::getLanguage().'/'.$relpath;
-					if (file_exists($filename))
-						require($filename);
+					$locale_filename = $lang_root.'/'.SERIA_Template::getLanguage().'/'.$relpath;
+					if (file_exists($locale_filename))
+						$Giant_list_lang[$filename] = _t_loadLangFile($locale_filename);
+					else
+						$Giant_list_lang[$filename] = array();
 				}
 
 				/* DEBUG ASSERTION: THE LOAD COUNTER MUST BE STRICTLY (0 = none loaded, 1 = locale loaded, 2 = default loaded) */
 				if (SERIA_DEBUG && $file_loaded[$file_hash] !== 1 && $file_loaded[$file_hash] !== 2)
 					throw new Exception('Unexpected value!');
 
-				if (!isset($Giant_list_lang[$hash])) {
+				if (!isset($Giant_list_lang[$filename][$hash])) {
 					if ($file_loaded[$file_hash] == 1) {
 						/* PHASE IId: Load default language file */
 						$file_loaded[$file_hash]++; /* 2 = default loaded */
-						$filename = $lang_root.'/default/'.$relpath;
-						if (file_exists($filename)) {
-							$defaultFileContents = _t_loadDefaultLangFile($filename);
+						$default_filename = $lang_root.'/default/'.$relpath;
+						if (file_exists($default_filename)) {
+							$defaultFileContents = _t_loadLangFile($default_filename);
 							foreach ($defaultFileContents as $whash => $value) {
-								if (!isset($Giant_list_lang[$whash]))
-									$Giant_list_lang[$whash] = $value;
+								if (!isset($Giant_list_lang[$filename][$whash]))
+									$Giant_list_lang[$filename][$whash] = $value;
 							}
 						}
 					}
@@ -173,16 +179,16 @@
 			/*
 			 * The files are guaranteed to have been loaded here..
 			 */
-			if (!isset($Giant_list_lang[$hash])) {
+			if (!isset($Giant_list_lang[$filename][$hash])) {
 				/* PHASE IIe: Add string to default language file */
-				$Giant_list_lang[$hash] = $string;
+				$Giant_list_lang[$filename][$hash] = $string;
 				_t_addStringToDefaultLang($lang_root.'/default/'.$relpath, $hash, $string);
 			}
 		}
-		if (SERIA_DEBUG && !isset($Giant_list_lang[$hash]))
+		if (SERIA_DEBUG && !isset($Giant_list_lang[$filename][$hash]))
 			throw new Exception('_t() algo failed to add string to array');
 
-		$string = $Giant_list_lang[$hash];
+		$string = $Giant_list_lang[$filename][$hash];
 
 		/* PHASE III: Replacements */
 		if(sizeof($vars))
