@@ -21,8 +21,6 @@
 				throw new SERIA_Exception('File (' . $filePath . ') does not have a valid powerpoint extension (.ppt or .pptx)');
 			}
 
-			$transcodeSem = new SERIA_Semaphore('powerpoint_remote_transcoding_'.$inputFile->get('id'), true);
-
 			try {
 				$data = unserialize($this->record->data);
 				if ($data === false) {
@@ -56,10 +54,9 @@
 						/*
 						 * Convertion complete, download the files:
 						 */
-						if ($dstatus) {
-							$transcodeSem->release(); /* I don't trust the G.C. */
+						if ($dstatus)
 							return true; /* Already done */
-						}
+
 						$dcount = 0;
 						$fileids = $powerpoint_bin->getRelatedFiles($data['remoteFileId'], 'ms_powerpoint_slide');
 						SERIA_Base::debug('Got download ids from remote converter: '.implode(', ', $fileids));
@@ -72,7 +69,6 @@
 						}
 						$powerpoint_bin->setMeta($data['remoteFileId'], 'powerpoint_downloaded_slides', true);
 						$inputFile->setMeta('powerpoint_transcode_download_complete', true);
-						$transcodeSem->release(); /* I don't trust the G.C. */
 						return true;
 					}
 				}
@@ -81,7 +77,6 @@
 			} catch (SERIA_AccessDeniedException $e) {
 				SERIA_Base::debug(_t('Powerpoint slide transcoder stumbled upon an access denied exception.'));
 			}
-			$transcodeSem->release(); /* I don't trust the G.C. */
 			return false;
 		}
 	}
