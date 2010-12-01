@@ -156,16 +156,14 @@ class UserLanguagePreference
 		$form = new SERIA_ActionForm('setLanguageLocaleAction');
 		$spec = array(
 			'caption' => _t('Select language: '),
-			'validator' => new SERIA_Validator(array(
-				array(SERIA_Validator::REQUIRED)
-			)),
+			'validator' => new SERIA_Validator(array()),
 			'values' => $values,
 			'value' => $value
 		);
 		$form->addField('languageLocale', $spec);
 		if ($form->hasData()) {
 			$error = $spec['validator']->isInvalid($form->get('languageLocale'));
-			if (!$error) {
+			if (!$error && $form->get('languageLocale')) {
 				try {
 					$locale = new Iso639Local($form->get('languageLocale'));
 				} catch (SERIA_Exception $e) {
