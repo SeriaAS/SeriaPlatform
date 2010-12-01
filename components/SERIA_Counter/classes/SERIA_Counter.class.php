@@ -1,16 +1,41 @@
 <?php
-
+	/**
+	*	Class facilitating counting persistently and fast using memory tables and persistent tables.
+	*	Warning! Power outages or database restarts will destroy memory tables and you may loose counts.
+	*
+	*	Optimizations to know about:
+	*
+	*	As long as you keep a reference to your SERIA_Counter instance, instances are performed in PHP memory and there should
+	*	be no need for additional optimizations by external means.
+	*
+	*	On class destruction, PHP memory is commited to a memory based database.
+	*
+	*	The commitMemory() method is called every five minutes by the maintenance script to copy memory tables to persistent tables.
+	*	Since the algorithm uses table locks, you should not call it yourself. In mysql, table locks starts an implicit database 
+	*	commit and your transaction will become unsafe.
+	*/
 	class SERIA_Counter {
 		protected $_namespace;
 		protected static $_batchUpdates = array();
 		protected static $_instances = 0;
 
+		/**
+		*	Constructor
+		*
+		*	@param string $namespace	A unique string grouping your counters
+		*/
 		function __construct($namespace)
 		{
 			$this->_namespace = $namespace;
 			self::$_instances++;
 		}
 
+		/**
+		*	Increment any number of counters by $increment
+		*
+		*	@param array $counterNames	An array of strings identifying each of the counters you wish to increment
+		*	@param int $increment		The number you wish to increment your counters by. Negative numbers are allowed.
+		*/
 		function add(array $counterNames, $increment=1)
 		{
 			$values = array();
@@ -53,17 +78,20 @@
 				try {
 					SERIA_Base::db()->exec($sql, NULL, true);
 				} catch (PDOException $e) {
-					if($e->getCode()==="42S02")
-					{ // table does not exist, create it
-						SERIA_Base::db()->exec("CREATE TABLE {counters_memory} (id VARCHAR(100), counter BIGINT, PRIMARY KEY(id)) ENGINE = MEMORY DEFAULT CHARSET utf8", NULL, true);
-						SERIA_Base::db()->exec("CREATE TABLE {counters} (id VARCHAR(100), counter BIGINT, PRIMARY KEY(id)) ENGINE = InnoDB DEFAULT CHARSET utf8", NULL, true);
-						SERIA_Base::db()->exec($sql, NULL, true);
-					}
 					else throw $e;
 				}
 			}
 		}
 
+		/**
+		*	Get the value from any number of counters. If you perhaps want to graph the hits for the years 2010, 2011 and 2012
+		*	you should provide array(2010,2011,2012).
+		*
+		*	The return value is an associative array of (countername => count)-pairs.
+		*
+		*	@param array $counterNames
+		*	@return array
+		*/
 		function get(array $counterNames)
 		{
 			$results = array();
@@ -92,6 +120,10 @@
 			return $results;
 		}
 
+		/**
+		*	Commit data from the {counters_memory] table to the {counters} table.
+		*	WARNING! This function performs an implicit transaction commit on mysql databases because of using LOCK TABLES
+		*/
 		public static function commitMemory()
 		{
 			$db = SERIA_Base::db();
