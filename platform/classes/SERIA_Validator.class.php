@@ -3,7 +3,7 @@
 class SERIA_Validator
 {
 	private $trim;
-	const REQUIRED = 1;	
+	const REQUIRED = 1;
 	const MIN_LENGTH = 2;			// array(SERIA_Validator::MIN_LENGTH, 3[, 'Custom error message']);
 	const CALLBACK = 3;			// array(SERIA_Validator::CALLBACK, $callback); // The callback will be called with arguments ($value, $object)
 	const MAX_LENGTH = 4;			// array(SERIA_Validator::MAX_LENGTH, 50[, 'Custom error message']);
@@ -30,6 +30,9 @@ class SERIA_Validator
 	const MAX_VALUE = 23;			// array(SERIA_Validator::MAX_VALUE, 100[, 'Custom error message']);
 	const HOSTNAME = 24;			// array(SERIA_Validator::HOSTNAME[, 'Custom error message']);
 	const FLOAT = 25;			// array(SERIA_Validator::FLOAT[, 'Custom error message']);
+	const LEGAL_CHARS = 26;			// array(SERIA_Validator::LEGAL_CHARS, <array of chars>[, 'Custom error message']);
+	const INTERNET_MEDIA_TYPE = 27;		// array(SERIA_Validator::INTERNET_MEDIA_TYPE[, 'Custom error message']);
+	const RTMP_URL = 28;			// array(SERIA_Validator::RTMP_URL[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -64,7 +67,7 @@ class SERIA_Validator
 						if(empty($value) && $value !== 0 && $value !== '0') return _t("Required");
 					break;
 				case self::MIN_LENGTH:
-					if (strlen($value) < $rule[1])
+					if (mb_strlen($value) < $rule[1])
 						return _t("Minimum length: %LENGTH%", array('LENGTH' => $rule[1]));
 					break;
 				case self::CALLBACK:
@@ -78,7 +81,7 @@ class SERIA_Validator
 						return $err;
 					break;
 				case self::MAX_LENGTH:
-					if (strlen($value) > $rule[1])
+					if (mb_strlen($value) > $rule[1])
 						return _t("Maximum length: %LENGTH%", array('LENGTH' => $rule[1]));
 					break;
 				case self::EMAIL:
@@ -174,6 +177,10 @@ class SERIA_Validator
 					$err = SERIA_IsInvalid::url($value);
 					if($err) return isset($rule[1]) ? $rule[1] : $err;
 					break;
+				case self::RTMP_URL:
+					$err = SERIA_IsInvalid::flashStreamUrl($value);
+					if($err) return isset($rule[1]) ? $rule[1] : $err;
+					break;
 				case self::COUNTRYCODE:
 					$dictionary = SERIA_Dictionary::getDictionary('iso-3166');
 					if(!isset($dictionary[$value]))
@@ -191,6 +198,19 @@ class SERIA_Validator
 					$t = array_flip($rule[1]);
 					if(!isset($t[$value]))
 						return isset($rule[2]) ? $rule[2] : _t("Must be one of %VALUES%.", array('VALUES' => implode(", ", $rule[1])));
+					break;
+				case self::LEGAL_CHARS:
+					$found = false; // found illegal chars?
+					foreach($rule[1] as $char)
+					{
+						if(mv_strpos($value, $char)===false)
+						{
+							$found = true;
+							break;
+						}
+					}
+					if(!$found)
+						return isset($rule[2]) ? $rule[2] : _t("Only these characters are allowed: %CHARS%", array('CHARS' => implode('', $rule[2])));
 					break;
 				case self::REQUIRED_CHARS:
 					$found = false;
@@ -276,6 +296,27 @@ class SERIA_Validator
 					if(!filter_var('http://'.$value.'/', FILTER_VALIDATE_URL, FILTER_FLAG_SCHEME_REQUIRED))
                                 		return isset($rule[1]) ? $rule[1] : _t('Invalid hostname');
 
+					break;
+				case self::INTERNET_MEDIA_TYPE:
+					$parts = explode("/", $value);
+					if(sizeof($parts)!=2)
+						return isset($rule[1]) ? $rule[1] : _t("Use the format 'type/subtype'.");
+
+					switch($parts[0])
+					{
+						case "application" :
+						case "audio" :
+						case "image" :
+						case "message" :
+						case "model" :
+						case "multipart" :
+						case "text" :
+						case "video" :
+						case "application" :
+							break;
+						default :
+							return isset($rule[1]) ? $rule[1] : _t("Main type must be one of application, audio, image, message, model, multipart, text, video or application.");
+					}
 					break;
 			}
 		}
