@@ -115,9 +115,17 @@ class sspmod_authtwitter_Auth_Source_Twitter extends SimpleSAML_Auth_Source {
 			$requestToken->key . "] with the secret [" . $requestToken->secret . "]");
 
 		// Replace the request token with an access token
-		$accessToken = $consumer->getAccessToken('http://twitter.com/oauth/access_token', $requestToken, $requestVerifier);
-		SimpleSAML_Logger::debug("Got an access token from the OAuth service provider [" . 
-			$accessToken->key . "] with the secret [" . $accessToken->secret . "]");
+		try {
+			$accessToken = $consumer->getAccessToken('http://twitter.com/oauth/access_token', $requestToken, $requestVerifier);
+			SimpleSAML_Logger::debug("Got an access token from the OAuth service provider [" . 
+				$accessToken->key . "] with the secret [" . $accessToken->secret . "]");
+		} catch (Exception $e) {
+			/*
+			 * This is usually an authentication error or user abort.
+			 */
+			$error = $e->getMessage();
+			throw new SimpleSAML_Error_Exception($error);
+		}
 			
 
 		

@@ -37,14 +37,21 @@ if ($source === NULL) {
 	throw new Exception('Could not find authentication source with id ' . $sourceId);
 }
 
+try {
+
+	$config = SimpleSAML_Configuration::getInstance();
+
+	$source->finalStep($state);
 
 
-$config = SimpleSAML_Configuration::getInstance();
 
-$source->finalStep($state);
+	SimpleSAML_Auth_Source::completeAuth($state);
 
-
-
-SimpleSAML_Auth_Source::completeAuth($state);
+} catch (SimpleSAML_Error_Exception $e) {
+	/*
+	 * This is probably a login failure or user cancel.
+	 */
+	SimpleSAML_Auth_State::throwException($state, $e);
+}
 
 
