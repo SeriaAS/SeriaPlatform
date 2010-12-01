@@ -42,8 +42,15 @@
 				/**
 				*	We are not using call_user_func because we want to support by reference arguments
 				*/
-				$result = call_user_func($listener['callback'], $p1, $p2, $p3, $p4, $p5, $p6, $p7, $p8, $p9, $p10, $p11, $p12);
-				$results[] = $result;
+				if(SERIA_DEBUG && !is_callable($listener['callback']))
+				{
+					SERIA_Base::debug('<strong>Illegal callback ('.serialize($listener['callback']).') for hook ('.$name.')</strong>');
+				}
+				else
+				{
+					$result = call_user_func($listener['callback'], $p1, $p2, $p3, $p4, $p5, $p6, $p7, $p8, $p9, $p10, $p11, $p12);
+					$results[] = $result;
+				}
 /*
 				if(is_array($listener['callback']))
 				{
@@ -107,7 +114,14 @@
 
 			foreach(self::$listeners[$name] as $listener)
 			{
-				$data = call_user_func($listener, $data);
+				if(SERIA_DEBUG && !is_callable($listener['callback']))
+				{
+					SERIA_Base::debug('<strong>Illegal callback ('.serialize($listener['callback']).') for hook ('.$name.')</strong>');
+				}
+				else
+				{
+					$data = call_user_func($listener['callback'], $data);
+				}
 			}
 
 			return $data;
@@ -131,10 +145,14 @@
 
 			foreach(self::$listeners[$name] as $listener)
 			{
-				/**
-				*	We are not using call_user_func because we want to support by reference arguments
-				*/
-				$result = call_user_func($listener['callback'], $p1, $p2, $p3, $p4, $p5, $p6, $p7, $p8, $p9, $p10, $p11, $p12);
+				if(SERIA_DEBUG && !is_callable($listener['callback']))
+				{
+					SERIA_Base::debug('<strong>Illegal callback ('.serialize($listener['callback']).') for hook ('.$name.')</strong>');
+				}
+				else
+				{
+					$result = call_user_func($listener['callback'], $p1, $p2, $p3, $p4, $p5, $p6, $p7, $p8, $p9, $p10, $p11, $p12);
+				}
 /*				
 				$result = false;
 				if(is_array($listener['callback']))
@@ -176,8 +194,6 @@
 
 		static function listen($name, $callback, $weight=0)
 		{
-			if(!is_callable($callback)) throw new SERIA_Exception('Illegal callback for hook ('.serialize($callback).')');
-
 			if(!isset(self::$listeners[$name]))
 				self::$listeners[$name] = array();
 
