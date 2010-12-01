@@ -9,13 +9,21 @@
 	foreach($apps as $app)
 		require($app."/application.php");
 
+	$manifests = array();
 	foreach($apps as $app)
 	{
-		$func = basename($app).'Init';
+		$bn = basename($app);
+		$func = $bn.'Init';
 		if(function_exists($func))
 			$func();
+
+		if(class_exists($bn."Manifest", false))
+		{
+			$manifests[] = $bn."Manifest";
+		}
 	}
 
+	SERIA_Base::processManifests('apps', $manifests);
 
 //	SERIA_Hooks::dispatch('platform_applications_loaded', $GLOBALS["seria"]["applications"]);
 

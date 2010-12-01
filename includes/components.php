@@ -7,6 +7,7 @@
 	$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
 	shuffle($components);
 	$callbacks = array();
+	$manifests = array();
 	foreach($components as $c)
 	{
 		require($c."/component.php");
@@ -24,7 +25,14 @@
 			))."</strong>");
 			$callbacks[] = $bn.'_init';
 		}
+
+		if(class_exists($bn."Manifest", false))
+		{
+			$manifests[] = $bn."Manifest";
+		}
 	}
+
+	SERIA_Base::processManifests('components', $manifests);
 
 	foreach($callbacks as $callback)
 		$callback();
