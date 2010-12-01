@@ -72,6 +72,7 @@
 				// if url exists, then we start building the page
 				$b = new SERIA_WebBrowser();
 
+				$b->followRedirect = false;
 				$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 				$sentHeaders["Accept-Language"] = $b->acceptLanguage;
 
