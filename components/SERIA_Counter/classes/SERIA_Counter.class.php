@@ -78,7 +78,7 @@
 				try {
 					SERIA_Base::db()->exec($sql, NULL, true);
 				} catch (PDOException $e) {
-					else throw $e;
+					throw $e;
 				}
 			}
 		}
@@ -129,23 +129,36 @@
 			$db = SERIA_Base::db();
 			while(true)
 			{ // do it in iterations
-				$db->exec("LOCK TABLES {counters} WRITE,{counters_memory} WRITE", NULL, true);
-				$memRows = $db->query("SELECT * FROM {counters_memory} ORDER BY id LIMIT 5000")->fetchAll(PDO::FETCH_ASSOC);
-				if(sizeof($memRows)===0) return true;
-				$reverse = array();
-				foreach($memRows as $memRow)
-				{
-					if(isset($reverse[$memRow["counter"]]))
-						$reverse[$memRow["counter"]][] = "(".$db->quote($memRow["id"]).",".$memRow["counter"].")";
-					else
-						$reverse[$memRow["counter"]] = array("(".$db->quote($memRow["id"]).",".$memRow["counter"].")");
+				try {
+					$db->exec("LOCK TABLES {counters} WRITE,{counters_memory} WRITE", NULL, true);
+					$memRows = $db->query("SELECT * FROM {counters_memory} ORDER BY id LIMIT 5000")->fetchAll(PDO::FETCH_ASSOC);
+					if(sizeof($memRows)===0) {
+						$db->exec("UNLOCK TABLES", NULL, true);
+						return true;
+					}
+					$reverse = array();
+					foreach($memRows as $memRow)
+					{
+						if(isset($reverse[$memRow["counter"]]))
+							$reverse[$memRow["counter"]][] = "(".$db->quote($memRow["id"]).",".$memRow["counter"].")";
+						else
+							$reverse[$memRow["counter"]] = array("(".$db->quote($memRow["id"]).",".$memRow["counter"].")");
+					}
+					foreach($reverse as $increment => $values)
+					{
+						$db->exec("INSERT INTO {counters} VALUES ".implode(",", $values)." ON DUPLICATE KEY UPDATE counter=counter+".$increment, NULL, true);
+					}
+					$db->exec("DELETE FROM {counters_memory} ORDER BY id LIMIT 5000", NULL, true);
+					$db->exec("UNLOCK TABLES", NULL, true);
+				} catch(Exception $e) {
+
+					// If function above threw exception, tables would not be unlocked
+					// error code mysql 1100
+
+					$db->exec("UNLOCK TABLES", NULL, true);
+
+					throw $e;
 				}
-				foreach($reverse as $increment => $values)
-				{
-					$db->exec("INSERT INTO {counters} VALUES ".implode(",", $values)." ON DUPLICATE KEY UPDATE counter=counter+".$increment, NULL, true);
-				}
-				$db->exec("DELETE FROM {counters_memory} ORDER BY id LIMIT 5000", NULL, true);
-				$db->exec("UNLOCK TABLES", NULL, true);
 			}
 		}
 	}
