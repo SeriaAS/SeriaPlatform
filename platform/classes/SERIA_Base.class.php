@@ -683,9 +683,9 @@ echo "<br>";
 		static function replaceParam($name, $value, $oldValue)
 		{
 			$value = (string) $value;
-			$oldValue = (string) $value;
+			$oldValue = (string) $oldValue;
 			$sql = 'UPDATE {params} SET value = :value WHERE name = :name AND value = :compare';
-			$data = array('name' => $name, 'value' => $value, 'compare' => $compare);
+			$data = array('name' => $name, 'value' => $value, 'compare' => $oldValue);
 			try {
 				return (SERIA_Base::db()->exec($sql, $data, true) ? true : false);
 			} catch (PDOException $e) {
