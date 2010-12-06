@@ -349,7 +349,37 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 					$this->periodicUpdateUserMeta($user, 20);
 					$_SESSION['AUTHPROVIDERS_REMOTE_XML'] = $status[1];
 					$_SESSION['AUTHPROVIDERS_REMOTE_SID'] = $status[2];
-					$_SESSION['authproviders_external_discovery_latest'] = $status[3];
+					$cookieName = 'logindiscovery'.sha1($this->rpc->getHostname());
+					if (isset($_COOKIE[$cookieName])) {
+						if ($_COOKIE[$cookieName] == $status[3]) {
+							$_SESSION['authproviders_external_discovery_latest'] = $status[3];
+							SERIA_Base::debug('Autodiscovery is enabled for this session. (success)');
+						} else {
+							SERIA_Base::debug('WARNING: COOKIE CONTENT CHANGED DURING LATE LOGIN PROCESS! found \''.$_COOKIE[$cookieName].'\', but expected \''.$status[3].'\'');
+							/*
+							 * Record this in session, if this happens twice within 300 seconds (5 minutes) then
+							 * give up cookie discovery. This avoids redirecting clients back and forth and never
+							 * succeeding to login permanently. (Mixed with autodiscovery, redirects for re-login
+							 * at next page view.)
+							 */
+							$ts = time();
+							if (isset($_SESSION['authproviders_external_discovery_unexpected_change_ts'])) {
+								$ts_check = $_SESSION['authproviders_external_discovery_unexpected_change_ts'];
+								if ($ts_check > ($ts - 300)) {
+									SERIA_Base::debug('Authproviders: ERROR: AUTODISCOVERY FAILURE, SOMETHING IS MODIFYING OR BLOCKING CHANGE TO DISCOVERY COOKIE!');
+									SERIA_Base::debug('Authproviders: DISABLED AUTODISCOVERY FOR THIS SESSION!');
+									if (isset($_SESSION['authproviders_external_discovery_latest'])) {
+										$_SESSION['authproviders_external_discovery_latest'] = null;
+										unset($_SESSION['authproviders_external_discovery_latest']);
+									}
+								} else
+									$_SESSION['authproviders_external_discovery_latest'] = $status[3];
+							}
+							$_SESSION['authproviders_external_discovery_unexpected_change_ts'] = $ts;
+						}
+					} else {
+						SERIA_Base::debug('External authprovider did not find a discovery cookie. Autodiscovery disabled.');
+					}
 					SERIA_PersistentExternalAuthentication::authenticatedExternally();
 				} else if ($status[0] == SERIA_ExternalAuthenticationAgent::STATUS_FAILED) {
 					/*
@@ -390,6 +420,10 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 			if (isset($_COOKIE[$cookieName])) {
 				if (SERIA_Base::user() !== false) {
 					SERIA_Base::debug('Automatic logout discovery with cookie..');
+					if (!isset($_SESSION['authproviders_external_discovery_latest'])) {
+						SERIA_Base::debug('Authproviders: Warning: Autodiscovery is disabled (propably missing or failing cookie)');
+						return false;
+					}
 					if ($_COOKIE[$cookieName] == $_SESSION['authproviders_external_discovery_latest']) {
 						$this->autoCalledWithLogin();
 						return false;
