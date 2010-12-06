@@ -57,13 +57,31 @@
 		*/
 		static function login($username, $password)
 		{
+
 			$username = mb_strtolower($username, "UTF-8");
 
 			$userRow = SERIA_Base::db()->query('SELECT * FROM {users} WHERE enabled=1 AND (username=:username OR email=:username) AND password=:password', array(
 				'username' => $username,
-				'password' => $password,
+				'password' => md5($password),
 			))->fetch(PDO::FETCH_ASSOC);
-			if ($userRow) 
+
+
+			if(!$userRow)
+			{ // fallback to cleartext passwords, to be removed
+				$userRow = SERIA_Base::db()->query('SELECT * FROM {users} WHERE enabled=1 AND (username=:username OR email=:username) AND password=:password', array(
+					'username' => $username,
+					'password' => $password,
+				))->fetch(PDO::FETCH_ASSOC);
+
+				if($userRow)
+				{
+					// fix md5 of password
+					$pw = md5($userRow['password']);
+					SERIA_Base::db()->exec('UPDATE {users} SET password=? WHERE id=?', array($pw, $userRow['id']));
+				}
+			}
+
+			if ($userRow)
 			{
 				$user = new SERIA_User($userRow);
 				return SERIA_Base::user($user);
@@ -176,6 +194,8 @@
 						return $e;
 					return false;
 				case "password" :
+//					if(strlen(trim($value))==32 && trim($value, '0123456789abcdef')=='')
+//						return false; // md5 hash is correct
 					return SERIA_IsInvalid::password($value,true);
 				case "email" :
 					return SERIA_IsInvalid::eMail($value,true);
@@ -399,7 +419,8 @@
 				case "firstName" :  case "first_name" : $field = "first_name"; break;
 				case "lastName" : case "last_name" : $field = "last_name"; break;
 				case "displayName" : case "display_name" : $field = "display_name"; break;
-				case "username" : case "password" : case "email" : case "id" : break;
+				case "password" : $value = md5($value); break;
+				case "username" : case "email" : case "id" : break;
 				case "isAdministrator" : case "is_administrator" : $field = "is_administrator"; $value = $value ? "1" : "0"; break;
 				case "password_change_required": break;
 				case "enabled" : $field = "enabled"; break;

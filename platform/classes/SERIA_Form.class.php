@@ -281,9 +281,13 @@
 				$data[$key] = $value;
 
 			// Special trick to hide passwords from HTML source code :-)
+			$toNotBeSaved = array();
 			foreach($data as $key => $val)
 				if($val == '{__PW_HERE__}')
+				{
+					$toNotBeSaved[] = $key;
 					$data[$key] = $this->get($key);
+				}
 
 			// Special trick for checkboxes
 			$fsTmp = $this->_getFinalFieldSpec();
@@ -306,12 +310,13 @@
 			if(sizeof($data))
 			{
 				$errorless = call_user_func_array(array($this,'validate'), array($data));
-
 			}
-
 
 			if($errorless)
 			{
+				foreach($toNotBeSaved as $felt)
+					unset($data[$felt]);
+
 				call_user_func_array(array($this, '_handle'), array($data));
 
 				foreach($this->getSubForms() as $name => $subFormSpec)
@@ -479,7 +484,7 @@ throw new Exception('Not implemented yet. Use subForm instead.');
 				'type' => 'password',
 				'id' => $name,
 				'name' => $name,
-				'value' => ($this->get($name)? $this->validationData !== NULL && isset($this->validationData[$name]) ? $this->validationData[$name]: '{__PW_HERE__}' : ''),
+				'value' => ($this->get($name) ? $this->validationData !== NULL && isset($this->validationData[$name]) ? $this->validationData[$name]: '{__PW_HERE__}' : ''),
 			)).'>';
 		}
 
