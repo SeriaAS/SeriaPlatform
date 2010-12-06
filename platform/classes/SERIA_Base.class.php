@@ -666,7 +666,7 @@ echo "<br>";
 		/**
 		*	Deprecated. See SERIA_Base::insertParam()
 		*/
-		static function setParamIfNotExist($name, $value)
+		static function setParamIfNotExists($name, $value)
 		{
 			SERIA_Base::debug('Using SERIA_Base::setParamIfNotExists(), which is deprecated in favor of SERIA_Base::insertParam()');
 			return self::insertParam($name, $value);
