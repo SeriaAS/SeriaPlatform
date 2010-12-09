@@ -1,10 +1,12 @@
 <?php
 	// Default configuration files. All values must check if local file
 	// have defined the value before modifying.
-	
+
 	// The description of the config values are in _config.php.sample
 	defined('SERIA_HTTP_ROOT') || define('SERIA_HTTP_ROOT', 'http'.($_SERVER['HTTPS']?'s':'').'://'.$_SERVER['HOST_NAME']);
 	defined('SERIA_ROOT') || define('SERIA_ROOT', realpath(dirname(__FILE__) . '/../..'));
+	defined('SERIA_TEMPLATE_ROOT') || define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/templates');
+	defined('SERIA_TEMPLATE_HTTP_ROOT') || define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/templates');
 	defined('SERIA_DEBUG') || define('SERIA_DEBUG', 0);
 	defined('SERIA_ERROR_EMAIL') || define('SERIA_ERROR_EMAIL', 'error@seria.no');
 	defined('SERIA_EMAIL_FROM') || define('SERIA_EMAIL_FROM', 'seria_platform@'.$_SERVER['HTTP_HOST']);
