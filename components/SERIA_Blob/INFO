@@ -1,0 +1,33 @@
+- En fil som er opplastet kan lenkes til fra statisk HTML, ergo må den endelige path være permanent.
+- Man kan ikke vente at alle komponenter i SERIA Platform vet hvor de skal legge filene sine; filer skal altså aldri legges inn i /files/ direkte.
+- Gjennomtenkt fysisk struktur på filene er viktig; samtidig kan det tenkes at man ønsker et CDN til å håndtere videodistribusjonen:
+
+	Følgende mappestruktur velges: /files/flv/2010/09/19/min-fil.flv
+
+	Begrunnelse:
+		- Man kan trikse med mounting av /files/flv på egnede servere for videostreaming
+		- Datokomponenten sørger for at det ikke blir for mange filer i én katalog, og man kan spre filer på flere volumer
+		- Mengden filer må ikke overstige maksimal størrelse på et volum i løpet av én dag, men dette kan eventuelt løses ved å dele inn døgnet
+		i timer.
+
+- Spesialfunksjonalitet for spesielle extensions løses slik:
+
+	- Outputfilter detekterer filer som har query params; for eksempel /files/flv/2010/09/19/min-fil.flv?thumbnail=400x300 kan omskrives
+	server side før output slik at url endres til /files/dyn/flv-thumbnails/2010/09/19/min-fil.flv.400x300.jpg
+
+- URL blir permanent når den er lenket til på denne måten. Outputfilter kan imidlertid omskrive path til f.eks. jpg-bilder slik at en lenke til
+/files/jpg/2010/09/19/min-fil.jpg blir omskrevet til http://static.seriacdn.com/example.com/files/jpg/2010/09/19/min-fil.jpg
+
+- Eksisterende filer som ligger i /files/ blir værende.
+
+Datamodell for SERIA_Blob blir:
+
+id
+originId	Referanse til original video, dersom denne filen er avledet / konvertert fra originalen. Dersom originalen slettes slettes denne.
+filename	Opprinnelig filnavn som opplastet
+path		image-jpeg/2010/09/19/min-fil.jpg
+folderId	SERIA_BlobFolder
+createdBy
+createdDate
+alteredBy
+alteredDate
