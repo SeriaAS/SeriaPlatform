@@ -29,6 +29,7 @@
 	*/
 	class SERIA_CounterManifest {
 		const SERIAL = 4;
+		const NAME = 'seria_counter';
 
 		const LEGAL_HOOK = 'SERIA_CounterManifest::LEGAL_HOOK';
 

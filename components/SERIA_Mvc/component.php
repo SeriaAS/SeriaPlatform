@@ -38,8 +38,53 @@
 			SERIA_Hooks::listen(SERIA_PlatformHooks::ROUTER_FAILED, 'SERIA_MetaTemplate_router');
 	}
 
+	/**
+	*	This router handler handles /seria/[manifest] routes, as well as routes referring to 
+	*	php-files inside of SERIA_TEMPLATE_ROOT. Examples:
+	*
+	*	The SERIA_MultisiteManifest is declared in /seria/platform/components/SERIA_Multisite/component.php and has
+	*	const NAME = 'multisite';
+	*
+	*	/seria/multisite		Will look for /seria/platform/components/SERIA_Multisite/pages/index.php
+	*	/seria/multisite/edit		Will look for /seria/platform/components/SERIA_Multisite/pages/edit.php
+	*	/seria/multisite/edit/site	Will look for /seria/platform/components/SERIA_Multisite/pages/edit/site.php
+	*/
 	function SERIA_MetaTemplate_router($route)
 	{
+		if(strpos($route, "seria/")===0)
+		{ // Manifest routing
+			$parts = explode("/", $route);
+			if(sizeof($parts)==0)
+				return;
+
+			if($manifest = SERIA_Base::getManifest($parts[1]))
+			{ // we have a manifest matching this name
+				$root = dirname($manifest->getFileName())."/pages";
+				if(is_dir($root))
+				{
+					array_shift($parts);
+					array_shift($parts);
+
+					if(sizeof($parts)>0)
+					{
+						$path = $root."/".implode("/", $parts).'.php';
+					}
+					else
+					{
+						$path = $root.'/index.php';
+					}
+
+					if(file_exists($path) && !is_dir($path))
+					{
+						$template = new SERIA_MetaTemplate();
+						echo $template->parse($path);
+						die();
+					}
+				}
+			}
+		}
+
+
 		$route = trim($route, "/ \t");
 		if($route=='')
 			$route = 'index';
