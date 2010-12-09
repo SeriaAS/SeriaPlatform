@@ -24,19 +24,4 @@
 	}
 
 	SERIA_Base::processManifests('apps', $manifests);
-
-//	SERIA_Hooks::dispatch('platform_applications_loaded', $GLOBALS["seria"]["applications"]);
-
-	/**
-	*	DEPRECATED
-	*
-	*	Execute embed() for each application, allowing the application
-	*	to integrate with the user interface properly.
-	*/
-//	foreach(SERIA_Applications::getApplications() as $app)
-//		$app->embed();
-
 	SERIA_Hooks::dispatch(SERIA_Application::EMBED_HOOK);
-
-
-//	SERIA_Hooks::dispatch('platform_applications_embedded', $GLOBALS["seria"]["applications"]);

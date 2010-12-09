@@ -243,10 +243,12 @@ require(SERIA_ROOT . '/seria/includes/locale.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/locale.php)');
 require(SERIA_ROOT . '/seria/includes/session.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/session.php)');
-require(SERIA_ROOT . '/seria/includes/components.php');
-if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/components.php)');
-require(SERIA_ROOT . '/seria/includes/applications.php');
-if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/applications.php)');
+require(SERIA_ROOT . '/seria/includes/coreComponents.php');
+if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/coreComponents.php)');
+require(SERIA_ROOT . '/seria/includes/userComponents.php');
+if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/userComponents.php)');
+require(SERIA_ROOT . '/seria/includes/userApplications.php');
+if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/userApplications.php)');
 if(file_exists(SERIA_ROOT.'/seria.php'))
 {
 	require(SERIA_ROOT.'/seria.php');
@@ -384,15 +386,6 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 { // Generate this page trough the router
 	// tell all applications and components to setup their routes
 	$router = SERIA_Router::instance();
-
-	// add platform specific routes
-	try
-	{
-		$router->addRoute('error/:code', array('SERIA_PlatformPages', 'httpError'));
-	}
-	catch (Exception $e)
-	{
-	}
 
 	// try to resolve routes
 	try {
