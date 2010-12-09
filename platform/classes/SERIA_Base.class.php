@@ -21,6 +21,9 @@
 		static $requestErrorTrace = false;
 		static $isElevated = 0;
 		static $_develHelp = array();
+
+		protected static $_manifests = array();
+
 /*
 	Debug messages should not be stored here. I've been working on down-building SERIA_Base, and duplicate storage of debug messages is memory hog - even if only for debug mode. The debug hook should
 	give you the information you need.
@@ -458,7 +461,7 @@ $trace");
 		/**
 		 * Returns whether the user has access to system features (seria/*).
 		 *
-		 * @return unknown_type
+		 * @return mixed
 		 */
 		public static function hasSystemAccess()
 		{
@@ -617,13 +620,6 @@ $trace");
 			$data = array('name' => $name, 'value' => $value, 'value2' => $value);
 			try {
 				$res = (SERIA_Base::db()->exec($sql, $data, true) ? true : false);
-/*
-echo $sql;
-var_dump($data);
-echo "SETPARAM $name:";
-var_dump($res);
-echo "<br>";
-*/
 				return $res;
 			} catch (PDOException $e) {
 				if($e->getCode() == '42S02')
@@ -770,10 +766,45 @@ echo "<br>";
 		}
 
 		/**
-		*	This menthod processes manifest classes that are declared
+		*	Returns the reflection object for the class corresponding to the manifest,
+		*	assuming that the manifest have been loaded.
+		*
+		*	@param $name	The name of the manifest class, excluding the "Manifest"-suffix
+		*	@returns ReflectionClass
+		*/
+		public static function getManifest($name)
+		{
+			if(!isset(self::$_manifests[$name]))
+				return NULL;
+			return self::$_manifests[$name];
+		}
+
+		/**
+		*	This method processes manifest classes that are declared
 		*	for each component and application. It updates the database structure
 		*	and logs which tables are created by which component, so that uninstallation
 		*	is possible in the future.
+		*
+		*	Format of a basic manifest file:
+		*	class ComponentNameManifest {
+		*		static SERIAL = 5; 			// the serial number is used to identify which version this file is
+		*		public static $classPaths = array(	// an array of paths relative to the folder where the Manifest is defined
+		*			'classes/*.class.php',
+		*		);
+		*		public static $database = array(	// declares the database structure
+		*			'creates' => array(		// a list of create table statements. NOTE! Normally you simply modify this to alter your datamodel
+		*				'CREATE TABLE {mytable} (id INTEGER PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+		*			),
+		*			'drops' => array(		// a list of tables to drop before parsing the 'creates'
+		*				2 => array(		// the serial number to perform this for
+		*					'{oldtable}',
+		*				),
+		*			),
+		*			'alters' => array(		// a list of alter table statements to perform before parsing the 'creates'
+		*				4 => 'ALTER TABLE {mytable} DROP COLUMN name',
+		*			),
+		*		);
+		*	}
 		*/
 		static function processManifests($namespace, array $classNames)
 		{
@@ -785,11 +816,31 @@ echo "<br>";
 			{
 				$reflector = $reflectors[$className] = new ReflectionClass($className);
 				$serial = $reflector->getConstant('SERIAL');
-
 				if(!$serial)
 					throw new SERIA_Exception('The manifest class "'.$className.'" does not specify the SERIAL constant as a positive integer.');
 
+				$name = $reflector->getConstant('NAME');
+				if(!$name)
+					throw new SERIA_Exception('The manifest class "'.$className.'" does not specify the NAME constant. This constant is used to identify your manifest and create nice admin urls.');
+				if(isset(self::$_manifests[$name]))
+					throw new SERIA_Exception('The manifest class "'.$className.'" has a name that have been used before. This is illegal.');
+				self::$_manifests[$name] = $reflector;
+
 				$hash .= '('.$serial.')';
+			}
+
+			foreach($reflectors as $className => $reflector)
+			{
+				$path = dirname($reflector->getFileName());
+				// Manifest::$classPaths
+				try {
+					$classPaths = $reflector->getStaticPropertyValue('classPaths');
+					if($classPaths) foreach($classPaths as $subPath)
+					{
+						self::addClassPath($path.'/'.$subPath);
+					}
+				}
+				catch (ReflectionException $null) {}
 			}
 
 			$currentHash = self::getParam('manifestversions:'.$namespace);
@@ -797,7 +848,6 @@ echo "<br>";
 				$changed = true; // must check if the $hash have changed
 			else
 				$changed = false;
-
 
 			if($changed)
 			{
@@ -812,7 +862,7 @@ echo "<br>";
 						throw new SERIA_Exception('Manifest class "'.$reflector->getName().'" does not specify a doc comment (/** */) which is required.');
 
 					// keywords to look for in doc-comment:
-					$keywords = array('@author','@version','@package');
+					$keywords = array('@author','@package');
 					foreach($keywords as $keyword)
 						if(strpos($docComment, $keyword)===false)
 							throw new SERIA_Exception('The doc comment (/** */) for the class "'.$reflector->getName().'" does not specify the "'.$keyword.'" keyword. Must use the following keywords: '.implode(", ", $keywords));
@@ -1237,7 +1287,7 @@ echo "<br>";
 				self::setParam('manifestversions:'.$namespace, $hash);
 				// release lock
 				self::setParam('manifestprocessing', 0);
-			}
+			} // changed
 		}
 
 		/**
