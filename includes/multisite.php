@@ -4,7 +4,7 @@
 	*/
 
 	if(!defined('SERIA_MULTISITE_DOMAIN'))
-		throw new SERIA_Exceptin('SERIA_MULTISITE_DOMAIN not defined.');
+		throw new SERIA_Exception('SERIA_MULTISITE_DOMAIN not defined.');
 
 	// required to connect to database, but should not be defined by anybody
 	define('SERIA_DB_DSN', SERIA_DB_TYPE.':host='.SERIA_DB_HOST.';port='.(defined('SERIA_DB_PORT')?SERIA_DB_PORT:'3306').';dbname='.SERIA_DB_NAME);
