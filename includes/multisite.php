@@ -75,8 +75,10 @@
 	else
 	{
 		define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['domain']);
-		define('SERIA_FILES_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain']);
-		define('SERIA_FILES_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain']);
+		define('SERIA_FILES_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
+		define('SERIA_FILES_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
+		define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
+	        define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
 		define('SERIA_EMAIL_FROM', 'no-reply@'.$site['domain']);
 		define('SERIA_TIMEZONE', $site['timezone']);
 		define('SERIA_CURRENCY', $site['currency']);

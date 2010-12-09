@@ -37,13 +37,12 @@
 	define('SERIA_TIMEZONE', 	'Europe/Oslo');				// the time zone used for displaying time to users http://www.php.net/timezones
 	define('SERIA_CURRENCY', 	'EUR');					// the default currency for the website. ISO 4217: http://www.iso.org/iso/support/currency_codes_list-1.htm
 
-
 // SPECIAL
 //	define('SERIA_PREFIX', 		'seria');				// prefix for variables, cookies and database tables that might conflict with other code
 //	define('SERIA_XHTML', 		1);					// output XHTML instead of HTML
 //	define('SERIA_GUI_TEMPLATE', dirname(__FILE__).'/seria/platform/templates/seria/seria.php');
-//  define('SERIA_VALIDATE_EMAIL_HOST', false);		// Turn on/off checking of email servers.
-//  define('SERIA_GUI_NO_GZIP', true);		// Disable gziphandler in SERIA_Gui
+//	define('SERIA_VALIDATE_EMAIL_HOST', false);		// Turn on/off checking of email servers.
+//	define('SERIA_GUI_NO_GZIP', true);		// Disable gziphandler in SERIA_Gui
 
 
 // DEBUGGING AND DEVELOPMENT
