@@ -13,7 +13,13 @@ class SERIA_AsyncUserMetaSync
 	}
 	public static function getUpdatedUsers($fromTime)
 	{
-		$users = SERIA_Base::db()->query('SELECT DISTINCT owner FROM {user_meta_value} WHERE timestamp >= :fromTime', array('fromTime' => date('Y-m-d H:i:s', $fromTime)))->fetchAll(PDO::FETCH_COLUMN, 0);
+		try {
+			$users = SERIA_Base::db()->query('SELECT DISTINCT owner FROM {user_meta_value} WHERE timestamp >= :fromTime', array('fromTime' => date('Y-m-d H:i:s', $fromTime)))->fetchAll(PDO::FETCH_COLUMN, 0);
+		} catch (PDOException $e) {
+			if($e->getCode()==='42S02')
+				return array();
+			throw $e;
+		}
 		$invalid = array();
 		foreach ($users as $key => &$user) {
 			try {
