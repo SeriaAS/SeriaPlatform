@@ -169,8 +169,6 @@
 					$td->set('style', $style);
 				}
 
-echo htmlspecialchars($td->__toString());
-
 				if($this->_rowClick)
 				{ // i must insert the rowClick code in $tr
 					$toInsert = $this->_rowClick;
@@ -333,8 +331,6 @@ echo htmlspecialchars($td->__toString());
 			}
 
 			$r .= $rows;
-
-var_dump($_depth);
 
 			if($_depth===0)
 			{
