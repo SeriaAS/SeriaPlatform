@@ -68,6 +68,7 @@
 
 			$passthru = true;
 
+			if (ESIFRONTEND_CLOSE_SESSION) session_write_close();
 			if (!$c) {
 				// if url exists, then we start building the page
 				$b = new SERIA_WebBrowser();
@@ -76,9 +77,11 @@
 				$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 				$sentHeaders["Accept-Language"] = $b->acceptLanguage;
 
+
 				if ($_SERVER['X_SERIA_HTTPS']) {
 					$b->customRequestHeaders = array('X-SERIA-HTTPS' => '1');
 				}
+
 				$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, $_POST, ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
 				$esiMimeTypes = array(
 					'text/xml' => 1,
