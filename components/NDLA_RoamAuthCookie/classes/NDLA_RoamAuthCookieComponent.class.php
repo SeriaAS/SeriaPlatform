@@ -35,12 +35,17 @@ class NDLA_RoamAuthCookieComponent extends SERIA_Component
 			if ($roamUrl)
 				$this->setRoamAuthCookie($roamUrl);
 		} else
-			$this->setRoamAuthCookie('');
+			$this->setRoamAuthCookie(null);
 	}
 	protected function setRoamAuthCookie($url)
 	{
-		if (!setCookie('NdlaRoamAuth', $url, time() + SERIA_SESSION_TTL * 100, '/', $this->domain, false, false))
-			throw new SERIA_Exception('Failed to set roam auth cookie!');
+		if ($url !== null) {
+			if (!setCookie('NdlaRoamAuth', $url, time() + SERIA_SESSION_TTL * 100, '/', $this->domain, false, false))
+				throw new SERIA_Exception('Failed to set roam auth cookie!');
+		} else {
+			if (!setCookie('NdlaRoamAuth', '', time() - 3600, '/', $this->domain, false, false))
+				throw new SERIA_Exception('Failed to set roam auth cookie!');
+		}
 		if (!setCookie('NdlaRoamAuthUpdate', sha1(mt_rand().mt_rand().mt_rand().mt_rand().time()), time() + SERIA_SESSION_TTL * 100, '/', $this->domain, false, false))
 			throw new SERIA_Exception('Failed to set roam auth update-cookie!');
 	}
