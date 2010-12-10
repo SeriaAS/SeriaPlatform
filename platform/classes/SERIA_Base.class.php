@@ -878,6 +878,9 @@ $trace");
 						if($c == 'SERIAL')
 						{ // hooks must end with _HOOK and contain a value identical to its token name in PHP
 						}
+						else if ($c == 'NAME')
+						{
+						}
 						else if(strtoupper($c) != $c)
 						{
 							throw new SERIA_Exception('Manifest class "'.$reflector->getName().'" defines the constant "'.$c.'" which does not follow guidelines (must be uppercase).');
