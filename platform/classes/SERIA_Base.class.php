@@ -529,7 +529,10 @@ $trace");
 					if (isset($_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED']))
 						unset($_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED']);
 					SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::NOTICE, _t('%USER%@%IP%: Logout.', array('USER' => $prevuser->get('username'), 'IP' => $_SERVER['REMOTE_ADDR'])), 'security');
-					SERIA_Hooks::dispatch(SERIA_Base::LOGGED_OUT, $prevuser);
+					/*
+					 * Handlers that have to do redirects must be heavy weighted (>=1000)
+					 */
+					SERIA_Hooks::dispatchOrdered(SERIA_Base::LOGGED_OUT, $prevuser);
 					return true;
 				}
 				else

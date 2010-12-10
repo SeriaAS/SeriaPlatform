@@ -43,7 +43,10 @@
 			SERIA_Hooks::listen('seria_maintain', array('SERIA_AsyncUserMetaSync', 'updateAllUsers'));
 			SERIA_Hooks::listen('loggedIn', array($this, 'successfulLogin'));
 			SERIA_Hooks::listen(SERIA_Base::LOGOUT_HOOK, array($this, 'beforeLogout'));
-			SERIA_Hooks::listen(SERIA_Base::AFTER_LOGOUT_HOOK, array($this, 'logout'));
+			/*
+			 * There is a chance for redirects, so attach a heavy hook.
+			 */
+			SERIA_Hooks::listen(SERIA_Base::AFTER_LOGOUT_HOOK, array($this, 'logout'), 1000);
 			SERIA_Hooks::listen(SERIA_GuiHooks::EMBED, array($this, 'guiEmbed'));
 		}
 		public function guiEmbed($gui)
