@@ -457,7 +457,16 @@
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
-				case "name" : 
+				case "safestring" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(100)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MAX_LENGTH, 100),
+							array(SERIA_Validator::LEGAL_CHARS, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'),
+						)),
+					);
+				case "name" :
 					return array(
 						"fieldtype" => "text",
 						"type" => "varchar(100)",
@@ -532,7 +541,7 @@
 				case "tags" :
 				case "text" :
 				case "note" :
-				case "message" : 
+				case "message" :
 					return array(
 						"fieldtype" => "textarea",
 						"type" => "text",
@@ -544,31 +553,31 @@
 						"type" => "text",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::MAX_LENGTH, 100000))),
 					);
-				case "address" : 
+				case "address" :
 					return array(
 						"fieldtype" => "textarea",
 						"type" => "text",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::MAX_LENGTH, 1000))),
 					);
-				case "email" : 
+				case "email" :
 					return array(
 						"fieldtype" => "email",
 						"type" => "varchar(100)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::EMAIL))),
 					);
-				case "phone" : 
+				case "phone" :
 					return array(
 						"fieldtype" => "text",
 						"type" => "varchar(20)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::PHONE))),
 					);
-				case "url" : 
+				case "url" :
 					return array(
 						"fieldtype" => "text",
 						"type" => "varchar(150)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::URL))),
 					);
-				case "rtmp_url" : 
+				case "rtmp_url" :
 					return array(
 						"fieldtype" => "text",
 						"type" => "varchar(150)",
@@ -587,12 +596,28 @@
 						"type" => "varchar(20)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::IP_ADDRESS))),
 					);
+				case "domain" :
+				case "hostname" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(100)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::HOSTNAME)
+						)),
+					);
 				case "boolean" :
 					return array(
 						"fieldtype" => "checkbox",
 						"type" => "tinyint(1)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::ONE_OF, array(0,1)))),
 					);
+				case "timezone" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(100)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::TIMEZONE),
+						));
 				case "duration" :
 					return array(
 						'fieldtype' => 'duration',
@@ -604,14 +629,6 @@
 					);
 				case "datetime" :
 					return SERIA_DateTimeMetaField::MetaField();
-				case "hostname" :
-					return array(
-						"fieldtype" => "text",
-						"type" => "varchar(100)",
-						"validator" => new SERIA_Validator(array(
-							array(SERIA_Validator::HOSTNAME)
-						)),
-					);
 				case "seria_metaobject" :
 					return array(
 						"fieldtype" => $specName,
@@ -619,7 +636,7 @@
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::META_OBJECT, $specName))),
 						"class" => 'SERIA_MetaObject',
 					);
-				case "enum" : 
+				case "enum" :
 					if(!isset($info[2]) || !isset($info[2]['values']) || !isset($info[2]['type']))
 						throw new SERIA_Exception("The 'enum' type requires 'values' and 'type' to be specified as an associative array in third parameter.");
 
@@ -666,7 +683,7 @@
 					}
 
 					throw new SERIA_Exception('Unknown field type "'.$specName.'".');
-			}	
+			}
 		}
 
 /**
