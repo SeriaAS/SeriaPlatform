@@ -1,0 +1,29 @@
+<?php
+	/**
+	* The SERIA_Meta-component abstracts database access and validation and provides metadata about
+	* data in tables to make it simpler for developers to reuse code.
+	*/
+
+	// Listen to autoloads so that we can update database model when class files change
+	SERIA_Hooks::listen('seria_autoload', array('SERIA_Meta','autoloadHook'));
+	// Listen to urls to handle /seria/[classname]/*-urls
+	SERIA_Hooks::listen('seria_router', array('SERIA_Meta','routerHook'));
+	// Add classpath early, so that we do not conflict with existing SERIA_Meta-classes
+	SERIA_Base::addEarlyClassPath(SERIA_ROOT.'/seria/components/SERIA_Meta/classes/*.class.php');
+
+
+
+
+/**
+
+/seria/SERIA_User	Find, edit, register, delete users
+/seria/SERIA_Video	Find, edit, register, delete videos
+/seria/SERIA_File	Find, edit, register, delete files
+/seria/SERIA_File/434234		View file metadata
+			/delete		Delete the file
+			/edit		Edit file metadata
+		 
+
+*/
+Templates		/seria/views
+			/seria/
