@@ -137,7 +137,7 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 			 */
 			$state = new SERIA_AuthenticationState();
 			$providerId = $this->getProviderId();
-			$url = new SERIA_Url(SERIA_HTTP_ROOT.'seria/components/SimplesamlAuthprovider/pages/loginFailed.php');
+			$url = new SERIA_Url(SERIA_HTTP_ROOT.'/seria/components/SimplesamlAuthprovider/pages/loginFailed.php');
 			$url->setParam('provider', $providerId);
 			$url = $state->stampUrl($url);
 			SERIA_Base::redirectTo($url->__toString());
