@@ -3,7 +3,17 @@
 	*	Provides Dictionary support for various sources of data to Seria Platform and components.
 	*
 	*	To add a dictionary, listen to the SERIA_DICTIONARY_GET_HOOK($dictionaryName), and return an object instance of SERIA_Dictionary
+	*	@author Frode Børli
+	*	@package platform
 	*/
+	class SERIA_SystemDictionariesManifest {
+		const SERIAL = 1;
+		const NAME = 'dictionaries';
+		public static $classPaths = array(
+			'classes/*.class.php',
+		);
+	}
+
         /**
         *       Return an instance of SERIA_Dictionary for the required name.
         *       @param string $dictionaryName

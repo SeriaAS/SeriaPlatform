@@ -14,16 +14,12 @@
 
 	function SERIA_Gui_init()
 	{
-		SERIA_Hooks::listen(SERIA_METATEMPLATE_EXTEND, 'SERIA_Gui_MetaTemplate_extend');
+		SERIA_Hooks::listen(SERIA_MvcManifest::TEMPLATE_EXTEND_HOOK, 'SERIA_Gui_MetaTemplate_extend');
 		SERIA_Hooks::listen(SERIA_PLATFORM_BOOT_COMPLETE_HOOK, 'SERIA_Gui_PlatformBootComplete');
 	}
 
 	function SERIA_Gui_MetaTemplate_extend($template)
 	{
-		$template->addVariable('frode', array(
-			'a' => 'A',
-			'b' => 'B',
-		));
 		$template->addTagCompiler('s:gui', array('SERIA_Gui', 'sGuiTag'));
 		$template->addTagCompiler('/s:gui', array('SERIA_Gui', 'sGuiTagClose'));
 		$template->addTagCompiler('s:script', array('SERIA_ScriptLoader', 'sScriptTag'));
