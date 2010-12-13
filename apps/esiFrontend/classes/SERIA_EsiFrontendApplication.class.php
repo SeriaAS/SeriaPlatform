@@ -77,7 +77,6 @@
 				$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 				$sentHeaders["Accept-Language"] = $b->acceptLanguage;
 
-
 				if ($_SERVER['X_SERIA_HTTPS']) {
 					$b->customRequestHeaders = array('X-SERIA-HTTPS' => '1');
 				}
@@ -167,13 +166,27 @@
 				} else {
 					$ident = "_";
 				}
-				$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache);
-				$this->putCache($cacheKey, $currentCache, $cache);
+
+                                $skipCache = false;
+                                if (defined('ESIFRONTEND_SKIP_CACHE')) {
+                                        $skipUrls = explode(',', ESIFRONTEND_SKIP_CACHE);
+                                        foreach ($skipUrls as $skipUrl) {
+                                                if (strpos($url, $skipUrl) !== false) {
+                                                        $skipCache = true;
+                                                        break;
+                                                }
+                                        }
+                                }
+
+                                if (!$skipCache) {
+                                        $currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache);
+                                        $this->putCache($cacheKey, $currentCache, $cache);
+                                }
+
 			} else {
 
 				foreach ($currentHeaders as $key => $value) {
 					if (strtolower($key) == 'content-type' && strpos($value, 'text/html') !== false) $passthru = false;
-//strpos(strtolower($b->responseHeaders["Content-Type"]), "text/html") === false) {
 					if (is_array($value)) {
 						foreach ($value as $subKey => $subValue) {
 							header($key.": ".$subValue, false);
@@ -184,7 +197,7 @@
 				}
 
 			}
-//die($passthru."-");
+
 			if ($passthru) {
 				SERIA_Template::disable();
 				die($c);
@@ -215,3 +228,4 @@
 			$gui->addMenuItem('esiFrontend/statistics', _t('Statistics'), _t('Various statistics for your backend/frontend-configuration.'), SERIA_HTTP_ROOT.'/seria/apps/esiFrontend/statistics/');
 		}
 	}
+
