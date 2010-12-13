@@ -38,6 +38,7 @@ if (isset($_GET['interactive']) && $_GET['interactive'] == 'no') {
 		 */
 		$state = new SERIA_AuthenticationState();
 		$state->set('continue', SERIA_Url::current()->__toString());
+		$state->set('abort', SERIA_Url::current()->setParam('failure', 'error')->__toString());
 
 		SERIA_Base::redirectTo($action->__toString());
 		die();
@@ -49,11 +50,22 @@ if (isset($_GET['interactive']) && $_GET['interactive'] == 'no') {
  */
 
 $code = SERIA_ExternalAuthenticationAgent::getCode($_GET['token']);
-SERIA_ExternalAuthenticationAgent::setUid($_GET['token'], SERIA_Base::user()->get('id'));
-if (SERIA_Base::hasSystemAccess())
-	SERIA_ExternalAuthenticationAgent::setStatus($_GET['token'], SERIA_ExternalAuthenticationAgent::STATUS_OK);
-else
-	SERIA_ExternalAuthenticationAgent::setStatus($_GET['token'], SERIA_ExternalAuthenticationAgent::STATUS_GUEST);
+try {
+	SERIA_ExternalAuthenticationAgent::setUid($_GET['token'], SERIA_Base::user()->get('id'));
+	if (SERIA_Base::hasSystemAccess())
+		SERIA_ExternalAuthenticationAgent::setStatus($_GET['token'], SERIA_ExternalAuthenticationAgent::STATUS_OK);
+	else
+		SERIA_ExternalAuthenticationAgent::setStatus($_GET['token'], SERIA_ExternalAuthenticationAgent::STATUS_GUEST);
+} catch (SERIA_Exception $e) {
+	if (SERIA_AuthenticationState::available()) {
+		$state = new SERIA_AuthenticationState();
+		$state->terminate('abort');
+	} else if (isset($_GET['from'])) {
+		$return = new SERIA_Url($_GET['from']);
+		SERIA_Base::redirectTo($return->setParam('failure', 'error')->__toString());
+	}
+	throw $e;
+}
 
 $url = $_GET['from'];
 $url = str_replace(array("\n", "\r", "\0"), array('', '', ''), $url);
