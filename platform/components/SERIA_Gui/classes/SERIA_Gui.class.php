@@ -60,7 +60,9 @@
 		{
 			$this->_standalone = $standalone;
 			$this->_title = $title;
-			if(!$this->_standalone) SERIA_Hooks::dispatch('SERIA_GUI_EMBED_HOOK', $this);
+			if(!$this->_standalone) {
+				SERIA_Hooks::dispatch('SERIA_GUI_EMBED_HOOK', $this);
+			}
 		}
 
 		static function addNotice($html)
