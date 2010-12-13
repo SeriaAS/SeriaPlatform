@@ -282,7 +282,8 @@ $platformVars = array(
 	'HTTP_CACHED_ROOT' => SERIA_CACHED_HTTP_ROOT,
 	'SERVER_TIMESTAMP' => time(),
 	'SESSION_NAME' => session_name(),
-	'SESSION_ID' => session_id()
+	'SESSION_ID' => session_id(),
+	'HTTP_REFERER' => (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '')
 );
 if (!$seria_options['skip_authentication'] && !$seria_options['skip_session']) {
 	$platformVars['IS_LOGGED_IN'] = (SERIA_Base::isLoggedIn()?true:false);
