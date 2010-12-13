@@ -532,7 +532,7 @@ $trace");
 					/*
 					 * Handlers that have to do redirects must be heavy weighted (>=1000)
 					 */
-					SERIA_Hooks::dispatchOrdered(SERIA_Base::LOGGED_OUT, $prevuser);
+					SERIA_Hooks::dispatch(SERIA_Base::LOGGED_OUT, $prevuser);
 					return true;
 				}
 				else
