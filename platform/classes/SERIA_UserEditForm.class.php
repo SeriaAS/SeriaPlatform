@@ -23,9 +23,11 @@
 
 		public function _handle($data)
 		{
+			$recvfields = array_keys($data);
 			foreach(SERIA_UserEditForm::getFormSpec() as $fieldName => $spec)
 			{
-				if(isset($data[$fieldName]))
+				/* This works for boolean fields that are for backw compat null/true */
+				if(in_array($fieldName, $recvfields))
 					$this->object->set($fieldName, $data[$fieldName]);
 			}
 			$this->object->save();
