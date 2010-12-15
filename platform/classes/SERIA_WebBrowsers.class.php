@@ -79,6 +79,12 @@ class SERIA_WebBrowsers
 						if ($record['socket'] == $socket) {
 							$chunk = $record['record']['webbrowser']->fetch(4096, true);
 							if ($chunk !== false) {
+								$restarted = $record['record']['webbrowser']->getSocket();
+								if ($restarted !== null && $restarted != $socket) {
+									SERIA_Base::debug('Socket '.$socket.' has been restarted as '.$restarted.' (prob. redirect)');
+									$record['socket'] = $restarted;
+									$remainingSockets[$remainingKey] = $restarted;
+								}
 								SERIA_Base::debug('Read '.strlen($chunk).' bytes from '.$socket);
 								$record['record']['data'] .= $chunk;
 							} else {

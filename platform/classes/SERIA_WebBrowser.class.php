@@ -266,7 +266,7 @@
 			$this->nextRequest['postFiles'][$name] = $file;
 		}
 
-		protected function _handleHeaders()
+		protected function _handleHeaders($dontRestartAfterRedirect)
 		{
 			foreach ($this->responseHeaders as $header => $values) {
 				if (!is_array($values))
@@ -389,8 +389,12 @@
 				case 302:
 				case 303:
 				case 307:
-					if ($this->followRedirect())
-						$this->fetchHeaders();
+					if ($this->followRedirect()) {
+						if (!$dontRestartAfterRedirect)
+							$this->fetchHeaders();
+						else
+							$this->send();
+					}
 					break;
 			}
 		}
@@ -603,7 +607,7 @@
 			}
 			return $headers;
 		}
-		public function fetchHeaders()
+		public function fetchHeaders($dontRestartAfterRedirect=false)
 		{
 			if ($this->responseHeaders !== null)
 				return $this->responseHeaders;
@@ -631,7 +635,7 @@
 			 * HTTP Rresponse headers
 			 */
 			$this->responseHeaders = $this->_fetchHeaders();
-			$this->_handleHeaders();
+			$this->_handleHeaders($dontRestartAfterRedirect);
 			return $this->responseHeaders;
 		}
 
@@ -688,7 +692,9 @@
 		{
 			if ($bytes <= 0)
 				throw new SERIA_Exception('Please read something at least (bytes<=0).');
-			$headers = $this->fetchHeaders();
+			$headers = $this->fetchHeaders($dontWaitForMore);
+			if ($dontWaitForMore && $headers === null && !$this->buffer_eof)
+				return '';
 
 			if ($this->httpTransferCoding === null) {
 				if (isset($headers['Transfer-Encoding']))
