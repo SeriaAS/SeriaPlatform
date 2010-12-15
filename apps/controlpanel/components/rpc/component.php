@@ -1,5 +1,5 @@
 <?php
-	SERIA_Hooks::listen('SERIA_GUI_EMBED_HOOK', 'seria_controlpanel_rpc_embed');
+	SERIA_Hooks::listen(SERIA_GuiManifest::EMBED_HOOK, 'seria_controlpanel_rpc_embed');
 	function seria_controlpanel_rpc_embed($gui) {
 		$gui->addMenuItem('controlpanel/settings/rpc', _t('RPC'), _t('Edit RPC settings for local and remote services'), SERIA_HTTP_ROOT.'/seria/apps/controlpanel/components/rpc/', SERIA_HTTP_ROOT."/seria/apps/controlpanel/icon.png");
 		$gui->addMenuItem('controlpanel/settings/rpc/services', _t('RPC services'), _t('Edit RPC settings for remote services'), SERIA_HTTP_ROOT.'/seria/apps/controlpanel/components/rpc/services.php');
