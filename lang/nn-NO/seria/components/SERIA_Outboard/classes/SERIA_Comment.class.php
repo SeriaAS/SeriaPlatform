@@ -9,4 +9,6 @@
   '31b874901192e82435bdba94774330b6' => 'Melding',
   '888868bfb81e19021da121c5d6a12707' => 'Godkjent',
   'a13f8433f8cb5dfe85c2b38f9f5a1faa' => 'Avvist',
+  '7f41f617c022295526dee1ec242a2ae7' => 'Varsla om av brukar',
+  'edd815756046e666546ec87f9374aba7' => 'Ingen varsling',
 )); ?>

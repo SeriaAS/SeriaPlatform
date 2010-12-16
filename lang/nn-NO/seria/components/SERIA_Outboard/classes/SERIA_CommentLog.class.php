@@ -6,4 +6,6 @@
   '33c873ee2e90169c84148c10b6401dea' => 'Opphavsrett',
   '7c864b6df0dd66d88aaabc0ec4247ead' => 'Annan grunn',
   'dd172d8d3db566c99e29c1f23386321c' => 'Kommentar',
+  'a920c481c309f3dfde86bbe8dc8b365d' => 'Handling',
+  '6fc217d49a21dfffce4db65a9c74f16a' => 'Varsle om denne kommentaren',
 )); ?>
