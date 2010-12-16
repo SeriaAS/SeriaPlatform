@@ -3,7 +3,7 @@ class SERIA_GuiVisualize {
 
 	public static function barChart($keyValues, $keyLabels)
 	{
-		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 
 		// analyze
 		$minValue = current($keyValues);
@@ -35,7 +35,7 @@ class SERIA_GuiVisualize {
 	*/
 	public static function toolbar(array $buttons)
 	{
-		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 		return "<div class='SERIA_GuiVisualize toolbar'><ul><li>".implode('</li><li>', $buttons)."</li></ul></div>";
 	}
 
@@ -44,7 +44,7 @@ class SERIA_GuiVisualize {
 	*/
 	public static function integer($caption, $count)
 	{
-		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 		return "<div class='SERIA_GuiVisualize integer'><div class='value'>".number_format($count, 0, ",", " ")."</div><div class='caption'>".$caption."</div><div class='clear'></div></div>";
 	}
 
@@ -58,7 +58,7 @@ class SERIA_GuiVisualize {
 	*/
 	public static function shortcuts($title, $shortcuts)
 	{
-		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 		$res = "<div class='SERIA_GuiVisualize shortcuts'><h2><span class='ui-icon ui-icon-star' style='float:left;'></span>".htmlspecialchars($title)."</h2><ul>";
 		foreach($shortcuts as $caption => $url)
 			$res .= "<li><a href='".htmlspecialchars($url)."'>".htmlspecialchars($caption)."</a></li>";
@@ -71,7 +71,7 @@ class SERIA_GuiVisualize {
 	*/
 	public static function box($title, $text)
 	{
-		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 		$res = "<div class='SERIA_GuiVisualize box'><h2><span class='ui-icon ui-icon-bullet' style='float:left;'></span>".htmlspecialchars($title)."</h2><div class='contents'>$text</div></div>";
 		return $res;
 	}
