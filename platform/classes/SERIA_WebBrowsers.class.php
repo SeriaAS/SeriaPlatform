@@ -77,7 +77,14 @@ class SERIA_WebBrowsers
 				if (array_search($socket, $read) !== false || array_search($socket, $exceptions) !== false) {
 					foreach ($sockets['assocSockets'] as &$record) {
 						if ($record['socket'] == $socket) {
-							$chunk = $record['record']['webbrowser']->fetch(4096, true);
+							try {
+								$chunk = $record['record']['webbrowser']->fetch(4096, true);
+							} catch (Exception $e) {
+								$record['record']['error'] = $e->getMessage();
+								$record['record']['exception'] = $e;
+								$record['record']['data'] = false;
+								$chunk = false;
+							}
 							if ($chunk !== false) {
 								$restarted = $record['record']['webbrowser']->getSocket();
 								if ($restarted !== null && $restarted != $socket) {
@@ -89,7 +96,8 @@ class SERIA_WebBrowsers
 								$record['record']['data'] .= $chunk;
 							} else {
 								SERIA_Base::debug('Terminated read from '.$socket);
-								$record['record']['completedAt'] = microtime(true);
+								if (!isset($record['record']['error']) || !$record['record']['error'])
+									$record['record']['completedAt'] = microtime(true);
 								if ($cacheControl && $record['record']['webbrowser']->method == 'GET') {
 									$hPragma = $record['record']['webbrowser']->responseHeaders['Pragma'];
 									$hCacheControl = $record['record']['webbrowser']->responseHeaders['Cache-Control'];
@@ -147,6 +155,12 @@ class SERIA_WebBrowsers
 					'webbrowser' => &$record['record']['webbrowser'],
 					'data' => &$record['record']['data'],
 					'completedAt' => $record['record']['completedAt']
+				);
+			else if (isset($record['record']['error']))
+				$returning[] = array(
+					'webbrowser' => &$record['record']['webbrowser'],
+					'error' => $record['record']['error'], /* There could be an exception also, but not passed back from here */
+					'data' => false
 				);
 			else
 				$returning[] = array(
