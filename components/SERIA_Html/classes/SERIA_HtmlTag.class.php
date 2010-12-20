@@ -95,7 +95,11 @@
 						$propertyValue = $matches[1];
 						$html = ltrim(substr($html, strlen($propertyValue)));
 					}
-					$this->_properties[$propertyName] = $propertyValue;
+					/*
+					 * Uses UTF-8 as output-charset assuming that the platform always uses UTF-8 internally,
+					 * which I believe is the case right now (now is relative to the commit-date :).
+					 */
+					$this->_properties[$propertyName] = html_entity_decode($propertyValue, ENT_QUOTES, 'UTF-8');
 				}
 				else
 				{
