@@ -71,7 +71,7 @@
 			}
 			else
 			{
-				$query->where($this->_parentIdColumn.'=?', array($parentId));
+				$query->where($this->_parentIdColumn.'= :_parentId', array('_parentId' => $parentId));
 				if($query->count()===0) return NULL;
 			}
 
@@ -79,10 +79,18 @@
 			{ // create the template for the developer
 				$method = 'template';
 				$templateOrCallback = '<tr>'; // template for each row
-				foreach($fieldSpec as $fieldName => $spec)
+
+				$find = array();
+				$get = array();
+
+				foreach ($columnSpec as $fieldName) {
 					$templateOrCallback .= '<td>%'.$fieldName.'%</td>';
+					$find[] = '%'.$fieldName.'%';
+					$get[] = $fieldName;
+				}
 				$templateOrCallback .= '</tr>';
-				$find = array_keys($fieldSpec);
+
+				$find[] = '%'.$metaSpec['primaryKey'].'%';
 			}
 			else if(is_callable($templateOrCallback))
 			{ // use the developer provided callback
