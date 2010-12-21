@@ -5,6 +5,8 @@
 		protected $_password;
 		
 		public function __construct($url, $username = '', $password = '') {
+			$url = rtrim($url, '/');
+			
 			$this->_url = $url;
 			$this->_username = $username;
 			$this->_password = $password;
