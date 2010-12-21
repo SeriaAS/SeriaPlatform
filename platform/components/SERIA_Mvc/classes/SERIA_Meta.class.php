@@ -754,6 +754,10 @@
 						case "isEnabled" :
 							$newRow[$name] = 1;
 							break;
+						case 'parent':
+						case 'parent required':
+							$newRow[$name] = $row[$name];
+							break;
 					}
 				}
 				else if(is_object($row[$name]))
