@@ -1,10 +1,28 @@
 <?php
 	class StreamServer extends ActiveResource {
-		protected $url = 'http://streamserverinterface.seria.net';
+		protected $url = '';
 		protected $username;
 		protected $password;
 		protected $singular_name = 'wowza_server';
 		protected $plural_name = 'wowza_servers';
+		
+		private static $_url;
+		private static $_username;
+		private static $_password;
+		
+		public function __construct() {
+			$this->url = self::$_url;
+			$this->username = self::$_username;
+			$this->password = self::$_password;
+		}
+		
+		public static function setUrl($url) {
+			self::$_url = $url;
+		}
+		public static function setAuth($username, $password) {
+			self::$_username = $username;
+			self::$_password = $password;
+		}
 		
 		public static function create() {
 			$object = new StreamServer();

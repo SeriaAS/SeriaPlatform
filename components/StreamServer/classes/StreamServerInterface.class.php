@@ -1,5 +1,13 @@
 <?php
 	class StreamServerInterface {
+		public function __construct($url, $username = '', $password = '') {
+			StreamServer::setUrl($url);
+			StreamServer::setAuth($username, $password);
+			
+			StreamServerStreamName::setUrl($url);
+			StreamServerStreamName::setAuth($username, $password);
+		}
+		
 		/**
 		 * 
 		 * Create a new stream server name on server specified by server key
@@ -7,7 +15,7 @@
 		 * @param string $serverKey Server key
 		 * @param string $prefix Stream prefix
 		 */
-		public static function createStreamName($serverKey, $prefix) {
+		public function createStreamName($serverKey, $prefix) {
 			$streamServers = StreamServer::all();
 			foreach ($streamServers as $streamServer) {
 				if ($streamServer->key == $serverKey) {
@@ -35,7 +43,7 @@
 		 * @param string $serverKey
 		 * @param string $name
 		 */
-		public static function deleteStreamName($serverKey, $name) {
+		public function deleteStreamName($serverKey, $name) {
 			$streamServers = StreamServer::all();
 			$streamNames = StreamServerStreamName::all();
 			foreach ($streamServers as $streamServer) {
