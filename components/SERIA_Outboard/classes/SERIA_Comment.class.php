@@ -35,7 +35,7 @@
 
 					// URL for the user
 					'userUrl' => array('url', _t('Website')),
-					'userEMail' => array('email', _t('E-mail')),
+					'userEMail' => array('email required', _t('E-mail')),
 
 					// The comment title
 					'title' => array('title required', _t('Title')),
