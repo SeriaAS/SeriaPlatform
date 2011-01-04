@@ -66,7 +66,7 @@
 				$html = substr($html, 1);
 
 			// get the tag name
-			preg_match('|([a-zA-Z0-9\:]*)|', $html, $matches);
+			preg_match('|([a-zA-Z][a-zA-Z0-9_\:\-]*)|', $html, $matches);
 			$this->tagName = $matches[1];
 			$html = ltrim(substr($html, strlen($this->tagName)));
 
@@ -101,9 +101,61 @@
 					 */
 					$this->_properties[$propertyName] = html_entity_decode($propertyValue, ENT_QUOTES, 'UTF-8');
 				}
-				else
+				else if ($propertyName)
 				{
 					$this->_properties[$propertyName] = $propertyName;
+				}
+				else
+				{
+					/* Invalid property name / character: trying to skip this */
+					$i = 0;
+					$len = strlen($html);
+					while ($i < $len) {
+						$charAt = substr($html, $i, 1);
+						if (trim($charAt) == '' || $charAt == "\n" || $charAt == "\r" || $charAt == "\t" || $charAt == '/' || $charAt == '>')
+							break;
+						$i++;
+					}
+					if ($i == 0 && $len > 0) {
+						if ($charAt == '>') {
+							$html = substr($html, 1);
+							/*
+							 * There is a parsing error here, and it looks like the
+							 * first parsing missed the tag-end-mark. Check if we
+							 * should unconsume some bytes.
+							 */
+							if (strlen($html)) {
+								/* Unconsume */
+								self::$_bytesConsumed -= strlen($html);
+								$html = '';
+							}
+								
+						}
+						else if ($charAt == '/')
+						{
+							/*
+							 * There is a parsing error here, and it looks like the
+							 * first parsing could have missed the tag-end-mark. Check if we
+							 * should unconsume some bytes.
+							 */
+							$html = ltrim(substr($html, 1));
+							if ($html) {
+								$nextChar = substr($html, 0, 1);
+								if ($nextChar == '>') {
+									$html = substr($html, 1);
+									/* Unconsume */
+									if (strlen($html))
+										self::$_bytesConsumed -= strlen($html);
+									$html = '/'; /* Trigger the self-closed clause artificially */
+								}
+							} else
+								$html = '/'; /* Let the self-closed clause take this */
+						}
+						else
+							$html = ltrim(substr($html, 1)); /* Skip one bad character */
+					}
+					else
+						$html = ltrim(substr($html, $i));
 				}
 			}
 			$this->_isSelfClosed = $html=="/";
