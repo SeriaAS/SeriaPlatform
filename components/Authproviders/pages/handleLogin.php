@@ -11,6 +11,14 @@ $state = new SERIA_AuthenticationState();
 if (SERIA_Base::user() !== false)
 	SERIA_Base::user(NULL);
 
+/*
+ * If we have lost the state of this login.
+ */
+if (!$state->exists('guestLogin')) {
+	$state->terminate('abort');
+	die();
+}
+
 if (!$state->get('guestLogin'))
 	$loginHandler = 'handleLogin';
 else
