@@ -23,7 +23,8 @@
 
 			if($_depth===0)
 			{
-				$r = '<table class="grid" style="width: 100%"><thead><tr>';
+				$tableId = 'SERIA_MetaTreeGrid_'.mt_rand().mt_rand().mt_rand();
+				$r = '<table id="'.htmlspecialchars($tableId).'" class="grid SERIA_MetaTreeGrid" style="width: 100%"><thead><tr>';
 
 				$columnFields = array();
 				$columnWidths = array();
@@ -131,8 +132,7 @@
 //			$expander = "<span class='texticon' onclick='document.getElementById(\"childGrid%id%\").style.display=\"block\";this.innerHTML=\"-\";event.cancelBubble=true;event.stopPropagation();alert(123);return false;'>+</span>";
 //			$expander = "<span class='texticon' onclick='document.getElementById(\"childrenGrid%id%\").style.display=\"block\"; event.cancelBubble=true;event.stopPropagation();alert(123);return false;'>+</span>";
 
-			$expander = '<span style="position:absolute"><span class="texticon" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;" onclick="if(this._son) jQuery(\'#childrenGrid%id%\').fadeOut(400); else jQuery(\'#childrenGrid%id%\').fadeIn(400); this._son = !this._son; jQuery(this).html(this._son?\'-\':\'+\'); event.cancelBubble=true;event.stopPropagation();">+</span></span>';
-			$collapser = '<span style="position:absolute"><span class="texticon" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;" onclick="%COLLAPSERCLICK%;event.cancelBubble=true;event.stopPropagation();">-</span></span>';
+			$expander = '<span style="position:absolute"><span class="texticon SERIA_MetaTreeGrid_expander" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;">-</span></span>';
 			$marker = '<span style="position:absolute"><span class="texticon" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;" onclick="event.cancelBubble=true;event.stopPropagation();">&nbsp;</span></span>';
 
 			// Generate the rows
@@ -166,6 +166,18 @@
 				$td = new SERIA_HtmlTag($rest, true);
 				$tdConsumed = SERIA_HtmlTag::getBytesConsumed();
 				$rest = substr($rest, $tdConsumed);
+
+				/*
+				 * Set classes to guide the javascript..
+				 */
+				$classes = 'SERIA_MetaTreeGrid_row_'.$object->MetaBackdoor('get_key').' SERIA_MetaTreeGrid_open';
+				if ($parentId !== null)
+					$classes .= ' SERIA_MetaTreeGrid_parent_'.$parentId;
+				/* commit */
+				if (!$tr->get('class'))
+					$tr->set('class', $classes);
+				else
+					$tr->set('class', $tr->get('class').' '.$classes);
 
 				$style = 'padding-left:'.(20+($_depth*10)).'px';
 				if($existing = $td->get('style'))
@@ -202,7 +214,7 @@
 				{
 					$row = $tr->__toString().$td->__toString().str_replace('%id%',$object->MetaBackdoor('get_key'),$expander).$rest;
 					$rows .= $row;
-					$rows .= '</tbody><tbody id="childrenGrid'.$object->MetaBackdoor('get_key').'" style="border-top: 2px solid #999; border-bottom: 1px solid #999;display: none">'.$childrenGrid.'</tbody><tbody>';
+					$rows .= $childrenGrid;
 				}
 				else
 				{
@@ -344,6 +356,133 @@
 			{
 				$r .= "</tbody></table>";
 
+				SERIA_ScriptLoader::loadScript('jQuery');
+				ob_start();
+				?>
+					<script type='text/javascript'>
+						<!--
+							(function () {
+								$('.SERIA_MetaTreeGrid_expander').each(function () {
+									var expander = this;
+									var tr = this.parentNode;
+									while (tr && (tr.nodeType != 1 || tr.nodeName.toLowerCase() != 'tr'))
+										tr = tr.parentNode;
+									var table = tr.parentNode;
+									while (table && (table.nodeType != 1 || table.nodeName.toLowerCase() != 'table'))
+										table = table.parentNode;
+									if (!tr || !table || !table.id)
+										return;
+									if (tr._metatreegrid)
+										return;
+									tr._visible = true;
+									tr._expanded = true;
+									tr._metatreegrid = true;
+									var classes = tr.getAttribute('class');
+									if (!classes)
+										classes = tr.getAttribute('className'); /* IE! */
+									if (!classes)
+										return;
+									classes = classes.replace(/\s/g, "\n");
+									while (classes.search(/\n\n/) >= 0)
+										classes = classes.replace(/\n\n/g, "\n");
+									classes = classes.split("\n");
+									var rowId = false;
+									for (classIndex in classes) {
+										className = classes[classIndex];
+										if (className.search(/SERIA_MetaTreeGrid_row_/) == 0)
+											rowId = className.replace(/SERIA_MetaTreeGrid_row_/, "");
+									}
+									if (!rowId)
+										return;
+
+									tr.setChildNodeVisibility = function(visibility) {
+										var pattern = '#'+table.id+' .SERIA_MetaTreeGrid_parent_'+rowId;
+										$(pattern).each(function () {
+											setNodeVisibility(this, visibility);
+										});
+									}
+									var setNodeVisibility = function(node, visibility) {
+										node._visibility = visibility;
+										if (visibility) {
+											if (!$(node).hasClass('SERIA_MetaTreeGrid_open'))
+												$(node).addClass('SERIA_MetaTreeGrid_open');
+											if ($(node).hasClass('SERIA_MetaTreeGrid_closed'))
+												$(node).removeClass('SERIA_MetaTreeGrid_closed');
+										} else {
+											if ($(node).hasClass('SERIA_MetaTreeGrid_open'))
+												$(node).removeClass('SERIA_MetaTreeGrid_open');
+											if (!$(node).hasClass('SERIA_MetaTreeGrid_closed'))
+												$(node).addClass('SERIA_MetaTreeGrid_closed');
+										} 
+										if (node.setChildNodeVisibility && node._expanded)
+											node.setChildNodeVisibility(visibility);
+									}
+									var oddRecalc = function () {
+										var odd = true;
+										$('#'+table.id+' > tbody > tr').each(function () {
+											if ($(this).hasClass('SERIA_MetaTreeGrid_open')) {
+												if (odd) {
+													if (!$(this).hasClass('odd'))
+														$(this).addClass('odd');
+													if ($(this).hasClass('even'))
+														$(this).removeClass('even');
+												} else {
+													if ($(this).hasClass('odd'))
+														$(this).removeClass('odd');
+													if (!$(this).hasClass('even'))
+														$(this).addClass('even');
+												}
+												odd = !odd;
+											}
+										});
+									}
+									var prepareToggleExpand = function (node, expander, rowId) {
+										node._expanded = !node._expanded;
+										var pattern = '#'+table.id+' .SERIA_MetaTreeGrid_parent_'+rowId;
+										$(pattern).each(function () {
+											setNodeVisibility(this, node._expanded);
+										});
+										if (node._expanded)
+											expander.innerHTML = '-';
+										else
+											expander.innerHTML = '+';
+									}
+									var toggleExpand = function (node, expander, rowId) {
+										prepareToggleExpand(node, expander, rowId);
+										if (node._expanded)
+											$('#'+table.id+' tr.SERIA_MetaTreeGrid_open').fadeIn(400);
+										else
+											$('#'+table.id+' tr.SERIA_MetaTreeGrid_closed').fadeOut(400);
+										oddRecalc();
+									}
+									var instantToggleExpand = function (node, expander, rowId) {
+										prepareToggleExpand(node, expander, rowId);
+										if (node._expanded)
+											$('#'+table.id+' tr.SERIA_MetaTreeGrid_open').show();
+										else
+											$('#'+table.id+' tr.SERIA_MetaTreeGrid_closed').hide();
+									}
+									instantToggleExpand(tr, expander, rowId); /* Collapse intially */
+
+									this.onclick = function (e) {
+										if (!e)
+											var e = window.event;
+										e.cancelBubble = true;
+										if (e.stopPropagation)
+											e.stopPropagation();
+										toggleExpand(tr, expander, rowId);
+										return false;
+									}
+
+									$(document).ready(function () {
+										oddRecalc();
+									});
+								});
+							})();
+						-->
+					</script>
+				<?php
+				$r .= ob_get_clean();
 				if(sizeof($this->_buttons))
 				{
 					$buttons = array();
