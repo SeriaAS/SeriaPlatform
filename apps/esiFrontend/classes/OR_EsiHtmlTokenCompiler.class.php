@@ -4,19 +4,30 @@
 		function includeTag($params) {
 			static $counter = 0;
 
+			$cns = 'OR_EsiHtmlTokenCompiler';
+			$cache = new SERIA_Cache($cns);
+
 			if (!$params["src"]) throw new SERIA_Exception("src attribute is required in ESI include tag");
 			if (strpos($params["src"], "http://") !== 0 && strpos($params["src"], "https://") !== 0) throw new SERIA_Exception("Security alert in ESI include tag");
 
 			OR_EsiHtmlTokenCompiler::parseParams($params);
 
+			$cacheKey = 'ESI-include->'.$params['src'];
+			if (($code = $cache->get($cacheKey))) {
+				return 'echo '.var_export($code, true).";\n";
+			}
+
 			$code = '$browsers = new SERIA_WebBrowsers();'."\n";
 			$code .= '$browsers->setTimeout(5);'."\n";
+			$code .= '$esiDataCache = new SERIA_Cache('.var_export($cns, true).');';
 			$this->addPreCode("include", $code);
 
 			$code = '$datas = $browsers->fetchAll(true);'."\n";
 			$code .= '$c = 0;'."\n";
 			$code .= 'foreach ($datas as $data) {'."\n";
-			$code .= '	if (!$data["data"]) $data["data"] = "Could not fetch data";'."\n";
+			$code .= '	if (!$data["data"])'."\n";
+			$code .= '		$data["data"] = "Could not fetch data";'."\n";
+			$code .= '	$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], 300);'."\n";
 			$code .= '	$obReplace["%WEB_BROWSER_".$c."%"] = $data["data"];'."\n";
 
 
