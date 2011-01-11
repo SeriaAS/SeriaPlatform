@@ -23,7 +23,8 @@
 
 			if($_depth===0)
 			{
-				$tableId = 'SERIA_MetaTreeGrid_'.mt_rand().mt_rand().mt_rand();
+				static $metaTreeGrid_count = 0;
+				$tableId = 'SERIA_MetaTreeGrid_'.sha1(SERIA_Url::current()->__toString().($metaTreeGrid_count++));
 				$r = '<table id="'.htmlspecialchars($tableId).'" class="grid SERIA_MetaTreeGrid" style="width: 100%"><thead><tr>';
 
 				$columnFields = array();
@@ -362,6 +363,7 @@
 					<script type='text/javascript'>
 						<!--
 							(function () {
+								var initiallyOpen = new Array();
 								$('.SERIA_MetaTreeGrid_expander').each(function () {
 									var expander = this;
 									var tr = this.parentNode;
@@ -394,6 +396,7 @@
 									}
 									if (!rowId)
 										return;
+									tr._rowId = rowId;
 
 									tr.setChildNodeVisibility = function(visibility) {
 										var pattern = '#'+table.id+' .SERIA_MetaTreeGrid_parent_'+rowId;
@@ -436,11 +439,100 @@
 											}
 										});
 									}
+									var updateExpanderCookie = function()
+									{
+										var value = '';
+										var expiry = new Date();
+										expiry.setTime(expiry.getTime()+36000000); /* 10hrs */
+										expiry = expiry.toGMTString();
+
+										$('#'+table.id+' .SERIA_MetaTreeGrid_expander').each(function () {
+											var row = this.parentNode;
+											while (row && (row.nodeType != 1 || row.nodeName.toLowerCase() != 'tr'))
+												row = row.parentNode;
+											if (row._expanded) {
+												if (value != '')
+													value += ','+row._rowId;
+												else
+													value = row._rowId;  
+											}
+										});
+										var oldValues = readCookie('SERIA_MetaTreeGrid');
+										var keepValues = '';
+										if (oldValues) {
+											oldValues = oldValues.split('|');
+											for (oldValueIndex in oldValues) {
+												oldValue = oldValues[oldValueIndex];
+												if (!oldValue)
+													continue;
+												if (oldValue.indexOf(table.id+'=') != 0)
+													keepValues += oldValue;
+											}
+										}
+										value = table.id+'='+value;
+										if (keepValues)
+											value += '|'+keepValues;
+										if (value.length > 3000)
+											value = value.substring(0, 3000);
+										var cookieDef = 'SERIA_MetaTreeGrid='+value+'; expires='+expiry+'; path=/';
+										document.cookie = cookieDef;
+									}
+									var readCookie = function (name) {
+										var valuePairs = document.cookie.split(';');
+										for (var i in valuePairs) {
+											var valuePair = valuePairs[i];
+											/* ltrim */
+											valuePair = valuePair.replace(/^\s+/, '');
+											if (valuePair.indexOf(name+'=') == 0)
+												return valuePair.replace(name+'=', '');
+										}
+										return false;
+									}
+									var rememberedExpanded = function (rowId) {
+										var value = readCookie('SERIA_MetaTreeGrid');
+										if (value) {
+											var grids = value.split('|');
+											for (gridIndex in grids) {
+												grid = grids[gridIndex];
+												if (grid.indexOf(table.id+'=') == 0) {
+													value = grid.replace(table.id+'=', '');
+													var memory = value.split(',');
+													for (var j in memory) {
+														if (memory[j] == rowId)
+															return true;
+													}
+													return false;
+												}
+											}
+										}
+										return false;
+									}
 									var prepareToggleExpand = function (node, expander, rowId) {
+										/* Check whether the parent node is expanded */
+										var classes = tr.getAttribute('class');
+										if (!classes)
+											classes = tr.getAttribute('className'); /* IE! */
+										if (!classes)
+											return;
+										classes = classes.replace(/\s/g, "\n");
+										while (classes.search(/\n\n/) >= 0)
+											classes = classes.replace(/\n\n/g, "\n");
+										classes = classes.split("\n");
+										var parentId = false;
+										for (classIndex in classes) {
+											className = classes[classIndex];
+											if (className.search(/SERIA_MetaTreeGrid_parent_/) == 0)
+												parentId = className.replace(/SERIA_MetaTreeGrid_parent_/, "");
+										}
+										var parentVisible = true;
+										$('#'+table.id+' .SERIA_MetaTreeGrid_row_'+parentId).first().each(function () {
+											parentVisible = $(this).hasClass('SERIA_MetaTreeGrid_open') && this._expanded;
+										});
+
 										node._expanded = !node._expanded;
 										var pattern = '#'+table.id+' .SERIA_MetaTreeGrid_parent_'+rowId;
 										$(pattern).each(function () {
-											setNodeVisibility(this, node._expanded);
+											setNodeVisibility(this, node._expanded && parentVisible);
 										});
 										if (node._expanded)
 											expander.innerHTML = '-';
@@ -454,6 +546,7 @@
 										else
 											$('#'+table.id+' tr.SERIA_MetaTreeGrid_closed').fadeOut(400);
 										oddRecalc();
+										updateExpanderCookie();
 									}
 									var instantToggleExpand = function (node, expander, rowId) {
 										prepareToggleExpand(node, expander, rowId);
@@ -462,7 +555,13 @@
 										else
 											$('#'+table.id+' tr.SERIA_MetaTreeGrid_closed').hide();
 									}
-									instantToggleExpand(tr, expander, rowId); /* Collapse intially */
+									tr.instantToggleExpand = instantToggleExpand;
+
+									/* Collapse intially, which helps build the javascript attributes */
+									instantToggleExpand(tr, expander, rowId);
+
+									if (rememberedExpanded(rowId))
+										initiallyOpen.push([tr, expander, rowId]);
 
 									this.onclick = function (e) {
 										if (!e)
@@ -478,6 +577,12 @@
 										oddRecalc();
 									});
 								});
+								for (var i in initiallyOpen) {
+									var tr = initiallyOpen[i][0];
+									var expander = initiallyOpen[i][1];
+									var rowId = initiallyOpen[i][2];
+									tr.instantToggleExpand(tr, expander, rowId);
+								}
 							})();
 						-->
 					</script>
