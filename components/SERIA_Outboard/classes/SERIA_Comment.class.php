@@ -107,10 +107,25 @@
 			return $form;
 		}
 
-		public function editAction()
+		public function editAction($captchaPassed=true)
 		{
 //@TODO: Check access
-			return SERIA_Meta::editAction('edit', $this, array('metaObject', 'subset', 'displayName', 'displayName', 'userUrl', 'userEMail', 'title', 'message', 'approved'));
+			$fields = array('metaObject', 'subset', 'displayName', 'displayName', 'userUrl', 'userEMail', 'title', 'message', 'approved');
+			$action = new SERIA_ActionForm('edit', $this, $fields);
+			$action->addField('captcha', array(
+				'caption' => _t('Captcha field: '),
+				'fieldtype' => 'hidden'
+			), !$hasCaptcha);
+			if ($action->hasData()) {
+				foreach($fields as $field)
+					$this->set($field, $action->get($field));
+				$action->errors = SERIA_Meta::validate($this);
+				if (!$captchaPassed)
+					$action->errors['captcha'] = _t('Not correct. Type exacly what you see.');
+				if (!$action->errors)
+					$action->success = SERIA_Meta::save($this);
+			}
+			return $action;
 		}
 
 		public function approveAction()
