@@ -11,4 +11,6 @@
   'a13f8433f8cb5dfe85c2b38f9f5a1faa' => 'Avvist',
   '7f41f617c022295526dee1ec242a2ae7' => 'Varsla om av brukar',
   'edd815756046e666546ec87f9374aba7' => 'Ingen varsling',
+  '95837bad150e4682ce7061fe93903639' => 'Captcha felt (skriv orda):',
+  '0b09638ce3b284278a1e348e8016300b' => 'Ikkje korrekt. Skriv eksakt det du ser.',
 )); ?>
