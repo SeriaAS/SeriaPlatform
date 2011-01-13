@@ -6,6 +6,9 @@
 		private $_modules;
 
 		public function __construct($object) {
+			if(!($object instanceof SERIA_IVideoData)) {
+				throw new SERIA_Exception($object.' is not an instance of SERIA_IVideoData');
+			}
 			$this->_object = $object;
 		}
 
@@ -18,35 +21,29 @@
 			$flashvars = array(
 				'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
 				'httpRoot' => urlencode(SERIA_HTTP_ROOT),
-				'objectKey' => SERIA_NamedObjects::getPublicKey($this->_object),
-				'tracker_code' => GoogleAnalyticsComponent::getGoogleAnalyticsId(),
+				'objectKey' => SERIA_NamedObjects::getPublicId($this->_object),
+				'trackerCode' => GoogleAnalyticsComponent::getGoogleAnalyticsId(),
 			);
 
 			foreach($this->_modules as $moduleName => $moduleURL) {
 				$flashvars[$moduleName] = urlencode($moduleURL);
 			}
 
-			return "<object width='100%' height='100%' id='SERIA_FlashPlayer'>
-					<param name='allowFullscreen' value='true' />
-					<param value='opaque'/>
-					<param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf' />
-					<param name='allowscriptaccess' value='always' />
-					<param name='quality' value='high' />
-					<param name='flashvars' value='".$this->_flashVarsToString($flashvars)."' />
-					<embed src='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf?".$this->_flashVarsToString($flashvars)."'
-					        quality='high'
-					        width='100%'
-					        height='100%'
-					        name='SERIA_FlashPlayer'
-					        align='middle'
-					        play='true'
-					        loop='false'
-					        allowFullscreen='true'
-					        allowScriptAccess='always'
-					        type='application/x-shockwave-flash'
-					        pluginspage='http://www.adobe.com/go/getflashplayer'>
-				        </embed>
-				</object>";
+			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='640' height='360'>
+<param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf'></param>
+<param name='allowFullscreen' value='true'></param>
+<param name='allowscriptaccess' value='always'></param> 
+<param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
+<!--[if !IE]>-->
+<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf' width='640' height='360'>
+<param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
+<param name='allowscriptaccess' value='always'></param> 
+<param name='allowFullscreen' value='true'></param>
+<!--<![endif]-->
+<!--[if !IE]>-->
+</object>
+<!--<![endif]-->
+</object>";
 		}
 
 		public function generateConfig()
@@ -60,15 +57,20 @@
 		*
 		*
 		*/
-		public static function rpc_getFlashPlayerData($objectKey)
+		public static function rpc_getFlashPlayerData($objectKey, $stage=false)
 		{
-			$o = SERIA_NamedObjects::getInstanceByPublicKey($objectKey);
+			$o = SERIA_NamedObjects::getInstanceByPublicId($objectKey);
 
 			if(!($o instanceof SERIA_IVideoData)) {
 				throw new SERIA_Exception($objectName.' is not an instance of SERIA_IVideoData');
 			}
-
-			return $o->getVideoData();
+			if($stage) {
+				$arrayS = $o->getVideoData();
+				$arrayS['site'] = $_SER;
+				return $arrayS;
+			} else {
+				return $o->getVideoData();
+			}
 		}
 
 		protected function _flashVarsToString($flashvarsArray)
