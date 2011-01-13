@@ -116,6 +116,7 @@
 		*/
 		public function resolve($reqRoute)
 		{
+			$reqRoute = trim($reqRoute, "/\r\n\t ");
 			$depth = sizeof($reqParts = explode('/', $route=trim($reqRoute, '/')));
 			if(!isset($this->_routes[$depth]))
 				throw new SERIA_Exception('Not found', SERIA_Exception::NOT_FOUND);

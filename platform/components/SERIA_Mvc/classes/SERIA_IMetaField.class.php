@@ -35,7 +35,7 @@
 		*	@param string $fieldName	The name of the form field.
 		*	@return string $html
 		*/
-		function renderFormField($fieldName, array $params=NULL);
+		public static function renderFormField($fieldName, $value, array $params=NULL, $hasError=false);
 
 		/**
 		*	Create an instance from data stored in the database. Format depends on the datatype stored in the database

@@ -26,9 +26,8 @@
 			return $this->_dateTime;
 		}
 
-		public function renderFormField($name, array $params=NULL)
+		public static function renderFormField($name, $value, array $params=NULL, $hasError=false)
 		{
-			$value = $this;
 			$formName = /*$prefix.*/$name; /* FIXME - We don't know the prefix. Assuming empty */
 			SERIA_ScriptLoader::loadScript('jQuery-ui');
 			$id = $name.mt_rand();

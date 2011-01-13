@@ -37,6 +37,7 @@
 		protected $_callbackParams = array();
 		protected $_vars = array();
 		protected $_tagCompilers = array();
+		protected $_includes = array();
 
 		/**
 		*	Provide an array of paths to search for the template file, when calling ::parse()
@@ -175,6 +176,15 @@
 		}
 
 		/**
+		*	Add a PHP file to include prior to rendering the template. Can be used for global access control or
+		*	similar.
+		*/
+		public function includeFile($path)
+		{
+			$this->_includes[] = $path;
+		}
+
+		/**
 		*	Parse a template file containing PHP code.
 		*	@param mixed $templateFileName		The path to your template file. Should be a complete absolute filesystem path.
 		*	@return string				Returns the result of the template
@@ -202,16 +212,25 @@
 			$code = file_get_contents($templateFileName);
 			if(empty($code)) throw new SERIA_Exception('Template "'.$templateFileName.'" not found');
 			$code = $this->compile($code, $templateFileName);
-//echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();
+			if(sizeof($this->_includes)>0)
+			{
+				$includes = '<?php ';
+				foreach($this->_includes as $path)
+					$includes .= 'require_once("'.$path.'");';
+				$includes .= '?>';
+				$code = $includes.$code;
+			}
+//FRODE
+if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 
 			/* overrride the translation context because we do eval from another file */
 			$_t_context = _t_setContext($templateFileName);
+
 
 			ob_start();
 			eval('?'.'>'.$code);
 			$contents = ob_get_contents();
 			ob_end_clean();
-
 //echo "<pre>".htmlspecialchars($contents)."</pre>";die();
 
 			return $contents;
@@ -250,7 +269,7 @@
 						$result .= self::_compileTag(new SERIA_HtmlTag($tag), $this->_tagCompilers, $templateFileName);
 
 						break;
-					case "{{" : // FOUND A VARIABLE
+					case "{{" : // FOUND A VARIABLE THAT IS TO BE OUTPUT USING PHP's echo (which is why double {{ )
 
 						$end = strpos($code, "}}", $cursor+2);
 						$variableName = substr($code, $cursor+2, $end-$cursor-2);
@@ -276,30 +295,141 @@
 			}
 			return $first;
 		}
+
+		public static function attributeToVariable($attribute, $templateFileName)
+		{
+			$rest = $attribute;
+			$result = '';
+
+			$parts = array();
+			while(strlen($rest)>0)
+			{
+				if($rest[0]=='{')
+				{ // consume a variable until we find }
+					$pos = strpos($rest, '}');
+					if($pos === false)
+					{
+						$parts[] = array('string', $rest);
+						$rest = '';
+					}
+					else
+					{
+						$parts[] = array('variable', substr($rest, 1, $pos-1));
+						$rest = substr($rest, $pos+1);
+					}
+				}
+				else
+				{
+					$pos = strpos($rest, "{");
+					if($pos===false)
+					{ // no more variables
+						$parts[] = array('string', $rest);
+						$rest = '';
+					}
+					else
+					{
+						$parts[] = array('string', substr($rest, 0, $pos));
+						$rest = substr($rest, $pos);
+					}
+				}
+			}
+			if(sizeof($parts)!=1 || $parts[0][0]=='string')
+			{ // multiple values are concatenated, we got a constant
+				throw new SERIA_Exception('Expected a variable, but got a constant value. Did you concatenate?');
+			}
+			return self::_compileVariable($parts[0][1], $templateFileName, true);
+		}
+
+		public static function attributeToConstant($attribute, $templateFileName)
+		{
+			$rest = $attribute;
+			$result = '';
+
+			$parts = array();
+			while(strlen($rest)>0)
+			{
+				if($rest[0]=='{')
+				{ // consume a variable until we find }
+					$pos = strpos($rest, '}');
+					if($pos === false)
+					{
+						$parts[] = array('string', $rest);
+						$rest = '';
+					}
+					else
+					{
+						$parts[] = array('variable', substr($rest, 1, $pos-1));
+						$rest = substr($rest, $pos+1);
+					}
+				}
+				else
+				{
+					$pos = strpos($rest, "{");
+					if($pos===false)
+					{ // no more variables
+						$parts[] = array('string', $rest);
+						$rest = '';
+					}
+					else
+					{
+						$parts[] = array('string', substr($rest, 0, $pos));
+						$rest = substr($rest, $pos);
+					}
+				}
+			}
+
+			$items = array();
+			foreach($parts as $part)
+			{
+				switch($part[0])
+				{
+					case 'string' :
+						$items[] = '\''.str_replace('\'','\\\'', $part[1]).'\'';
+						break;
+					case 'variable' :
+						$items[] = self::_compileVariable($part[1], $templateFileName, false);
+						break;
+				}
+			}
+			return implode('.', $items);
+		}
+
 		protected static function _compileTag(SERIA_HtmlTag $tag, &$tagCompilers, $templateFileName)
 		{
 			/*
 			 * Parse fields
-			 */
+			 *
+			 * All attributes can be inserted directly into PHP-code like any other variable
+			 *
+			 * Translation checklist:
+			 * attr='Hello' gives '"Hello"'
+			 * attr='Hello {name}' gives '"Hello ".$this->name'
+			 * attr='{name}' gives $this->name
+			 * attr='{name} is your name' gives '$this->name." is your name"'
+			 *
 			$properties = $tag->getProperties();
 			foreach ($properties as $name => $value) {
+
+			 */
+/*
 				$input = $value;
 				$proc = '';
+
 				while ($input) {
 					$pos = mb_strpos($input, '{');
-					if ($pos === false) {
-						$proc .= $input;
-						break;
-					} else if ($pos != 0) {
+					if ($pos === false) { // A constant string value, directly insertable into PHP-code
+						$proc .= '\''.str_replace('\'','\\'',$input).'\'';
+						break; // no more output
+					} else if ($pos != 0) { // Complex string value, with concatenation - to be treated as a constant since we concatenate
 						$proc .= mb_substr($input, 0, $pos);
-						$input = mb_substr($input, $pos);
+						$input = '"'.str_replace('"','\"', mb_substr($input, $pos)).'".';
 					} else {
 						$input = mb_substr($input, 1);
 						$end = mb_strpos($input, '}');
 						if ($end !== false) {
 							$var = mb_substr($input, 0, $end);
 							$input = mb_substr($input, $end+1);
-							$proc .= '<'.'?php echo '.self::_compileVariable($var, $templateFileName).'; ?'.'>';
+							$proc .= self::_compileVariable($var, $templateFileName);
 						} else
 							$proc .= '{';
 					}
@@ -307,12 +437,13 @@
 				if ($proc != $value)
 					$tag->set($name, $proc);
 			}
+*/
 			$tagName = $tag->isClosing() ? '/' : '';
 			$tagName .= $tag->tagName;
 			if(isset($tagCompilers[$tagName]))
 			{
 //echo "PARSING($tagName)";
-				$res = call_user_func($tagCompilers[$tagName]['callback'], $tag);
+				$res = call_user_func($tagCompilers[$tagName]['callback'], $tag, $templateFileName);
 //echo "GOT(".strlen($res).")<br>\n";
 				return $res;
 			} else {
@@ -397,7 +528,7 @@
 			$mark = array_shift($_delims);
 			foreach ($_delims as $delim)
 				$delimMark[] = $mark;
-			
+
 			$hash = hash('md4', $input);
 			/*
 			 * The memory is not (md4) collision safe.
@@ -598,11 +729,17 @@
 			}
 
 			if($mustBeAssignable && $finalVar[0]!='$')
-				throw new SERIA_Exception('Can\'t assign values to "'.$name.'". Try "$'.$name.'" instead.');
+				throw new SERIA_MetaTemplateException('Can\'t assign values to "'.$name.'". Try "$'.$name.'" instead.');
 
 			// ignore constants and quoted strings
 			if(strpos('$"\'0123456789', $finalVar[0])===false)
+			{
+//				if($mustBeAssignable)
+//					$finalVar = '$this->'.$finalVar;
+//				else
+//				$finalVar = 'var_dump($this->'.$finalVar.')';
 				$finalVar = '$this->'.$finalVar;
+			}
 
 			if(($filterL = sizeof($parts))===1)
 			{
@@ -610,7 +747,7 @@
 			}
 			else
 			{
-				if($mustBeAssignable) throw new SERIA_Exception('Unable use filters on user defined variables ("'.$name.'").');
+// why not?				if($mustBeAssignable) throw new SERIA_Exception('Unable use filters on user defined variables ("'.$name.'").');
 
 				for($filterI = 1; $filterI < $filterL; $filterI++)
 				{
@@ -753,6 +890,14 @@
 			}
 		}
 
+		/**
+		* For use when compiling tags to display error messages to users.
+		*/
+		public /*package*/ static function displayError($message)
+		{
+			echo "<span class='SERIA_MetaTemplate_error'><strong>MetaTemplate error: </strong> ".$message."</span>";
+		}
+
 		protected function _isQuoted($string, $pos, $offset = 0)
 		{
 			$string = mb_substr($string, $offset, $pos-$offset);
@@ -787,5 +932,37 @@
 			foreach ($args as $param)
 				$params[] = $param;
 			return _t_with_caller($string, $params, null, $filename);
+		}
+
+
+		/**
+		*
+		*/
+		protected static $_stack = array();
+		/**
+		*	Special methods for helping with debugging meta template nesting. Push tags that require a closing tag and pop them when closing it.
+		*/
+		public static function push($tag)
+		{
+			array_push(self::$_stack, $tag);
+		}
+
+		/**
+		*	Check if a tag is in the stack.
+		*/
+		public static function inStack($tag)
+		{
+			return in_array($tag, self::$_stack);
+		}
+
+		/**
+		*	Special method for helping with debugging meta template nesting. Pop whenever handling a closing tag, then catch any exception from this method.
+		*/
+		public static function pop($tag)
+		{
+			$l = sizeof(self::$_stack);
+			if($l===0) throw new SERIA_MetaTemplateException('No opening tag for "'.$tag.'".');
+			if(self::$_stack[$l-1]!==$tag) throw new SERIA_MetaTemplateException('Expected closing tag for "'.self::$_stack[$l-1].'" but got "'.$tag.'".');
+			return array_pop(self::$_stack);
 		}
 	}

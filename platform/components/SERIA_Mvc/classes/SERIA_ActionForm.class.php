@@ -67,9 +67,9 @@ $form->begin()."<table><thead>';
 
 			if(isset($src[$this->_prefix.'bool']) && isset($src[$this->_prefix.'bool'][$name]))
 				return isset($src[$this->_prefix.$name]);
+
 			if(isset($src[$this->_prefix.$name])) {
-				if (isset($this->_spec[$name]) &&
-				    isset($this->_spec[$name]['class'])) {
+				if (isset($this->_spec[$name]) && isset($this->_spec[$name]['class'])) {
 					if (!in_array('SERIA_IMetaField', class_implements($this->_spec[$name]['class'])))
 						throw new SERIA_Exception('Class is not a SERA_IMetaField (interface).');
 					return call_user_func(array($this->_spec[$name]['class'], 'createFromUser'), $src[$this->_prefix.$name]);
@@ -92,7 +92,7 @@ $form->begin()."<table><thead>';
 			else if($this->_method === 'get' && isset($_GET['SAFI']))
 				$id = $_GET['SAFI'];
 			else $id = NULL;
-			return $this->id == $id;		
+			return $this->id == $id;
 		}
 
 		/**
@@ -207,32 +207,39 @@ $form->begin()."<table><thead>';
 		*/
 		public function field($name, array $attributes=NULL)
 		{
+			$legal = array('style','class');
+			foreach($attributes as $key => $val)
+			{
+				if(!in_array($key, $legal))
+					unset($attributes[$key]);
+			}
+
 			if(!isset($this->_spec[$name]))
 				throw new SERIA_Exception('No such field "'.$name.'".');
 
 			// no field type defined
-			if(!isset($this->_spec[$name]['fieldtype'])) {
+//			if(!isset($this->_spec[$name]['fieldtype'])) {
 
-				if (isset($this->_spec[$name]['class'])) {
-					if (in_array('SERIA_IMetaField', class_implements($this->_spec[$name]['class']))) {
-						$obj = $this->get($name);
-						if ($obj === null || $obj === false)
-							throw new SERIA_Exception('The field '.$name.' is a class type and does not have a value to display or edit.');
-						if (!in_array('SERIA_IMetaField', class_implements($obj)))
-							throw new SERIA_Exception('The object is not a SERIA_IMetaField (interface). The spec has a valid class.');
-							return $obj->renderFormField($name, $attributes);
-					}
-					else
+			if(is_callable(array($this, $this->_spec[$name]['fieldtype'])))
+			{
+				return call_user_func(array($this, $this->_spec[$name]['fieldtype']), $name, $attributes);
+			}
+
+			if (isset($this->_spec[$name]['class'])) {
+				if (in_array('SERIA_IMetaField', class_implements($this->_spec[$name]['class']))) {
+					$value = $this->get($name);
+					if ($value && !in_array('SERIA_IMetaField', class_implements($value)))
 					{
-						throw new SERIA_Exception('There is no fieldtype specified for the field "'.$name.'" and the class "'.$this->_spec[$name]['class'].'" does not implement the SERIA_IMetaField interface.');
+						throw new SERIA_Exception('The object is not a SERIA_IMetaField (interface). The spec has a valid class.');
 					}
+					return call_user_func(array($this->_spec[$name]['class'], 'renderFormField'), $this->_prefix.$name, $value, $attributes, $this->hasError($name));
+				}
+				else
+				{
+					throw new SERIA_Exception('There is no fieldtype specified for the field "'.$name.'" and the class "'.$this->_spec[$name]['class'].'" does not implement the SERIA_IMetaField interface.');
 				}
 			}
 
-			if(!is_callable(array($this, $this->_spec[$name]['fieldtype'])))
-			{
-				throw new SERIA_Exception('Unknown fieldtype "'.$this->_spec[$name]['fieldtype'].'" for field "'.$name.'".');
-			}
 			return call_user_func(array($this, $this->_spec[$name]['fieldtype']), $name, $attributes);
 		}
 
@@ -325,8 +332,9 @@ $form->begin()."<table><thead>';
 			), $caption);
 		}
 
-		public function select($name, array $attributes=NULL, array $values=NULL)
+		public function select($name, array $attributes=NULL, $values=NULL)
 		{
+			$currentValue = ($this->get($name) ? $this->get($name) : NULL);
 			$options = array("<option></option>");
 			if($values!==NULL)
 			{
@@ -334,7 +342,7 @@ $form->begin()."<table><thead>';
 				{
 					if(is_object($value) && is_a($value, 'SERIA_MetaObject'))
 						$value = $value->__toString();
-					$options[] = '<option value="'.htmlspecialchars($key).'">'.htmlspecialchars($value).'</option>';
+					$options[] = '<option value="'.htmlspecialchars($key).'"'.($currentValue!==NULL && $key==$currentValue?' selected="selected"':'').'>'.htmlspecialchars($value).'</option>';
 				}
 			}
 			else if(!isset($this->_spec[$name]['values']))
@@ -346,8 +354,10 @@ $form->begin()."<table><thead>';
 				foreach($this->_spec[$name]['values'] as $key => $value)
 				{
 					if(is_object($value) && is_a($value, 'SERIA_MetaObject'))
+					{
 						$value = $value->__toString();
-					$options[] = '<option value="'.htmlspecialchars($key).'">'.htmlspecialchars($value).'</option>';
+					}
+					$options[] = '<option value="'.htmlspecialchars($key).'"'.($currentValue!==NULL && $key==$currentValue?' selected="selected"':'').'>'.htmlspecialchars($value).'</option>';
 				}
 			}
 			else if(is_object($this->_spec[$name]['values']) && is_a($this->_spec[$name]['values'], 'SERIA_FluentQuery'))
@@ -356,7 +366,7 @@ $form->begin()."<table><thead>';
 				{
 					$key = $value->FluentBackdoor('get_key');
 					$value = $value->__toString();
-					$options[] = '<option value="'.htmlspecialchars($key).'">'.htmlspecialchars($value).'</option>';
+					$options[] = '<option value="'.htmlspecialchars($key).'"'.($currentValue!==NULL && $key==$currentValue?' selected="selected"':'').'>'.htmlspecialchars($value).'</option>';
 				}
 			}
 
@@ -473,7 +483,7 @@ $form->begin()."<table><thead>';
 				return $this->_noError;
 		}
 
-		protected static function renderTag($tagName, array $attributes=NULL, $defaults=array(), $innerHTML=false)
+		public /*package*/ static function renderTag($tagName, array $attributes=NULL, $defaults=array(), $innerHTML=false)
 		{
 			$res = '<'.$tagName.' '.self::renderAttributes($attributes, $defaults);
 			if($innerHTML!==false)

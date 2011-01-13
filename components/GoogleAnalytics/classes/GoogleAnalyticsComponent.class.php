@@ -38,7 +38,7 @@ class GoogleAnalyticsComponent extends SERIA_Component
 	 */
 	public function guiEmbed(SERIA_Gui $gui)
 	{
-		$gui->addMenuItem('controlpanel/settings/googleanalytics', _t('Google Analytics'), _t('Configure Google Analytics on this site.'), SERIA_HTTP_ROOT.'?route=googleanalytics/configure', $this->getInstallationPath().'/icon.png', 100);
+		$gui->addMenuItem('controlpanel/settings/googleanalytics', _t('Google Analytics'), _t('Configure Google Analytics on this site.'), SERIA_HTTP_ROOT.'?route=googleanalytics/configure', SERIA_HTTP_ROOT.'/seria/components/GoogleAnalytics/icon.png', 100);
 	}
 
 	/**

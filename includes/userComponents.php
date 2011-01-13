@@ -31,7 +31,7 @@
 		}
 	}
 
-	SERIA_Base::processManifests('userComponents', $manifests);
+	SERIA_Manifests::processManifests('userComponents', $manifests);
 
 	foreach($callbacks as $callback)
 		$callback();
