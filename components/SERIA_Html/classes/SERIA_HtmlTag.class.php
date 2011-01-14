@@ -95,14 +95,20 @@
 						$propertyValue = $matches[1];
 						$html = ltrim(substr($html, strlen($propertyValue)));
 					}
+
+					$this->_propertiesEscape[$propertyName] = true;
+//					$this->_properties[$propertyName] = $propertyValue;
+
 					/*
 					 * Uses UTF-8 as output-charset assuming that the platform always uses UTF-8 internally,
 					 * which I believe is the case right now (now is relative to the commit-date :).
+Should perhaps move to the ->get method, and be optional (default $entityDecode=true)?
 					 */
 					$this->_properties[$propertyName] = html_entity_decode($propertyValue, ENT_QUOTES, 'UTF-8');
 				}
 				else if ($propertyName)
 				{
+					$this->_propertiesEscape[$propertyName] = true;
 					$this->_properties[$propertyName] = $propertyName;
 				}
 				else
@@ -170,11 +176,17 @@
 		{
 			$result = "<".($this->_isClosingTag?'/':'').$this->tagName;
 			foreach($this->_properties as $name => $value)
-				$result .= " ".$name."=\"".htmlspecialchars($value)."\"";
+			{
+				if($this->_propertiesEscape[$name])
+					$result .= " ".$name."=\"".htmlspecialchars($value)."\"";
+				else
+					$result .= " ".$name."=\"".$value."\"";
+			}
 			$result .= (SERIA_XHTML && $this->_isSelfClosing?" />":">");
 			return $result;
 		}
 
+		public function getAttributes() { return $this->getProperties(); }
 		public function getProperties()
 		{
 			return $this->_properties;
@@ -187,14 +199,25 @@
 			return NULL;
 		}
 
-		public function set($propertyName, $value)
+		/**
+		*	Set a property on the HTML tag.
+		*	@param string $propertyName	The name of the property
+		*	@param string $value		The value of the property
+		*	@param boolean $escape		Wether to html escape the property when rendering it
+		*	@return SERIA_HtmlTag
+		*/
+		public function set($propertyName, $value, $escape=true)
 		{
+			$this->_propertiesEscape[$propertyName] = $escape;
 			$this->_properties[$propertyName] = $value;
+			return $this;
 		}
 
 		public function remove($propertyName)
 		{
+			unset($this->_propertiesEscape[$propertyName]);
 			unset($this->_properties[$propertyName]);
+			return $this;
 		}
 
 		public function isClosing()
