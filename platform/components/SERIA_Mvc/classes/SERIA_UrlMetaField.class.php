@@ -5,7 +5,7 @@ class SERIA_UrlMetaField extends SERIA_Url implements SERIA_IMetaField
 		{
 			return new SERIA_UrlMetaField($value);
 		}
-		public function renderFormField($fieldName, array $params=NULL)
+		public static function renderFormField($fieldName, $value, array $params=NULL, $hasError=false)
 		{
 			return SERIA_ActionForm::renderTag('input', $params, array(
 				'type' => 'text',

@@ -20,10 +20,20 @@
 	*				instances may be cached efficiently. Perhaps different cache backends should be considered differently; memcache is shared, while apc is not.
 	*				MySQL based cache tables might not perform better.
 	*
-	*	
+	*
 	*/
 	class SERIA_Meta
 	{
+		/**
+		* Events that are raised on SERIA_MetaObject objects. The method you can override is specified below:
+		*/
+		const AFTER_SAVE_EVENT = 'after_save';		// MetaAfterSave()
+		const BEFORE_SAVE_EVENT = 'before_save';	// MetaBeforeSave() returns boolean false if you wish to deny saving
+		const AFTER_DELETE_EVENT = 'after_delete';	// MetaAfterDelete()
+		const BEFORE_DELETE_EVENT = 'before_delete';	// MetaBeforeDelete() returns boolean false if you wish to deny deleting
+		const AFTER_LOAD_EVENT = 'after_load';		// MetaAfterLoad()
+		const AFTER_CREATE_EVENT = 'after_create';	// MetaAfterCreate()
+
 		private static $_specCache = array();
 		private static $_mTimes = false;
 		private static $_cache = false;
@@ -100,10 +110,11 @@
 			$className = get_class($instance);
 			$spec = self::_getSpec($className);
 
-			if(!$instance->MetaBackdoor('raise_event', 'before_save'))
-				return false;
+			if(!$instance->MetaBackdoor('raise_event', self::BEFORE_SAVE_EVENT))
+				throw new SERIA_Exception('Unable to save, access denied by MetaBeforeSave()', SERIA_Exception::ACCESS_DENIED);
 
 			$errors = self::validate($instance);
+
 
 			if($saveReferences && $errors)
 			{ // want to save references. Only do that is there is no errors but unsaved META_OBJECTS
@@ -130,7 +141,7 @@
 			}
 			$instance->MetaBackdoor('set_row', $row);
 
-			$instance->MetaBackdoor('raise_event', 'after_save');
+			$instance->MetaBackdoor('raise_event', self::AFTER_SAVE_EVENT);
 
 			return $res;
 		}
@@ -209,7 +220,7 @@
 		*/
 		public static function delete(SERIA_MetaObject $instance)
 		{
-			if(!$instance->MetaBackdoor('raise_event', 'before_delete'))
+			if(!$instance->MetaBackdoor('raise_event', self::BEFORE_DELETE_EVENT))
 				return false;
 
 			$row = $instance->MetaBackdoor('get_row');
@@ -219,7 +230,7 @@
 			$res = SERIA_Base::db()->exec('DELETE FROM '.$spec['table'].' WHERE '.$spec['primaryKey'].'=:'.$spec['primaryKey'], $instance);
 			if($res)
 			{
-				$instance->MetaBackdoor('raise_event', 'after_delete');
+				$instance->MetaBackdoor('raise_event', self::AFTER_DELETE_EVENT);
 			}
 			return $res;
 		}
@@ -260,7 +271,6 @@
 			{
 				throw new SERIA_Exception('No such outboard class "'.$item.'"');
 			}
-			
 
 			if(isset(self::$_specCache[$item]))
 			{
@@ -515,11 +525,12 @@
 				case "iso4217" :
 				case "currencycode" :
 					return array(
-						"fieldtype" => "text",
+						"fieldtype" => "select",
 						"type" => "varchar(3)",
 						"validator" => new SERIA_Validator(array(
 							array(SERIA_Validator::CURRENCYCODE)
 						)),
+						"values" => SERIA_Dictionary::getDictionary('iso-4217'),
 					);
 				case "currency" : 
 					return array(
@@ -621,11 +632,12 @@
 					);
 				case "timezone" :
 					return array(
-						"fieldtype" => "text",
+						"fieldtype" => "select",
 						"type" => "varchar(100)",
 						"validator" => new SERIA_Validator(array(
 							array(SERIA_Validator::TIMEZONE),
-						))
+						)),
+						"values" => new SERIA_TimezoneDictionary(),
 					);
 				case "duration" :
 					return array(
@@ -638,6 +650,8 @@
 					);
 				case "datetime" :
 					return SERIA_DateTimeMetaField::MetaField();
+				case "date" :
+					return SERIA_DateMetaField::MetaField();
 				case "seria_metaobject" :
 					return array(
 						"fieldtype" => $specName,
@@ -1015,7 +1029,6 @@ DELETE THIS
 				unset($fields[$spec['primaryKey']]);
 			}
 
-
 			$a = new SERIA_ActionForm($formId, $mo, $fields);
 			if($a->hasData())
 			{
@@ -1060,5 +1073,55 @@ DELETE THIS
 		public static function isNew(SERIA_MetaObject $object)
 		{
 			return $object->MetaBackdoor('is_new');
+		}
+
+		/**
+		*	Return true if the user is allowed to save the object
+		*	@param SERIA_MetaObject $object	An instance of a SERIA_MetaObject
+		*	@return boolean
+		*/
+		public static function allowEdit(SERIA_MetaObject $object)
+		{
+			return $object->MetaEditable();
+		}
+
+		/**
+		*	Returns true if the user is allowed to delete the object
+		*	@param SERIA_MetaObject $object	An instance of a SERIA_MetaObject
+		*	@return boolean
+		*/
+		public static function allowDelete(SERIA_MetaObject $object)
+		{
+			return $object->MetaDeletable();
+		}
+
+		/**
+		*	Returns true if the user is allowed to create an instance of the specified class
+		*	@param string $className	A classname to check for legality of
+		*	@return boolean
+		*/
+		public static function allowCreate($className)
+		{
+			return call_user_func(array($className, 'MetaCreatable'));
+		}
+
+		public static function manifestUrl($manifestName, $page=NULL, array $params=NULL)
+		{
+			$url = new SERIA_Url(SERIA_HTTP_ROOT."/");
+			$route = 'seria/'.$manifestName;
+			if($page!==NULL)
+			{
+				$parts = explode("/", $page);
+				foreach($parts as $part) if($part)
+					$route .= "/".$part;
+			}
+			$url->setParam('route', $route);
+			if($params!==NULL)
+			{
+				$parts = array();
+				foreach($params as $key => $param)
+					$url->setParam($key, $param);
+			}
+			return $url;
 		}
 	}
