@@ -18,7 +18,7 @@
 		$manifests[] = $bn."Manifest";
 	}
 
-	SERIA_Base::processManifests('coreComponents', $manifests);
+	SERIA_Manifests::processManifests('coreComponents', $manifests);
 
 	foreach($callbacks as $callback)
 		$callback();

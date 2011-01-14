@@ -23,5 +23,5 @@
 		}
 	}
 
-	SERIA_Base::processManifests('apps', $manifests);
+	SERIA_Manifests::processManifests('apps', $manifests);
 	SERIA_Hooks::dispatch(SERIA_Application::EMBED_HOOK);
