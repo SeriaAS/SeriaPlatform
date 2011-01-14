@@ -25,14 +25,12 @@
 	*/
 	function seria_systemdictionary_load($dictionaryName)
 	{
-		if(file_exists(SERIA_ROOT.'/seria/platform/components/SERIA_SystemDictionaries/dictionaries/'.$dictionaryName.'.ini'))
+		if(file_exists(SERIA_ROOT.'/seria/components/SERIA_SystemDictionaries/dictionaries/'.$dictionaryName.'.ini'))
 		{
-			$config = parse_ini_file(SERIA_ROOT.'/seria/platform/components/SERIA_SystemDictionaries/dictionaries/'.$dictionaryName.'.ini');
-			$config['file'] = SERIA_ROOT.'/seria/platform/components/SERIA_SystemDictionaries/dictionaries/'.$config['file'];
+			$config = parse_ini_file(SERIA_ROOT.'/seria/components/SERIA_SystemDictionaries/dictionaries/'.$dictionaryName.'.ini');
+			$config['file'] = SERIA_ROOT.'/seria/components/SERIA_SystemDictionaries/dictionaries/'.$config['file'];
 			$className = $config['class'];
-			$dict = new SERIA_CsvDictionary($config);
-			return $dict;
-//			return self::$dictionaries[$dictionaryName] = new $className($config);
+			return self::$dictionaries[$dictionaryName] = new $className($config);
 		}
 	}
 

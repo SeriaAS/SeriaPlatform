@@ -1,5 +1,5 @@
 <?php
-	class SERIA_CsvDictionary extends SERIA_Dictionary implements IteratorAggregate
+	class SERIA_CSVDictionary extends SERIA_Dictionary implements IteratorAggregate
 	{
 		private $data = false;
 
@@ -29,8 +29,7 @@
 				foreach($data as $line)
 				{
 					$components = explode($this->config['delimiter'], trim($line));
-					if(trim($components[$this->config['valueColumn']]))
-						$this->data[$components[$this->config['keyColumn']]] = $components[$this->config['valueColumn']];
+					$this->data[$components[$this->config['keyColumn']]] = $components[$this->config['valueColumn']];
 				}
 			}
 			else if(isset($this->config['valueColumns']))
@@ -55,11 +54,6 @@
 					$this->data[$components[$this->config['keyColumn']]] = $components;
 				}
 			}
-
-			if(isset($this->config['sortByKey']))
-				ksort($this->data);
-			else if(isset($this->config['sortByValue']))
-				asort($this->data);
 		}
 
 		function get($key)

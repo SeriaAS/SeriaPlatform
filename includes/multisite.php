@@ -1,8 +1,6 @@
 <?php
 	/**
 	*	This file is included by default for multi site installations of Seria Platform.
-	*
-	*	It does not work trough the SERIA_Meta API.
 	*/
 
 	if(!defined('SERIA_MULTISITE_DOMAIN'))
@@ -11,8 +9,6 @@
 	// required to connect to database, but should not be defined by anybody
 	define('SERIA_DB_DSN', SERIA_DB_TYPE.':host='.SERIA_DB_HOST.';port='.(defined('SERIA_DB_PORT')?SERIA_DB_PORT:'3306').';dbname='.SERIA_DB_NAME);
 
-	require_once(SERIA_ROOT.'/seria/platform/components/SERIA_Multisite/classes/SERIA_Multisite.class.php');
-
 	function multisiteInit() {
 		// select the correct site
 		if($_SERVER['HTTP_HOST']===NULL)
@@ -20,7 +16,7 @@
 		$host = $_SERVER['HTTP_HOST'];
 		if(substr($host,0,4)==='www.')
 			$host = substr($host,4);
-		if(SERIA_Multisite::isMaster())
+		if($host===SERIA_MULTISITE_DOMAIN)
 			return false;
 
 		// connect to database

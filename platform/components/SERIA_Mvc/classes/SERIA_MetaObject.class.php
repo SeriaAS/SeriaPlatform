@@ -1,5 +1,5 @@
 <?php
-	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField, SERIA_IApiAccess
+	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator
 	{
 		abstract public static function Meta($instance=NULL); 
 		/* EXAMPLE IMPLEMENTATION {
@@ -26,53 +26,6 @@
 		}
 
 		/**
-		*	Create an instance of the object.
-		*/
-		public static function createFromUser($value)
-		{
-			return SERIA_Meta::load(get_called_class(), $value);
-		}
-
-		public static function createFromDb($value)
-		{
-			return SERIA_Meta::load(get_called_class(), $value);
-		}
-
-		public static function renderFormField($fieldName, $current, array $params=NULL, $hasError=false)
-		{
-			$values = SERIA_Meta::all(get_called_class());
-			$options[] = array();
-			foreach($values as $value)
-			{
-				$options[] = '<option value="'.$value->MetaBackdoor('get_key').'"'.($value==$current?' selected="selected"':'').'>'.$value->__toString().'</option>';
-			}
-			return SERIA_ActionForm::renderTag('select', $attributes, array(
-				'id' => $fieldName,
-				'name' => $fieldName,
-				'class' => 'select'.($hasError?' ui-state-error':''),
-			), implode("", $options));
-		}
-
-		public function toDb()
-		{
-			return $this->MetaBackdoor('get_key');
-		}
-
-		public static function MetaField()
-		{
-			$spec = SERIA_Meta::_getSpec($className = get_called_class());
-			if(isset($spec['caption']))
-				$caption = $spec['caption'];
-			else
-				$caption = '"caption" not defined in Meta spec for class "'.$className.'"';
-			$spec = $spec['fields'][$spec['primaryKey']];
-			$spec['fieldtype'] = $spec['class'] = $className;
-			if(!isset($spec['caption']))
-				$spec['caption'] = $caption;
-			return $spec;
-		}
-
-		/**
 		*	Special method to filter queries for an extra level of access control. For example
 		*	you should check if(SERIA_Base::viewMode()=="public") and return 'isPublished=1'.
 		*	isPublished=1 will then be added to the queries by SERIA_MetaQuery if the website
@@ -83,7 +36,7 @@
 		}
 
 		/**
-		*	Special method to check if the object is deletable. Use SERIA_Meta::allowDelete($instance) to check.
+		*	Special method to check if the object is deletable. Use SERIA_Meta::isDeletable($instance) to check.
 		*	@return boolean
 		*/
 		public function MetaDeletable() {
@@ -91,7 +44,7 @@
 		}
 
 		/**
-		*	Special method to check if the object is editable. Use SERIA_Meta::allowEdit($instance) to check.
+		*	Special method to check if the object is editable. Use SERIA_Meta::isEditable($instance) to check.
 		*	@return boolean
 		*/
 		public function MetaEditable() {
@@ -99,10 +52,10 @@
 		}
 
 		/**
-		*	Special method to check if the user can create new objects. Use SERIA_Meta::allowCreate('ClassName') to check.
+		*	Special method to check if the user can create new objects. Use SERIA_Meta::canCreate('ClassName') to check.
 		*	@return boolean
 		*/
-		public static function MetaCreatable() {
+		public function MetaCreatable() {
 			return true;
 		}
 
@@ -111,7 +64,7 @@
 		*	@return boolean		True if allowed to continue
 		*/
 		protected function MetaBeforeSave() {
-			return SERIA_Meta::allowEdit($this);
+			return true;
 		}
 
 		/**
@@ -131,7 +84,7 @@
 		*	@return boolean		True if allowed to continue
 		*/
 		protected function MetaBeforeDelete() {
-			return SERIA_Meta::allowDelete($this);
+			return true;
 		}
 
 		/**
@@ -181,12 +134,12 @@
 				case 'raise_event' :
 					switch($data)
 					{
-						case SERIA_Meta::BEFORE_SAVE_EVENT : return $this->MetaBeforeSave(); break;
-						case SERIA_Meta::AFTER_SAVE_EVENT : return $this->MetaAfterSave(); break;
-						case SERIA_Meta::AFTER_LOAD_EVENT : return $this->MetaAfterLoad(); break;
-						case SERIA_Meta::BEFORE_DELETE_EVENT : return $this->MetaBeforeDelete(); break;
-						case SERIA_Meta::AFTER_DELETE_EVENT : return $this->MetaAfterDelete(); break;
-						case SERIA_Meta::AFTER_CREATE_EVENT : return $this->MetaAfterCreate(); break;
+						case 'before_save' : return $this->MetaBeforeSave(); break;
+						case 'after_save' : return $this->MetaAfterSave(); break;
+						case 'after_load' : return $this->MetaAfterLoad(); break;
+						case 'before_delete' : return $this->MetaBeforeDelete(); break;
+						case 'after_delete' : return $this->MetaAfterDelete(); break;
+						case 'after_create' : return $this->MetaAfterCreate(); break;
 					}
 					break;
 				case 'get_row' :
@@ -274,10 +227,6 @@
 		*/
 		public function get($name)
 		{
-			// todo: make sure that $this->$name is a non-static method and that it has no parameters
-			if((substr($name, -6)==='Action' || substr($name, -4)==='View') && is_callable(array($this,$name)))
-				return call_user_func(array($this,$name));
-
 			$spec = SERIA_Meta::_getSpec(get_class($this));
 			if(isset($spec['fieldAliases']) && isset($spec['fieldAliases'][$name]))
 				$name = $spec['fieldAliases'][$name];
@@ -424,20 +373,17 @@
 
 		public final function __construct($p=false)
 		{
-			if(!SERIA_Meta::allowCreate(get_class($this)))
-				throw new SERIA_Exception('Access denied creating an instance of "'.get_class($this).'".', SERIA_Exception::ACCESS_DENIED);
-
 			if($p === false)
 			{ // entirely new object
 				$this->primaryKey = false;
 				$this->row = array();
-				$this->MetaBackdoor('raise_event', SERIA_Meta::AFTER_CREATE_EVENT);
+				$this->MetaAfterCreate();
 			}
 			else if(is_array($p))
 			{
 				$this->row = $p;
 				$this->metaNew = false;
-				$this->MetaBackdoor('raise_event', SERIA_Meta::AFTER_LOAD_EVENT);
+				$this->MetaAfterLoad();
 			}
 			else
 			{
@@ -448,84 +394,7 @@
 				if(!$this->row)
 					throw new SERIA_NotFoundException('Could not find '.get_class($this).' with id='.$p);
 
-				$this->MetaBackdoor('raise_event', SERIA_Meta::AFTER_LOAD_EVENT);
+				$this->MetaAfterLoad();
                         }
                 }
-
-                /**
-                *       Methods related to collections of data
-                */
-                // public static function getCollectionApi($start=0, $length=1000, $options=NULL); // returns an array with $length items representing table rows, starting at offset $start. $options is an associative arr$
-                // public static function putCollectionApi($values, $options=NULL); // overwrite entire collection, return true or false
-                // public static functino postCollectionApi($values, $options); // insert a new element to the collection, return the new primary key or throw an exception
-                // public static function deleteCollectionApi($options=NULL); // delete the entire collection, return true or throw an exception
-
-                /**
-                *       Methods related to a specified element belonging to a collection
-                */
-                // public static function getElementApi($key, $options=NULL) // returns an array of key=>value pairs
-                // public static function putElementApi($key, $values, $options=NULL) // overwrite or create element, return true or false
-                // public static function deleteElementApi($key, $options=NULL) // delete an element, return true or throw an exception
-
-		/**
-		*	SERIA_IApiAccess method. Requires the MetaSelect and MetaFields methods to be overridden, for security reasons.
-		*	When overriding the methods, make sure that MetaSelect returns a query where part that ONLY returns the rows that
-		*	the current user is allowed to see and that MetaFields returns an array containing only the columns that the user
-		*	is allowed to see.
-		*/
-		public static function getCollectionApi($start=0, $length=1000, $options=NULL)
-		{
-			$class = get_called_class();
-			$metaSelectReflect = new ReflectionMethod($class, 'MetaSelect');
-			if($metaSelectReflect->class != $class)
-				throw new SERIA_Exception('The "'.$class.'::MetaSelect"-method has not been overridden. You must apply security restrictions before this api can be made available. The method must return a where clause or NULL if you wish to make everything available to everybody.');
-			try {
-				$metaFieldsReflect = new ReflectionMethod($class, 'MetaFields');
-			} catch (ReflectionException $e) {
-				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
-			}
-			if($metaFieldsReflect->class != $class)
-				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
-
-			$elements = SERIA_Meta::all($class)->limit($start, $length);
-			$fields = call_user_func(array($class, 'MetaFields'), $options);
-			$results = array();
-			foreach($elements as $element)
-			{
-				$result = array();
-				foreach($fields as $field)
-				{
-					$result[$field] = $element->get($field);
-				}
-				$results[] = $result;
-			}
-			return $results;
-
-		}
-
-		/**
-		*	SERIA_IApiAccess method. Requires the MetaSelect and MetaFields methods to be overridden. @see SERIA_MetaObject::getCollectionApi
-		*/
-		public static function getElementApi($key, $options)
-		{
-			$class = get_called_class();
-			$metaSelectReflect = new ReflectionMethod($class, 'MetaSelect');
-			if($metaSelectReflect->class != $class)
-				throw new SERIA_Exception('The "'.$class.'::MetaSelect"-method has not been overridden. You must apply security restrictions before this api can be made available. The method must return a where clause or NULL if you wish to make everything available to everybody.');
-			try {
-				$metaFieldsReflect = new ReflectionMethod($class, 'MetaFields');
-			} catch (ReflectionException $e) {
-				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
-			}
-			if($metaFieldsReflect->class != $class)
-				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
-
-			$element = SERIA_Meta::load($class, $key);
-			$fields = call_user_func(array($class, 'MetaFields'), $options);
-			$result = array();
-			foreach($fields as $field)
-				$result[$field] = $element->get($field);
-
-			return $result;
-		}
 	}

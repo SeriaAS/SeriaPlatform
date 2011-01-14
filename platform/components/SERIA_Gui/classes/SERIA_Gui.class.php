@@ -20,7 +20,6 @@
 
 		private $_guiMenu = array();
 		private $_guiMenuActive = false;
-		private static $_guiMenuActiveHint = false;
 		private $_isBuffering = false;
 		private $_httpStatusCode = false;
 
@@ -28,15 +27,14 @@
 		*	Hook for attaching to the user interface whenever needed.
 		*	@deprecated Replaced by SERIA_GuiManifest::EMBED_HOOK
 		*/
-		const EMBED_HOOK = "SERIA_GuiManifest::EMBED_HOOK";
-
+		const EMBED_HOOK = SERIA_GuiManifest::EMBED_HOOK;
 		static $instance;
 
-		static function sGuiTag($tag, $filename)
+		static function sGuiTag($tag)
 		{
 			$code .= '<'.'?php $this->gui = new SERIA_Gui();';
 			if($tag->get('title'))
-				$code .= '$this->gui->title('.SERIA_MetaTemplate::attributeToConstant($tag->get('title'), $filename).');';
+				$code .= '$this->gui->title('.SERIA_MetaTemplate::embedTagAttributeAsString($tag->get('title')).');';
 			if($tag->get('httpStatusCode'))
 				$code .= '$this->gui->httpStatusCode('.SERIA_MetaTemplate::embedTagAttributeAsString($tag->get('httpStatusCode')).');';
 			if($tag->get('popup'))
@@ -124,16 +122,6 @@
 		{
 			$this->_guiMenuActive = $id;
 			return $this;
-		}
-
-		/**
-		*	Hint about which menu item should be active, in case the active menu item
-		*	is not defined by $gui->activeMenuItem()
-		*	@param string $id	The menu path
-		*/
-		public static function activeMenuItemHint($id)
-		{
-			self::$_guiMenuActiveHint = $id;
 		}
 
 		function markActiveMenuItems()
@@ -388,10 +376,7 @@
 			}
 			if($this->_guiMenuActive === false || !isset($this->_guiMenu[$this->_guiMenuActive]))
 			{
-				if(self::$_guiMenuActiveHint)
-					$this->_guiMenuActive = self::$_guiMenuActiveHint;
-				else
-					$this->_guiMenuActive = "controlpanel";
+				$this->_guiMenuActive = "controlpanel";
 				SERIA_Base::debug('<strong>Active page not specified using $gui->activeMenuItem("application/icon/path")</strong>');
 			}
 /*
