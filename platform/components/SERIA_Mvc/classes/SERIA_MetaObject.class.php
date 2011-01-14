@@ -60,7 +60,11 @@
 
 		public static function MetaField()
 		{
-			$spec = SERIA_Meta::_getSpec($className = get_called_class());
+			$className = get_called_class();
+			if ($className != 'SERIA_MetaObject')
+				$spec = SERIA_Meta::_getSpec($className);
+			else
+				$spec = array();
 			if(isset($spec['caption']))
 				$caption = $spec['caption'];
 			else
