@@ -33,6 +33,8 @@ class SERIA_Validator
 	const LEGAL_CHARS = 26;			// array(SERIA_Validator::LEGAL_CHARS, <array of chars>[, 'Custom error message']);
 	const INTERNET_MEDIA_TYPE = 27;		// array(SERIA_Validator::INTERNET_MEDIA_TYPE[, 'Custom error message']);
 	const RTMP_URL = 28;			// array(SERIA_Validator::RTMP_URL[, 'Custom error message']);
+	const TIMEZONE = 29;			// array(SERIA_Validator::TIMEZONE[, 'Custom error message']);
+	const CURRENCYCODE = 30;		// array(SERIA_Validator::CURRENCYCODE[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -203,7 +205,7 @@ class SERIA_Validator
 					$found = false; // found illegal chars?
 					foreach($rule[1] as $char)
 					{
-						if(mv_strpos($value, $char)===false)
+						if(mb_strpos($value, $char)===false)
 						{
 							$found = true;
 							break;
@@ -317,6 +319,16 @@ class SERIA_Validator
 						default :
 							return isset($rule[1]) ? $rule[1] : _t("Main type must be one of application, audio, image, message, model, multipart, text, video or application.");
 					}
+					break;
+				case self::TIMEZONE :
+					$dictionary = new SERIA_TimezoneDictionary();
+					if(!isset($dictionary[$value]))
+						return isset($rule[1]) ? $rule[1] : _t("Invalid timezone.");
+					break;
+				case self::CURRENCYCODE:
+					$dictionary = SERIA_Dictionary::getDictionary('iso-4217');
+					if(!isset($dictionary[$value]))
+						return isset($rule[1]) ? $rule[1] : _t("No such currency code.");
 					break;
 			}
 		}
