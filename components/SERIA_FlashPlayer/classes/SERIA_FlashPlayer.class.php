@@ -29,13 +29,13 @@
 				$flashvars[$moduleName] = urlencode($moduleURL);
 			}
 
-			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='640' height='360'>
+			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
 <param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf'></param>
 <param name='allowFullscreen' value='true'></param>
 <param name='allowscriptaccess' value='always'></param> 
 <param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
 <!--[if !IE]>-->
-<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf' width='640' height='360'>
+<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf' width='100%' height='100%'>
 <param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
 <param name='allowscriptaccess' value='always'></param> 
 <param name='allowFullscreen' value='true'></param>
