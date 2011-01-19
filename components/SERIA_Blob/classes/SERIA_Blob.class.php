@@ -1,4 +1,12 @@
 <?php
+
+//define('SERIA_BLOB_IMAGE', 'small=400x300,medium=600x400,large=1000x700');
+//define('SERIA_BLOB_VIDEO_FORMATS', 'ipod-small,ipod-medium,ipod-large,flv-medium,custom-flv3');
+
+
+
+
+
 	/**
 	*	Represents a file. The following applies to special file types:
 	*
@@ -18,26 +26,73 @@
 		public static function Meta($instance=NULL)
 		{
 			return array(
-				'table' => '{blob}',
-				'displayField' => 'name',
+				'table' => '{blobs}',
+				'displayField' => 'originalName',
 				'fields' => array(
-					'name' => array('filename required', _t("Filename")),
-					'type' => array('SERIA_BlobType required', _t("Filetype")),
-					'filepath' => array('filepath required', _t("Physical path")),	// path relative to SERIA_FILES_ROOT
-					'cdnHost' => array('SERIA_BlobCdn', _t("CDN host")),		// host serving this file, for example Amazon S3
-					'cdnUrl' => array('url', _t("Off-site url")),			// when the file have been uploaded to the CDN, the url will be set here
-					'derivedFrom' => array('SERIA_Blob', _t("Derived from")),	// if this file is a thumbnail
+					'editionOf' => array('SERIA_Blob', _t("An edition of")),
+					'editionName' => array('name', _t("Edition identifier")),
+					'originalName' => array('name required', _t("Filename")),
+					'filesize' => array('integer', _t("Filesize")),
+					'duration' => array('integer', _t("Duration")),
+					'height' => array('integer', _t("Height")),
+					'width' => array('integer', _t("Width")),
+					'bitrate' => array('integer', _t("Kbps")),
+					'isAccessible' => array('boolean', _t("Ready to be accessed")),
+					'backendClass' => array('classname', _t("Backend class"), array("implements" => "SERIA_IBlobBackend")),
+					'backendData' => array('text', _t("Backend data")),
 					'createdBy' => 'createdBy',
 					'createdDate' => 'createdDate',
 				),
 			);
 		}
 
-		public static function templateFilter($buffer)
+		public function getEditions() {
+			return SERIA_Meta::all('SERIA_Blob')->where('editionOf=:id', $this);
+		}
+
+		public function getEdition($editionName) {
+			$edition = SERIA_Meta::all('SERIA_Blob')->where('editionOf=:id AND editionName=:name', array('id' => $this->get('id'), 'name' => $editionName)->fetch();
+			if($edition) return $edition;
+			throw new SERIA_Exception('Could not find that edition of this file.', SERIA_Exception::NOT_FOUND);
+		}
+
+		/**
+		*	Consume a local file and store in in an appropriate backend, such as
+		*	the local file system or a cloud backed service.
+		*/
+		public static function createFromFile($filepath)
 		{
-			//@TODO: Identify image urls within the HTML, resize then rewrite the files.
-			return $buffer;
+			if(!file_exists($filepath))
+				throw new SERIA_Exception('File "'.$filepath.'" not found.', SERIA_Exception::NOT_FOUND);
+
+			if(is_dir($filepath))
+				throw new SERIA_Exception('File "'.$filepath.'" is a directory.');
+
+			$blob = new SERIA_Blob();
+			$blob->set("filesize", filesize($filepath));
+			$handled = SERIA_Hooks::dispatchToFirst(SERIA_BlobManifest::BACKEND_HOOK, $blob, $filepath);
+			if($handled)
+			{
+				SERIA_Meta::save($blob);
+				return $blob;
+			}
+			throw new SERIA_Exception("No backend captured the file");
+		}
+
+		/**
+		*	Return the url of this file
+		*/
+		public function getUrl($protocol) {
+			return $this->getBackend()->getUrl($protocol);
+		}
+
+		public function delete() {
+			$this->getBackend()->delete();
+			SERIA_Meta::delete($this);
+		}
+
+		public function getBackend() {
+			$className = $this->get('backendClass');
+			return new $className($this);
 		}
 	}
-
-	SERIA_Template::addOutputFilter(array('SERIA_Blob','templateFilter'));
