@@ -172,6 +172,16 @@
 					}
 				}
 			}
+
+			$customErrors = $instance->MetaIsInvalid();
+			if($customErrors)
+			{
+				foreach($customErrors as $key => $value)
+				{
+					$errors[$key] = $value;
+				}
+			}
+
 			if(sizeof($errors)>0)
 				return $errors;
 			else
@@ -484,6 +494,15 @@
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
+				case "filepath" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(200)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::FILEPATH),
+							array(SERIA_Validator::MAX_LENGTH, 200),
+						)),
+					);
 				case "internetmediatype" :
 					return array(
 						"fieldtype" => "text",
@@ -648,6 +667,17 @@
 							array(SERIA_Validator::MIN_VALUE, 0),
 						)),
 					);
+				case "classname" :
+					if(!isset($info[2]) || (!isset($info[2]['extends']) && !isset($info[2]['implements'])))
+						throw new SERIA_Exception("The 'classname' type requires 'extends' or 'implements' to be specified as an associative array in third parameter.");
+
+					return array(
+						'fieldtype' => 'text',
+						'type' => 'varchar(100)',
+						'validator' => new SERIA_Validator(array(
+							array(SERIA_Validator::CALLBACK, array('SERIA_Meta', 'classNameValidator'), $info[2]),
+						)),
+					);
 				case "datetime" :
 					return SERIA_DateTimeMetaField::MetaField();
 				case "date" :
@@ -803,7 +833,6 @@
 						default :
 							$newRow[$name] = $row[$name];
 					}
-					
 				}
 				else if(isset($row[$name]))
 				{ // this is not good, since we do not have database model information in the MetaSpec.
@@ -1123,5 +1152,21 @@ DELETE THIS
 					$url->setParam($key, $param);
 			}
 			return $url;
+		}
+
+		public static function classNameValidator($spec, $className, $extra)
+		{
+			if(isset($extra['extends']))
+			{
+				if(!is_subclass_of($className, $extra['extends']))
+					return _t("The class %CLASS% must extend %EXTENDS%.", array("CLASS" => $className, "EXTENDS" => $extra['extends']));
+			}
+			if(isset($extra['implements']))
+			{
+				$ref = new ReflectionClass($className);
+				if(!$ref->implementsInterface($extra['implements']))
+					return _t("The class %CLASS% must implement %INTERFACE%.", array("CLASS" => $className, "INTERFACE" => $extra['implements']));
+			}
+			return false;
 		}
 	}

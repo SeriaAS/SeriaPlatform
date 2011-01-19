@@ -77,10 +77,24 @@
 		}
 
 		/**
+		*	Special method to add custom validation rules that the rulesets cannot handle. For
+		*	example to check if parent is self. Should return false if nothing is wrong. Should
+		*	return an associative array of fieldname => error message if validation errors
+		*/
+		public function MetaIsInvalid() {
+			return false;
+		}
+
+		public static function MetaQuery() {
+			return SERIA_Meta::all(get_called_class());
+		}
+
+		/**
 		*	Special method to filter queries for an extra level of access control. For example
 		*	you should check if(SERIA_Base::viewMode()=="public") and return 'isPublished=1'.
 		*	isPublished=1 will then be added to the queries by SERIA_MetaQuery if the website
 		*	is being viewed in the public context.
+		*	$return string		Return ordinary SQL
 		*/
 		public static function MetaSelect() {
 			return NULL;

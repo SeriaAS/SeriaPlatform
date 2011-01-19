@@ -1,4 +1,13 @@
 <?php
+	/**
+	*	Serves as an entry point for the {{Meta}} variable in templates.
+	*	Provides:
+	*	{{Meta.urls}}		Returns urls for all manifest based components and their pages.
+	*	{{Meta.SERIA_Video}}	Returns a MetaQuery for all SERIA_Video. Can be used in loops:
+	*		<s:loop trough="{Meta.SERIA_Video}" as="{$video}">
+	*			Id: {{$video.id}}
+	*		</s:loop>
+	*/
 	class SERIA_MetaTemplateVariable implements ArrayAccess
 	{
 		public function offsetExists($offset) {

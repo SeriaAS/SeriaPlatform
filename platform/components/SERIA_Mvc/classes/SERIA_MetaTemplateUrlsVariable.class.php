@@ -1,4 +1,12 @@
 <?php
+	/**
+	*	Represents all urls for the Meta.urls.{manifest} and Meta.urls.{manifest}.{subPage}.{subPage} etc.
+	*
+	*	Example:
+	*	{{Meta.urls.webtv}}		Link to the Seria WebTV frontpage
+	*	{{Meta.urls.webtv.videos}}	Link to the Seria WebTV videos page (pages/videos.php)
+	*	{{Meta.urls.webtv.videos.edit}}	Link to the Seria WebTV video editing page (pages/videos/edit.php)
+	*/
 	class SERIA_MetaTemplateUrlsVariable implements ArrayAccess
 	{
 		protected $_manifest = NULL;
@@ -16,9 +24,13 @@
 
 		public function offsetExists($offset) {
 			if($this->_manifest === NULL)
+			{ // We are not representing a Manifest
 				return SERIA_Manifests::getManifest($offset) ? true : false;
+			}
+			/**
+			*	We are representing a manifest. Assume all paths exist!
+			*/
 			return true;
-			return false;
 		}
 		public function offsetGet($offset) {
 			if(!$this->offsetExists($offset))

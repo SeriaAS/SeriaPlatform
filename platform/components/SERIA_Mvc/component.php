@@ -151,16 +151,65 @@
 
 	function SERIA_MetaTemplate_extend($tpl)
 	{
+		/**
+		*	Expose all Meta classes trough templates:
+		*	{Meta.urls.webtv}		The frontpage for Seria WebTV
+		*	{Meta.urls.webtv.videos}	The video management page for Seria WebTV
+		*	{Meta.SERIA_Video}		All SERIA_Video objects
+		*/
 		$tpl->addVariableCallback('Meta', 'SERIA_MetaTemplate_MetaTemplateVariable');
+		/**
+		*	<s:isTrue variable="{Meta.urls}">
+		*		This is displayed if Meta.urls exists and is true
+		*	</s:isTrue>
+		*/
+		$tpl->addTagCompiler('s:isTrue', 'SERIA_MetaTemplate_isTrue');
+		$tpl->addTagCompiler('/s:isTrue', 'SERIA_MetaTemplate_isTrueClose');
+		/**
+		*	<s:isFalse variable="{Meta.urls}">
+		*		This is displayed if Meta.urls does not exist or if it evaluates to false
+		*	</s:isFalse>
+		*/
+		$tpl->addTagCompiler('s:isFalse', 'SERIA_MetaTemplate_isFalse');
+		$tpl->addTagCompiler('/s:isFalse', 'SERIA_MetaTemplate_isFalseClose');
+		/**
+		*	<s:grid></s:grid>
+		*/
 		$tpl->addTagCompiler('s:grid', 'SERIA_MetaTemplate_sGrid');
 		$tpl->addTagCompiler('/s:grid', 'SERIA_MetaTemplate_sGridClose');
+		/**
+		*	Use this in forms to create the submit button.
+		*	<s:submit label="Save">
+		*/
 		$tpl->addTagCompiler('s:submit', 'SERIA_MetaTemplate_sSubmit');
+		/**
+		*	Use this in forms to create labels for fields:
+		*	<s:label for="fieldname">
+		*/
 		$tpl->addTagCompiler('s:label', 'SERIA_MetaTemplate_sLabel');
+		/**
+		*	Use this in forms to create the field:
+		*	<s:field for="fieldname">
+		*/
 		$tpl->addTagCompiler('s:field', 'SERIA_MetaTemplate_sField');
+		/**
+		*	Use this to create forms for actions exposed by the api:
+		*	<s:form for="{myActionForm}"></s:form>
+		*/
 		$tpl->addTagCompiler('s:form', 'SERIA_MetaTemplate_sForm');
 		$tpl->addTagCompiler('/s:form', 'SERIA_MetaTemplate_sFormClose');
+		/**
+		*	Loop through a set of elements in a collection:
+		*	<s:loop trough="{myCollection}" as="{$myVariableName}">
+		*		{$myVariableName.title}
+		*	</s:loop>
+		*/
 		$tpl->addTagCompiler('s:loop', 'SERIA_MetaTemplate_sLoop');
 		$tpl->addTagCompiler('/s:loop', 'SERIA_MetaTemplate_sLoopClose');
+		/**
+		*	Link to an url:
+		*	<s:a href="{Meta.urls.seriawebtv.videos}">Link text</s:a>
+		*/
 		$tpl->addTagCompiler('s:a', 'SERIA_MetaTemplate_sA');
 		$tpl->addTagCompiler('/s:a', 'SERIA_MetaTemplate_sAClose');
 	}
@@ -171,6 +220,41 @@
 	function SERIA_MetaTemplate_MetaTemplateVariable()
 	{
 		return new SERIA_MetaTemplateVariable();
+	}
+
+	function SERIA_MetaTemplate_isTrue($tag, $templateFileName) {
+		if(!$tag->get('variable'))
+			return '<?php echo SERIA_MetaTemplate::displayError(\'Required parameters for s:isTrue is "variable".\'); ?>';
+
+		SERIA_MetaTemplate::push('s:isTrue');
+
+		return '<?php if(!empty('.SERIA_MetaTemplate::attributeToConstant($tag->get('variable')).') && '.SERIA_MetaTemplate::attributeToConstant($tag->get('variable')).') { ?>';
+	}
+
+	function SERIA_MetaTemplate_isTrueClose($tag, $templateFileName) {
+		try {
+			SERIA_MetaTemplate::pop('s:isTrue');
+		} catch (SERIA_MetaTemplateException $e) {
+			return '<?php echo SERIA_MetaTemplate::displayError('.var_export($e->getMessage(), true).'); ?>';
+		}
+		return '<?php } ?>';
+	}
+
+	function SERIA_MetaTemplate_isFalse($tag, $templateFileName) {
+		if(!$tag->get('variable'))
+			return '<?php echo SERIA_MetaTemplate::displayError(\'Required parameters for s:isFalse is "variable".\'); ?>';
+
+		SERIA_MetaTemplate::push('s:isFalse');
+		return '<?php if(empty('.SERIA_MetaTemplate::attributeToConstant($tag->get('variable')).')) { ?>';
+	}
+
+	function SERIA_MetaTemplate_isFalseClose($tag, $templateFileName) {
+		try {
+			SERIA_MetaTemplate::pop('s:isFalse');
+		} catch (SERIA_MetaTemplateException $e) {
+			return '<?php echo SERIA_MetaTemplate::displayError('.var_export($e->getMessage(), true).'); ?>';
+		}
+		return '<?php } ?>';
 	}
 
 	/**
