@@ -35,6 +35,7 @@ class SERIA_Validator
 	const RTMP_URL = 28;			// array(SERIA_Validator::RTMP_URL[, 'Custom error message']);
 	const TIMEZONE = 29;			// array(SERIA_Validator::TIMEZONE[, 'Custom error message']);
 	const CURRENCYCODE = 30;		// array(SERIA_Validator::CURRENCYCODE[, 'Custom error message']);
+	const FILEPATH = 31;			// array(SERIA_Validator::FILEPATH[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -66,7 +67,8 @@ class SERIA_Validator
 			switch($rule[0])
 			{
 				case self::REQUIRED :
-						if(empty($value) && $value !== 0 && $value !== '0') return _t("Required");
+					if(empty($value) && $value !== 0 && $value !== '0')
+						return _t("Required");
 					break;
 				case self::MIN_LENGTH:
 					if (mb_strlen($value) < $rule[1])
@@ -77,7 +79,7 @@ class SERIA_Validator
 					array_shift($args);
 					$func = array_shift($args);
 					$args[] = $value;
-					$args[] = $extra;
+					$args[] = $extra; 
 					$err = call_user_func_array($func, $args);
 					if ($err)
 						return $err;
@@ -329,6 +331,22 @@ class SERIA_Validator
 					$dictionary = SERIA_Dictionary::getDictionary('iso-4217');
 					if(!isset($dictionary[$value]))
 						return isset($rule[1]) ? $rule[1] : _t("No such currency code.");
+					break;
+				case self::FILEPATH:
+					$illegalChars = ":&|><*?\"'";
+					$parts = explode("/", str_replace('\'', '/', $value));
+					foreach($parts as $part)
+						if(empty($part))
+							return isset($rule[1]) ? $rule[1] : _t("Problem with path delimiters.");
+					$l = strlen($illegalChars);
+					foreach($parts as $part)
+					{
+						if(!ctype_print($part))
+							return isset($rule[1]) ? $rule[1] : _t("Unprintable characters in path component.");
+						for($i = 0; $i < $l; $i++)
+							if(strpos($part, $illegalChars[$i])!==false)
+								return isset($rule[1]) ? $rule[1] : _t("Illegal character %CHAR% in path component.", array('CHAR' => $illegalChars[$i]));
+					}
 					break;
 			}
 		}
