@@ -33,6 +33,6 @@
 			}
 			return false;
 		}
-		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to Meta.', SERIA_Exception::USAGE_ERROR);}
-		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values on Meta.', SERIA_Exception::USAGE_ERROR);}
+		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to Meta.', SERIA_Exception::INCORRECT_USAGE);}
+		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values on Meta.', SERIA_Exception::INCORRECT_USAGE);}
 	}

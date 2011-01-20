@@ -51,6 +51,6 @@
 			return call_user_func(array($this->_class, $offset));
 		}
 
-		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to MetaQuery.', SERIA_Exception::USAGE_ERROR);}
-		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values on MetaQuery.', SERIA_Exception::USAGE_ERROR);}
+		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to MetaQuery.', SERIA_Exception::INCORRECT_USAGE);}
+		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values on MetaQuery.', SERIA_Exception::INCORRECT_USAGE);}
 	}

@@ -50,6 +50,6 @@
 					return new self($this->_manifest, $this->_path.'/'.$offset);
 			}
 		}
-		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to a Manifest URL.', SERIA_Exception::USAGE_ERROR);}
-		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values from a Manifest URL.', SERIA_Exception::USAGE_ERROR);}
+		public function offsetSet($offset, $value) { throw new SERIA_Exception('Unable to assign values to a Manifest URL.', SERIA_Exception::INCORRECT_USAGE);}
+		public function offsetUnset($offset) { throw new SERIA_Exception('Unable to unset values from a Manifest URL.', SERIA_Exception::INCORRECT_USAGE);}
 	}
