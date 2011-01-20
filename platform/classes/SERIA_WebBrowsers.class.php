@@ -38,12 +38,18 @@ class SERIA_WebBrowsers
 		$onlySockets = array();
 		foreach ($this->webbrowsers as &$record) {
 			$record['webbrowser']->requestDataTimeout = $this->timeout;
-			$record['webbrowser']->send();
+			try {
+				$record['webbrowser']->send();
+				$onlySockets[] = $record['webbrowser']->getSocket();
+			} catch (SERIA_Exception $e) {
+				$record['exception'] = $e;
+				$record['error'] = $e->getMessage();
+				$record['data'] = false;
+			}
 			$sockets[] = array(
 				'record' => &$record,
 				'socket' => $record['webbrowser']->getSocket()
 			);
-			$onlySockets[] = $record['webbrowser']->getSocket();
 		}
 		$prepared = true;
 		return array(
@@ -57,7 +63,7 @@ class SERIA_WebBrowsers
 		$sockets =& $this->prepareAll();
 		$write = array();
 		$remainingSockets = $sockets['sockets'];
-		$remaining = count($this->webbrowsers);
+		$remaining = count($remainingSockets);
 		$timedOut = false;
 		while ($remaining > 0) {
 			if (!$timedOut && time() > ($startime + $this->timeout + 1))
