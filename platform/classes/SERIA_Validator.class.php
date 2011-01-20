@@ -334,7 +334,7 @@ class SERIA_Validator
 					break;
 				case self::FILEPATH:
 					$illegalChars = ":&|><*?\"'";
-					$parts = explode("/", str_replace('\'', '/', $value));
+					$parts = explode("/", str_replace('\\', '/', $value));
 					foreach($parts as $part)
 						if(empty($part))
 							return isset($rule[1]) ? $rule[1] : _t("Problem with path delimiters.");
