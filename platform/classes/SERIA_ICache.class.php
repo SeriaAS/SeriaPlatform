@@ -1,6 +1,7 @@
 <?php
 	interface SERIA_ICache {
-		function __construct($namespace='');
-		function get($name);
-		function set($name, $value, $expires=1800);
+		public function __construct($namespace='');
+		public function get($name);
+		public function set($name, $value, $expires=1800);
+		public function deleteAll();
 	}
