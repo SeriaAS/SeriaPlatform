@@ -3,6 +3,8 @@
 
 	class SERIA_EsiFrontendApplication extends SERIA_Application
 	{
+		protected $cache = null;
+
 		function getId() { return 'seria_esiFrontend'; }
 		function getHttpPath() { return SERIA_HTTP_ROOT.'/seria/apps/esiFrontend'; }
 		function getInstallationPath() { return dirname(dirname(__FILE__)); }
@@ -17,6 +19,26 @@
 		{
 			SERIA_Hooks::listen(SERIA_GuiHooks::EMBED, array($this, 'guiEmbed'));
 			SERIA_Hooks::listen('seria_router', array($this, 'router'), -100);
+		}
+
+		/**
+		 *
+		 * Returns the cache-object used in this instance of the esi-application.
+		 * @return SERIA_ICache
+		 */
+		public function getCacheObject()
+		{
+			if ($this->cache === null)
+				$this->cache = new SERIA_Cache('Esi');
+			return $this->cache;
+		}
+		/**
+		 *
+		 * Delete all ESI-cache.
+		 */
+		public function deleteAllCache()
+		{
+			$this->getCacheObject()->deleteAll();
 		}
 
 		function putCache($key, $c, &$cache) {
@@ -39,7 +61,7 @@
 			SERIA_Hooks::dispatch('esiFrontend_beforeLoading', $class);
 			$url = $class->url;
 
-			$cache = new SERIA_Cache('Esi');
+			$cache = $this->getCacheObject();
 			
 			$cacheKey = md5($url);
 
