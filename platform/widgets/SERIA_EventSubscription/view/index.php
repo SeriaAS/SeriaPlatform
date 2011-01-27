@@ -113,7 +113,8 @@ if (!isset($_GET['event_subscribed']) || $_GET['event_subscribed'] != $this->get
 		?>
 		<script type='text/javascript'>
 			<!--
-				function SubscribeFormSwitch_<?php echo $id; ?>()
+				<?php $jsRef = mt_rand().mt_rand(); ?>
+				function SubscribeFormSwitch_<?php echo $jsRef.$id; ?>()
 				{
 					var button_obj = document.getElementById('SubscribeFormButton_<?php echo $id; ?>');
 					var obj = document.getElementById('<?php echo $id ?>');
@@ -129,7 +130,7 @@ if (!isset($_GET['event_subscribed']) || $_GET['event_subscribed'] != $this->get
 			-->
 		</script>
 		<div>
-			<button class='subscribe_form_switch_on' id='SubscribeFormButton_<?php echo $id; ?>' type='button' onclick="SubscribeFormSwitch_<?php echo $id; ?>();"><?php echo htmlspecialchars(_t("Subscribe")); ?></button>
+			<button class='subscribe_form_switch_on' id='SubscribeFormButton_<?php echo $id; ?>' type='button' onclick="SubscribeFormSwitch_<?php echo $jsRef.$id; ?>();"><?php echo htmlspecialchars(_t("Subscribe")); ?></button>
 		</div>
 		<div class='subscribe_form_switch' id='<?php echo $id; ?>' style='display: <?php echo ($errorMode ? 'block' : 'none'); ?>;'>
 			<div class='subscribe_form_container'>
