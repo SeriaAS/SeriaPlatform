@@ -37,11 +37,23 @@
 			$r = new ReflectionClass($_REQUEST['c']);
 			if(!$r->implementsInterface('SERIA_RPCServer'))
 				throw new SERIA_Exception('The class '.$_REQUEST['c'].' does not implement SERIA_RPCServer.');
-
 			$arguments = array();
-			$i = 0;
-			while(isset($_REQUEST[$i]))
-				$arguments[] = $_REQUEST[$i++];
+			$keys = array_keys($_REQUEST);
+			$kMax = -1;
+			foreach($keys as $key)
+			{ // find last key
+				if(is_numeric($key))
+				{
+					if($key>$kMax) $kMax = $key;
+				}
+			}
+			for($i = 0; $i < $kMax+1; $i++)
+			{ // populate arguments
+				if(isset($_REQUEST[$i]))
+					$arguments[$i] = $_REQUEST[$i];
+				else
+					$arguments[$i] = NULL;
+			}
 
 			$result = call_user_func_array($callback, $arguments);
 			call_user_func($serialize, $result);
