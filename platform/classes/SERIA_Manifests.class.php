@@ -34,6 +34,10 @@ class SERIA_Manifests {
 	*	and logs which tables are created by which component, so that uninstallation
 	*	is possible in the future.
 	*
+	*	********************************************************
+	*	SERIAL must increase by one for every change you do!!!!!
+	*	********************************************************
+	*
 	*	Format of a basic manifest file:
 	*	class ComponentNameManifest {
 	*		static SERIAL = 5; 			// the serial number is used to identify which version this file is
