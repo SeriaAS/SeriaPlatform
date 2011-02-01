@@ -678,6 +678,16 @@
 							array(SERIA_Validator::CALLBACK, array('SERIA_Meta', 'classNameValidator'), $info[2]),
 						)),
 					);
+				case "hexcolor" :
+					return array(
+						"fieldtype" => 'text',
+						"type" => "varchar(8)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MIN_LENGTH, 6),
+							array(SERIA_Validator::MAX_LENGTH, 8),
+							array(SERIA_Validator::LEGAL_CHARS, str_split('aAbBcCdDeEfF1234567890'))
+						))
+					);
 				case "datetime" :
 					return SERIA_DateTimeMetaField::MetaField();
 				case "date" :
