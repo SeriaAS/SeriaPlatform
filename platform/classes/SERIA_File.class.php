@@ -1224,6 +1224,8 @@
 			return $this->id;
 		}
 
+		public function toDB() { return $this->id; }
+
 		public static function MetaField()
 		{
 			return array(
