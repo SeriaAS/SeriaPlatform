@@ -1,5 +1,5 @@
 <?php
-	class SERIA_User implements SERIA_NamedObject, SERIA_IFluentObject, ArrayAccess
+	class SERIA_User implements SERIA_NamedObject, SERIA_IFluentObject, ArrayAccess, SERIA_IMetaField
 	{
 		private $_row,
 			$_rights = false,
@@ -763,4 +763,58 @@
 			} else
 				SERIA_Base::pageRequires('login');
 		}
+
+		/**
+		*	Interface SERIA_IMetaField
+		*/
+		public static function createFromUser($value)
+		{
+			try {
+				return self::createObject($value);
+			}
+			catch (SERIA_Exception $e)
+			{
+				return NULL;
+			}
+		}
+
+		public static function createFromDb($value)
+		{
+			return self::createObject($value);
+		}
+
+		public function toDbFieldValue()
+		{
+			return $this->getKey();
+		}
+
+		public static function MetaField()
+		{
+			return array(
+				'type' => 'integer',
+				'class' => 'SERIA_User',
+			);
+		}
+
+		public static function renderFormField($fieldName, $value, array $params=NULL, $hasError=false)
+		{
+			if($value!==NULL)
+				$value = $value->getKey();
+
+/**
+                          'id' => $this->_prefix.$name,
+                                'name' => $this->_prefix.$name,
+                                'class' => 'select'.($this->hasError($name)?' ui-state-error':''),
+*/
+			$r = '<select id="'.$fieldName.'" class="select'.($hasError?' ui-state-error':'').'" name="'.$fieldName.'"><option></option>';
+			$users = SERIA_Fluent::all('SERIA_User');
+
+			foreach($users as $user)
+				$r.= '<option value="'.$user->get("id").'"'.($user->getKey()===$value?' selected="selected"':'').'>'.$user->get("display_name").'</option>';
+
+			$r .= '</select>';
+
+			return $r;
+		}
+
 	}
