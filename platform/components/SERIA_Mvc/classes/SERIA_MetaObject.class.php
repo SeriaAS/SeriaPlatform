@@ -38,6 +38,11 @@
 			return SERIA_Meta::load(get_called_class(), $value);
 		}
 
+		public function toDbFieldValue()
+		{
+			return $this->MetaBackdoor('get_key');
+		}
+
 		public static function renderFormField($fieldName, $current, array $params=NULL, $hasError=false)
 		{
 			$values = SERIA_Meta::all(get_called_class());
@@ -230,7 +235,7 @@
 							}
 							else if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$name]['class'])))
 							{
-								$this->row[$name] = call_user_func(array($value, 'toDb'));
+								$this->row[$name] = call_user_func(array($value, 'toDbFieldValue'));
 							}
 							else if(is_subclass_of($spec['fields'][$name]['class'], 'SERIA_FluentObject') || in_array('SERIA_IFluentObject', class_implements($spec['fields'][$name]['class'])))
 							{

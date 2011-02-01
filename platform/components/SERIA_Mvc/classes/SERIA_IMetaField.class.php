@@ -52,7 +52,7 @@
 		*
 		*	@return string
 		*/
-		public function toDb();
+		public function toDbFieldValue();
 
 		/**
 		*	Return an array of information for SERIA_Meta. It is returned as an array to provide for additional

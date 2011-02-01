@@ -18,7 +18,7 @@ class SERIA_UrlMetaField extends SERIA_Url implements SERIA_IMetaField
 		{
 			return new SERIA_UrlMetaField($value);
 		}
-		public function toDb()
+		public function toDbFieldValue()
 		{
 			return $this->_url;
 		}

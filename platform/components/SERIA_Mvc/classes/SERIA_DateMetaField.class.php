@@ -56,7 +56,7 @@
 			return $this->_dateTime->renderUserDate();
 		}
 
-		public function toDb()
+		public function toDbFieldValue()
 		{
 			return $this->_dateTime->render('Y-m-d');
 		}

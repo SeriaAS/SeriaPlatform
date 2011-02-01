@@ -148,7 +148,7 @@ class SERIA_AlertGenerator
 					/* Insert alerts */
 					<?php
 						$timeNow = new SERIA_DateTimeMetaField(time());
-						$timeNow = $timeNow->toDb();
+						$timeNow = $timeNow->toDbFieldValue();
 						$scheduled = SERIA_Meta::all('SERIA_AlerterSchedule')->where('start <= :start AND stop > :stop', array('start' => $timeNow, 'stop' => $timeNow));
 						$shown = false;
 						foreach ($scheduled as $item) {

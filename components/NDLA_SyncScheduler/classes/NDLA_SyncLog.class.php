@@ -141,7 +141,7 @@ class NDLA_SyncLog extends SERIA_MetaObject
 		/* Check schedules */
 		$fromDateTime = new SERIA_DateTimeMetaField($fromTime);
 		$toDateTime = new SERIA_DateTimeMetaField($toTime);
-		$syncs = SERIA_Meta::all('NDLA_ScheduledSync')->where('syncDate > :fromTime AND syncDate <= :toTime', array('fromTime' => $fromDateTime->toDb(), 'toTime' => $toDateTime->toDb()))->count();
+		$syncs = SERIA_Meta::all('NDLA_ScheduledSync')->where('syncDate > :fromTime AND syncDate <= :toTime', array('fromTime' => $fromDateTime->toDbFieldValue(), 'toTime' => $toDateTime->toDbFieldValue()))->count();
 		if ($syncs) {
 			if (!self::syncPause())
 				self::doSync('Scheduled sync');
@@ -152,7 +152,7 @@ class NDLA_SyncLog extends SERIA_MetaObject
 			if ($minute < 45) {
 				$fromDateTime = new SERIA_DateTimeMetaField($toTime);
 				$toDateTime = new SERIA_DateTimeMetaField($toTime + 36000); /* 10 hrs */
-				$nearFutureSyncs = SERIA_Meta::all('NDLA_ScheduledSync')->where('syncDate > :fromTime AND syncDate <= :toTime', array('fromTime' => $fromDateTime->toDb(), 'toTime' => $toDateTime->toDb()))->count();
+				$nearFutureSyncs = SERIA_Meta::all('NDLA_ScheduledSync')->where('syncDate > :fromTime AND syncDate <= :toTime', array('fromTime' => $fromDateTime->toDbFieldValue(), 'toTime' => $toDateTime->toDbFieldValue()))->count();
 				if (!$nearFutureSyncs)
 					self::writeSyncLogEntry('Polled: Not syncing');
 			}

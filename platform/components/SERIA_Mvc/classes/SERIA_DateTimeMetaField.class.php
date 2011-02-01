@@ -202,7 +202,7 @@
 			return $this->_dateTime->renderUserDateTime();
 		}
 
-		public function toDb()
+		public function toDbFieldValue()
 		{
 			return $this->_dateTime->render('Y-m-d H:i:s');
 		}
