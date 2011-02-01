@@ -5,7 +5,7 @@
 	if(SERIA_Base::isLoggedIn()){
 			if(!isset($_GET["file_id"]))
 				throw new SERIA_Exception('Must provide file_id for information regarding conversion status');
-	
+
 			$file_id = $_GET["file_id"];
 			$info = PowerpointConverterJobInformation::createFromFileId($file_id);
 
@@ -16,11 +16,11 @@
 					<Description>
 						'.$info->get('description').'
 					</Description>
-					
+
 				</Job>';
-	
+
 		} else {
-	
+
 			$contents = '<Job>
 					<Progress>
 						"Ukjent feil,"
@@ -28,7 +28,6 @@
 					<Description>
 						" ikke logget inn "
 					</Description>
-					
 				</Job>';
 		}
 	} catch(SERIA_Exception $e) {
@@ -39,7 +38,6 @@
 				<Description>
 					'.$e->getMessage().'
 				</Description>
-				
-			</Job>';	
+			</Job>';
 	}
 	SERIA_Template::override('text/xml', $contents);

@@ -11,11 +11,14 @@ class LiveAPI implements SERIA_RPCServer {
 		return time();
 	}
 
-	private static function recordEvent($articleId, $eventType, $eventValue)
+	private static function recordEvent($articleId, $eventType, $eventValue, $ts = 0)
 	{
 		LiveAPI::authenticate();
 
-		$servertimestamp = time();
+		if($ts === 0)
+			$servertimestamp = time();
+		else
+			$servertimestamp = $ts;
 
 		$article = LiveAPI::createArticle($articleId);
 		$eventArray = $article->recordEvent($eventType, $eventValue, $servertimestamp);
@@ -44,9 +47,9 @@ class LiveAPI implements SERIA_RPCServer {
 	{
 		RPCServer::requireAuthentication();
 		$db = SERIA_Base::db();
-		
+
 		$eventKey = md5(time().$articleId.$width.$height.'j04k');
-		
+
 		$res = $db->exec('INSERT INTO serialive_eventkeys VALUES(:articleId, :eventkey)',array(
 			'articleId' => $articleId,
 			'eventkey' => $eventKey));
@@ -198,6 +201,25 @@ class LiveAPI implements SERIA_RPCServer {
 		return true;
 	}
 
+	public static function rpc_getConverterInformation($fileId) {
+		if(SERIA_Base::isLoggedIn()){
+			if(!isset($fileId))
+				throw new SERIA_Exception('Must provide file_id for information regarding conversion status');
+
+			$info = PowerpointConverterJobInformation::createFromFileId($fileId);
+
+			$r['status'] = 'OK';
+			$r['progress'] = $info->get("progress");
+			$r['description'] = $info->get("description");
+		} else {
+			$r['status'] = 'FAILED';
+			$r['progress'] = 'Ukjent feil';
+			$r['description'] = 'Ikke logget inn';
+		}
+
+		return $r;
+	}
+
 	public static function rpc_hello($articleId)
 	{
 		LiveAPI::authenticate();
@@ -255,7 +277,24 @@ class LiveAPI implements SERIA_RPCServer {
 	public static function rpc_getCustomers()
 	{
 		if(SERIA_Base::isLoggedIn()) {
-			return array(SERIA_Base::user()->get("id") => SERIA_Base::user()->get("display_name"));
+			$customers = array();
+
+			$customerQuery = SERIA_Meta::all('PresentationCompany');
+			while($currentCustomer = $customerQuery->next()) {
+				$customers[] = array("id" =>$currentCustomer->get("id"),
+							"name" => $currentCustomer->get("name"));
+			}
+
+			$producerUser = new SERIA_MetaQuery('ProducerUser');
+			$producerUser->where('user='.SERIA_Base::user()->get("id"));
+
+			$productionCompany = $producerUser->current()->get("producer");
+
+			$selfObject["id"] = $productionCompany->get("id");
+			$selfObject["name"] = $productionCompany->get("name");
+//joakim
+			array_unshift($customers, $selfObject);
+			return $customers;
 		}
 		else {
 			return 'NOT LOGGED IN';
@@ -448,6 +487,7 @@ fwrite($fp, 'setting video files');
 				case "application_name" :
 				case "streamname" :
 				case "is_published" :
+				case "customer_id" :
 				case "pausetext" :
 				case "speaker_image_id" :
 				case "foils_id" :
@@ -460,6 +500,12 @@ fwrite($fp, 'setting video files');
 				case "broadcast_method" :
 				case "uploaded_video_file_id" : 
 				case "status" :
+				case "requires_registration" :
+				case "requires_password" :
+				case "presentation_password" :
+				case "requires_emailcheck" :
+				case "requires_authentication" :
+				case "emailcheck_domain" :
 				case "recording_skip" : 
 					$article->set($field, $value);
 					break;
@@ -517,7 +563,89 @@ fwrite($fp, 'setting video files');
 		return $article;
 	}
 
-	public static function rpc_fetchArticle($id, $secretKey='') {
+	public static function rpc_getArticleInformation($id) {
+		if(!$id)
+			throw new SERIA_Exception('Invalid ID given, unable to create article from id '.intval($id));
+
+		$article = LiveAPI::createArticle($id);
+
+		$fields['requires_authentication'] = $article->get("requires_authentication");
+		$fields['requires_registration'] = $article->get("requires_registration");
+		$fields['requires_password'] = $article->get("requires_password");
+
+		if($article->get("background_image_id")) {
+			try {
+				$file = SERIA_File::createObject($article->get("background_image_id"));;
+				$fields['backgroundImage'] = $file->getThumbnailURL(1600,1200);
+				$fields['backgroundWidth'] = $file->getMeta("image_width");
+				$fields['backgroundHeight'] = $file->getMeta("image_height");
+			} catch(SERIA_Exception $e) {
+				$fields['backgroundImage'] = false;
+			}
+		}
+
+		$fields['event_date'] = $article->get("event_date");
+
+
+		return $fields;
+	}
+
+	public static function rpc_registerFlashError($id, $error)
+	{
+		$counter = new SERIA_Counter("SERIA_FlashErrors");
+
+		$counter->add(array($error, $id.'_errors', $id.'_'.$error), 1);
+
+		return true;
+	}
+
+	public static function rpc_registerBlockHour($id, $blockNumber)
+	{
+		$article = SERIA_Article::createObjectFromId($id);
+
+		// Presentation is finished, no need to count live viewers.
+		if(($article->get("status") == "finished") || ($article->get("status") == "published"))
+			return false;
+
+/*
+		session_start();
+
+		if($_SESSION["block".$blockNumber] == "registered") {
+			// Do nothing, we already registered
+			$registerBlockView = false;
+		} else {
+			// Register viewer
+			$registerBlockView = true;
+			$_SESSION["block".$blockNumber] = "registered";
+		}
+*/
+		$counter = new SERIA_Counter("SERIA_LiveArticleBlockHours");
+
+//		if($registerBlockView) {
+			// Register as value-click
+		$counter->add(array(
+				'total',
+				'total_Year_'.date("Y"),
+				'total_YearMonth_'.date("Y-m"),
+				'total_YearMonthDate_'.date("Y-m-d"),
+				'total_Year_Customer_'.date("Y").'_{'.$article->get("customer_id").'}',
+				'total_YearMonth_Customer_'.date("Y-m").'_{'.$article->get("customer_id").'}',
+				'total_YearMonthDate_Customer_'.date("Y-m-d").'_{'.$article->get("customer_id").'}',
+				'total_Hour_'.date("H"),
+				'billable_webcastviewerhour_'.$blockNumber."{".$article->get("id")."}",
+				'blockhours', 'blocknumber_'.$blockNumber
+			), 1
+		);
+//		} else {
+			// Register as a duplicate (could be nice to have incase something goes wrong !
+//			$counter->add(array('unbillable_blockhours', 'unbillable_blocknumber_'.$blockNumber), 1);
+//		}
+
+		return true;
+	}
+
+	public static function rpc_fetchArticle($id, $secretKey='', $secureAccessToken='') {
+		session_start();
 		$article = LiveAPI::createArticle($id);
 
 		$article->countView();
@@ -531,6 +659,7 @@ fwrite($fp, 'setting video files');
 
 		$fields = $article->toArray();
 		$fields['isLoggedIn'] = SERIA_Base::isLoggedIn();
+		$fields['serverTime'] = time();
 		$fields['id'] = $article->get("id");
 		$fields['article_id'] = $article->get("id");
 		$fields['is_live'] = !($isFinished = ($article->get("status") == 'published' || $article->get("status") == 'finished'));
@@ -551,7 +680,6 @@ fwrite($fp, 'setting video files');
 				$fields['uploaded_video_file_url'] = 'Kunne ikke finne videofil: '.$e->getMessage();
 			}
 		}
-
 		if($article->get("company_logo_id")) {
 			try {
 				$companyLogo = SERIA_File::createObject($article->get("company_logo_id"))->getThumbnailUrl(110,75);
@@ -669,9 +797,164 @@ fwrite($fp, 'setting video files');
 			$fields['publish_point'] = 'hidden';
 		}
 
-
+		if(SERIA_Base::isLoggedIn() && (SERIA_Base::user()->get("id") == $article->get("author_id"))) {
+			// Logged in and got access, no need to verify streamtoken
+		} else if($fields['requires_registration'] && $fields['requires_authentication']) {
+			if(!isset($secureAccessToken)) {
+				$fields['streamname'] = '';
+			} else if(isset($secureAccessToken) && !LiveAPI::verifyToken($article->get("id"), $secureAccessToken)) {
+				$fields['streamname'] = '';
+				$fields['streamname_error'] = "Failed to validate token, unable to play presentation";
+			}
+		}
 
 		return $fields;
+	}
+
+	private static function userHasRegistered($presentationId) {
+		session_start();
+		return $_SESSION['registration'][$presentationId];
+	}
+
+	private static function sendPresentationByMail($article, $email, $name) {
+		$accesstoken = LiveAPI::createToken($article->get("id"));
+		mail($email, 'Hello '.$name, 'Hello watch your presentation yes please with token : '.SERIA_HTTP_ROOT.'/watch.php?id='.$article->get("id").'&amp;token='.$accesstoken);
+	}
+
+	public static function rpc_sessionTest()
+	{
+		session_start();
+		if(!isset($_SESSION['sessionTest']))
+			 $_SESSION['sessionTest'] = 0;
+		return $_SESSION['sessionTest']++;
+	}
+
+	public static function rpc_requestAccessToken($articleId, $name, $email, $password) {
+		$emailSent = 0;
+		$article = SERIA_Article::createObjectFromId($articleId);
+		if(!$article->get("requires_authentication")) {
+			throw new SERIA_Exception("Requested accesstoken for public article");
+		}
+		if($article->get("requires_password")) {
+			if(empty($password))
+				$errors['password'] = 'No password specified';
+			if($password == $article->get("presentation_password"))
+				$passwordInputCorrect = true;
+			if(!($password == $article->get("presentation_password")))
+				$errors['password'] = 'Specified password was incorrect';
+		}
+		if($article->get("requires_registration")) {
+			if(empty($name)) {
+				$errors['name'] = 'Name must be provided';
+			}
+			if(empty($email)) {
+				$errors['email'] = 'E-Mail must be provided';
+			}
+			if(!empty($name) && !empty($email)) {
+				$article = SERIA_Article::createObjectFromId($articleId);
+				if($article->get("requires_emailcheck")) {
+					$emailDomain = substr($email, strpos($email, '@')+1);
+					if($emailDomain == $article->get("emailcheck_domain")) {
+						LiveAPI::sendPresentationByMail($article, $email, $name);
+						$emailSent = 1;
+					} else {
+						$errors['email'] = 'Unable to grant your email address access to this presentation';
+					}
+				}
+			}
+		} else {
+			// Article doesn't require registration
+			// But name and email could be supplied by the flash due to flash cookies.
+			// So lets check them for emptieness!
+			if(empty($name))
+				$name = 'Not required';
+			if(empty($email))
+				$email = 'notrequired@notrequired.com';
+		}
+		if(sizeof($errors)) {
+			$requestToken = false;
+		} else {
+
+			$registeredViewer = new RegisteredViewer();
+
+			$registeredViewer->set('name', $name);
+			$registeredViewer->set('email', $email);
+			$registeredViewer->set('usedPassword', $article->get("requires_password") ? 1 : 0);
+			$registeredViewer->set('sentAsEmail', $emailSent);
+
+
+			$registeredViewer->set('presentationId', $article->get("id"));
+
+			try {
+				SERIA_Meta::save($registeredViewer);
+				$accessToken = LiveAPI::createToken($article->get("id"));
+				$registeredViewer->set('accessToken', $accessToken);
+				SERIA_Meta::save($registeredViewer);
+			} catch (SERIA_ValidationException $e) {
+				$errors['registering_viewer'] = $e->getMessage();
+			}
+		}
+
+//$errors = SERIA_Meta::validate($registeredViewer);
+
+		return array(
+			'emailSent' => $emailSent,
+			'accessToken' => $accessToken,
+			'errors' => $errors,
+		);
+	}
+
+	public static function createToken($articleId) {
+		$randomToken = LiveAPI::generateRandomString(24);
+
+		$token = new AccessToken();
+		$token->set('token', $randomToken);
+		$token->set('used', 0);
+		$token->set('presentationId', $articleId);
+		SERIA_Meta::save($token);
+
+		return $randomToken;
+	}
+	public static function verifyToken($presentationId, $secureAccessToken) {
+		$mq = new SERIA_MetaQuery('AccessToken');
+		$mq->where('token="'.$secureAccessToken.'"');
+		$mq->where('presentationId='.$presentationId);
+
+		if($mq->count() == 1) {
+			$token = $mq->current();
+			$token->set('used', 1);
+			return SERIA_Meta::save($token);
+		} else if($mq->count() > 1) {
+			throw new SERIA_Exception('More than one hit to a single access token');
+		}
+		return false;
+	}
+
+	public static function generateRandomString($length=6,$level=2){
+		list($usec, $sec) = explode(' ', microtime());
+		srand((float) $sec + ((float) $usec * 100000));
+
+		$validchars[1] = "0123456789abcdfghjkmnpqrstvwxyz";
+		$validchars[2] = "0123456789abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		$validchars[3] = "0123456789_!@#$%&*()-=+/abcdfghjkmnpqrstvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_!@#$%&*()-=+/";
+
+		$token = "";
+		$counter = 0;
+
+		while ($counter < $length) {
+			$actChar = substr($validchars[$level], rand(0, strlen($validchars[$level])-1), 1);
+
+			// All character must be different
+			if (!strstr($token, $actChar)) {
+				$token .= $actChar;
+				$counter++;
+			}
+		}
+		return $token;
+	}
+
+	public static function validateRegistration($articleId, $name, $email) {
+
 	}
 
 	private static function generateFoilsUrl($article) {

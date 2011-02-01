@@ -4,389 +4,251 @@
 	 *	$_GET["articleId"] is the article id in question
 	 *	$_GET["localTime"] is the local timestamp of the computer running the flash media encoder program
 	 *
-	 *	We use these params to generate a delay compared to server time. We then use that delay to synchronize	
+	 *	We use these params to generate a delay compared to server time. We then use that delay to synchronize
 	 *	the foilmanager's timestamp to the encoder's timestamp. The videoframes will then be encoded with TS=x
 	 *	which we then can use to fetch a foil positioned at TS=x in our event list. (listening to onFI in flash client)
-	 * 
+	 *
 	 **/
 
 	function generateXML($article)
 	{
-return '<?xml version="1.0" encoding="UTF-8"?>
-<flashmedialiveencoder_profile>
-    <preset>
-        <name>High Bandwidth (800 Kbps) - VP6</name>
-        <description></description>
-    </preset>
-    <capture>
-        <video>
-        <device>VHScrCap</device>
-        <crossbar_input>0</crossbar_input>
-        <frame_rate>15.00</frame_rate>
-        <size>
-            <width>320</width>
-            <height>240</height>
-        </size>
-        </video>
-        <audio>
-        <device></device>
-        <crossbar_input>0</crossbar_input>
-        <sample_rate>44100</sample_rate>
-        <channels>2</channels>
-        <input_volume>75</input_volume>
-        </audio>
-        <timecode>
-        <frame_rate>25</frame_rate>
-        <systemtimecode>true</systemtimecode>
-        <devicetimecode>
-            <enable>false</enable>
-            <vertical_line_no>16</vertical_line_no>
-            <burn>false</burn>
-            <row>Bottom</row>
-            <column>Left</column>
-        </devicetimecode>
-        </timecode>
-    </capture>
-    <process>
-        <video>
-        <preserve_aspect></preserve_aspect>
-        </video>
-    </process>
-    <encode>
-        <video>
-        <format>H.264</format>
-        <datarate>650;</datarate>
-        <outputsize>320x240;</outputsize>
-        <advanced>
-            <keyframe_frequency>5 Seconds</keyframe_frequency>
-            <quality>Good Quality - Good Framerate</quality>
-	    <profile>Baseline</profile>
-	    <level>3.0</level>
-            <noise_reduction>None</noise_reduction>
-            <datarate_window>Medium</datarate_window>
-            <cpu_usage>Dedicated</cpu_usage>
-        </advanced>
-        <autoadjust>
-            <enable>false</enable>
-            <maxbuffersize>1</maxbuffersize>
-            <dropframes>
-            <enable>false</enable>
-            </dropframes>
-            <degradequality>
-            <enable>false</enable>
-            <minvideobitrate></minvideobitrate>
-            <preservepfq>false</preservepfq>
-            </degradequality>
-        </autoadjust>
-        </video>
-        <audio>
-        <format>MP3</format>
-        <datarate>128</datarate>
-        </audio>
-    </encode>
-    <restartinterval>
-        <days></days>
-        <hours></hours>
-        <minutes></minutes>
-    </restartinterval>
-    <reconnectinterval>
-        <attempts></attempts>
-        <interval></interval>
-    </reconnectinterval>
-    <output>
-        <rtmp>
-        <url>rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</url>
-        <backup_url></backup_url>
-        <stream>'.$article->get("publish_point").'</stream>
-        </rtmp>
-        <file>
-        <limitbysize>
-            <enable>false</enable>
-            <size>10</size>
-        </limitbysize>
-        <limitbyduration>
-            <enable>false</enable>
-            <hours>1</hours>
-            <minutes>0</minutes>
-        </limitbyduration>
-        <path>sample.flv</path>
-        </file>
-    </output>
-    <metadata></metadata>
-    <preview>
-        <video>
-        <input>
-            <zoom>100%</zoom>
-        </input>
-        <output>
-            <zoom>100%</zoom>
-        </output>
-        </video>
-        <audio></audio>
-    </preview>
-    <log>
-        <level>100</level>
-        <directory></directory>
-    </log>
+
+return '<flashmedialiveencoder_profile>
+<preset>
+<name>Custom</name>
+<description></description>
+</preset>
+<capture>
+<video>
+<device></device>
+<crossbar_input>0</crossbar_input>
+<frame_rate>25.00</frame_rate>
+<size>
+<width>640</width>
+<height>480</height>
+</size>
+</video>
+<audio>
+<device></device>
+<crossbar_input>0</crossbar_input>
+<sample_rate>44100</sample_rate>
+<channels>2</channels>
+<input_volume>75</input_volume>
+</audio>
+</capture>
+<process>
+<video>
+<preserve_aspect></preserve_aspect>
+</video>
+</process>
+<encode>
+<video>
+<format>VP6</format>
+<datarate>544;</datarate>
+<outputsize>640x480;</outputsize>
+<advanced>
+<keyframe_frequency>5 Seconds</keyframe_frequency>
+<quality>Good Quality - Good Framerate</quality>
+<noise_reduction>None</noise_reduction>
+<datarate_window>Medium</datarate_window>
+<cpu_usage>Dedicated</cpu_usage>
+</advanced>
+<autoadjust>
+<enable>false</enable>
+<maxbuffersize>1</maxbuffersize>
+<dropframes>
+<enable>false</enable>
+</dropframes>
+<degradequality>
+<enable>false</enable>
+<minvideobitrate></minvideobitrate>
+<preservepfq>false</preservepfq>
+</degradequality>
+</autoadjust>
+</video>
+<audio>
+<format>MP3</format>
+<datarate>96</datarate>
+</audio>
+</encode>
+<restartinterval>
+<days></days>
+<hours></hours>
+<minutes></minutes>
+</restartinterval>
+<reconnectinterval>
+<attempts></attempts>
+<interval></interval>
+</reconnectinterval>
+<output>
+<rtmp>
+<url>rtmp://rtmpin1.seriacdn.com/publish</url>
+<backup_url></backup_url>
+<stream>hegnar1_3828</stream>
+</rtmp>
+</output>
+<metadata>
+<entry>
+<key>author</key>
+<value></value>
+</entry>
+<entry>
+<key>copyright</key>
+<value></value>
+</entry>
+<entry>
+<key>description</key>
+<value></value>
+</entry>
+<entry>
+<key>keywords</key>
+<value></value>
+</entry>
+<entry>
+<key>rating</key>
+<value></value>
+</entry>
+<entry>
+<key>title</key>
+<value></value>
+</entry>
+</metadata>
+<preview>
+<video>
+<input>
+<zoom>100%</zoom>
+</input>
+<output>
+<zoom>100%</zoom>
+</output>
+</video>
+<audio></audio>
+</preview>
+<log>
+<level>100</level>
+<directory></directory>
+</log>
 </flashmedialiveencoder_profile>
 ';
 
 return '<?xml version="1.0" encoding="UTF-8"?>
 <flashmedialiveencoder_profile>
-    <preset>
-        <name>Custom</name>
-        <description></description>
-    </preset>
-    <capture>
-        <video>
-        <device></device>
-        <crossbar_input>0</crossbar_input>
-        <frame_rate>15.00</frame_rate>
-        <size>
-            <width>320</width>
-            <height>240</height>
-        </size>
-        </video>
-        <audio>
-        <device></device>
-        <crossbar_input>0</crossbar_input>
-        <sample_rate>22050</sample_rate>
-        <channels>1</channels>
-        <input_volume>75</input_volume>
-        </audio>
-	<timecode>
-        <frame_rate>25</frame_rate>
-        <systemtimecode>true</systemtimecode>
-        <devicetimecode>
-            <enable>false</enable>
-            <vertical_line_no>16</vertical_line_no>
-            <burn>false</burn>
-            <row>Bottom</row>
-            <column>Left</column>
-        </devicetimecode>
-        </timecode>
-    </capture>
-    <process>
-        <video>
-        <preserve_aspect></preserve_aspect>
-        </video>
-    </process>
-    <encode>
-        <video>
-        <format>VP6</format>
-        <datarate>200;</datarate>
-        <outputsize>320x240;</outputsize>
-        <advanced>
-            <keyframe_frequency>5 Seconds</keyframe_frequency>
-            <quality>Good Quality - Good Framerate</quality>
-            <noise_reduction>None</noise_reduction>
-            <datarate_window>Medium</datarate_window>
-            <cpu_usage>Dedicated</cpu_usage>
-        </advanced>
-        <autoadjust>
-            <enable>false</enable>
-            <maxbuffersize>1</maxbuffersize>
-            <dropframes>
-            <enable>false</enable>
-            </dropframes>
-            <degradequality>
-            <enable>false</enable>
-            <minvideobitrate></minvideobitrate>
-            <preservepfq>false</preservepfq>
-            </degradequality>
-        </autoadjust>
-        </video>
-        <audio>
-        <format>MP3</format>
-        <datarate>48</datarate>
-        </audio>
-    </encode>
-    <restartinterval>
-        <days></days>
-        <hours></hours>
-        <minutes></minutes>
-    </restartinterval>
-    <reconnectinterval>
-        <attempts></attempts>
-        <interval></interval>
-    </reconnectinterval>
-    <output>
-        <rtmp>
-        <url>rtmp://localhost/live</url>
-        <backup_url></backup_url>
-        <stream>livestream</stream>
-        </rtmp>
-        <file>
-        <limitbysize>
-            <enable>false</enable>
-            <size>10</size>
-        </limitbysize>
-        <limitbyduration>
-            <enable>false</enable>
-            <hours>1</hours>
-            <minutes>0</minutes>
-        </limitbyduration>
-        <path>sample.flv</path>
-        </file>
-    </output>
-    <metadata></metadata>
-    <preview>
-        <video>
-        <input>
-            <zoom>100%</zoom>
-        </input>
-        <output>
-            <zoom>100%</zoom>
-        </output>
-        </video>
-        <audio></audio>
-    </preview>
-    <log>
-        <level>100</level>
-        <directory>C:\Users\Joakim\Videos</directory>
-    </log>
-</flashmedialiveencoder_profile>';
-
-		$quality = unserialize($article->get("quality"));
-		return '<?xml version="1.0" encoding="UTF-8"?><flashmedialiveencoder_profile>
-    <preset>
-        <name>'.$article->get("title").'</name>
-        <description>'.$article->get("description").'</description>
-    </preset>
-    <capture>
-        <video>
-        <device></device>
-        <crossbar_input>0</crossbar_input>
-        <frame_rate>'.$quality['preview_framerate'].'</frame_rate>
-        <size>
-            <width>'.$quality['preview_width'].'</width>
-            <height>'.$quality['preview_height'].'</height>
-        </size>
-        </video>
-	<audio>
-        <device></device>
-        <crossbar_input>0</crossbar_input>
-        <sample_rate>22050</sample_rate>
-        <channels>1</channels>
-        <input_volume>75</input_volume>
-        </audio>
-        <timecode>
-        <frame_rate>25</frame_rate>
-        <systemtimecode>true</systemtimecode>
-        <devicetimecode>
-            <enable>false</enable>
-            <vertical_line_no>16</vertical_line_no>
-            <burn>false</burn>
-            <row>Bottom</row>
-            <column>Left</column>
-        </devicetimecode>
-        </timecode>
-    </capture>
-    <process>
-        <video>
-        <preserve_aspect></preserve_aspect>
-        </video>
-    </process>
-    <encode>
-        <video>
-        <format>'.$quality['encode_format'].'</format>
-        <datarate>'.$quality['encode_datarate'].';</datarate>
-        <outputsize>'.$quality['encode_width'].'x'.$quality['encode_height'].';</outputsize>
-        <advanced>
-            <keyframe_frequency>3 Seconds</keyframe_frequency>
-            <quality>Good Quality - Good Framerate</quality>
-            <noise_reduction>None</noise_reduction>
-            <datarate_window>Medium</datarate_window>
-            <cpu_usage>Dedicated</cpu_usage>
-        </advanced>
-        <autoadjust>
-            <enable>'.$quality['auto_adjust'].'</enable>
-            <maxbuffersize>'.$quality['auto_adjust_maxbuffersize'].'</maxbuffersize>
-            <dropframes>
-            <enable>'.$quality['auto_adjust_dropframes'].'</enable>
-            </dropframes>
-            <degradequality>
-            <enable>'.$quality['auto_adjust_degradequality'].'</enable>
-            <minvideobitrate></minvideobitrate>
-            <preservepfq>false</preservepfq>
-            </degradequality>
-        </autoadjust>
-        </video>
-	<audio>
-        <format>MP3</format>
-        <datarate>48</datarate>
-        </audio>
-    </encode>
-    <restartinterval>
-        <days></days>
-        <hours></hours>
-        <minutes></minutes>
-    </restartinterval>
-    <reconnectinterval>
-        <attempts></attempts>
-        <interval></interval>
-    </reconnectinterval>
-    <output>
-        <rtmp>
-        <url>rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</url>
-        <backup_url>'.$article->get("fms_backup").'</backup_url>
-        <stream>'.$article->get("publish_point").'</stream>
-        </rtmp>
-	<file>
-        <limitbysize>
-            <enable>false</enable>
-            <size>10</size>
-        </limitbysize>
-        <limitbyduration>
-            <enable>false</enable>
-            <hours>1</hours>
-            <minutes>0</minutes>
-        </limitbyduration>
-        <path>serialive_'.$article->get("id").'.flv</path>
-        </file>
-    </output>
-    <metadata>
-        <entry>
-        <key>author</key>
-        <value>'.$article->get("author_name").'</value>
-        </entry>
-        <entry>
-        <key>copyright</key>
-        <value></value>
-        </entry>
-        <entry>
-        <key>description</key>
-        <value></value>
-        </entry>
-        <entry>
-        <key>keywords</key>
-        <value></value>
-        </entry>
-        <entry>
-        <key>rating</key>
-        <value></value>
-        </entry>
-        <entry>
-        <key>title</key>
-        <value>'.$article->get("title").'</value>
-        </entry>
-    </metadata>
-    <preview>
-        <video>
-        <input>
-            <zoom>100%</zoom>
-        </input>
-        <output>
-            <zoom>100%</zoom>
-        </output>
-        </video>
+<preset>
+<name>High Bandwidth (800 Kbps) - VP6</name>
+<description></description>
+</preset>
+<capture>
+<video>
+<device>VHScrCap</device>
+<crossbar_input>0</crossbar_input>
+<frame_rate>15.00</frame_rate>
+<size>
+<width>720</width>
+<height>576</height>
+</size>
+</video>
+<audio>
+<device></device>
+<crossbar_input>0</crossbar_input>
+<sample_rate>44100</sample_rate>
+<channels>2</channels>
+<input_volume>75</input_volume>
+</audio>
+<timecode>
+<frame_rate>25</frame_rate>
+<systemtimecode>true</systemtimecode>
+<devicetimecode>
+<enable>false</enable>
+<vertical_line_no>16</vertical_line_no>
+<burn>false</burn>
+<row>Bottom</row>
+<column>Left</column>
+</devicetimecode>
+</timecode>
+</capture>
+<process>
+<video>
+<preserve_aspect></preserve_aspect>
+</video>
+</process>
+<encode>
+<video>
+<format>VP6</format>
+<datarate>554;</datarate>
+<outputsize>640x360;</outputsize>
+<advanced>
+<keyframe_frequency>5 Seconds</keyframe_frequency>
+<quality>Good Quality - Good Framerate</quality>
+	<profile>Baseline</profile>
+	<level>3.0</level>
+<noise_reduction>None</noise_reduction>
+<datarate_window>Medium</datarate_window>
+<cpu_usage>Dedicated</cpu_usage>
+</advanced>
+<autoadjust>
+<enable>false</enable>
+<maxbuffersize>1</maxbuffersize>
+<dropframes>
+<enable>false</enable>
+</dropframes>
+<degradequality>
+<enable>false</enable>
+<minvideobitrate></minvideobitrate>
+<preservepfq>false</preservepfq>
+</degradequality>
+</autoadjust>
+</video>
+<audio>
+<format>MP3</format>
+<datarate>96</datarate>
+</audio>
+</encode>
+<restartinterval>
+<days></days>
+<hours></hours>
+<minutes></minutes>
+</restartinterval>
+<reconnectinterval>
+<attempts></attempts>
+<interval></interval>
+</reconnectinterval>
+<output>
+<rtmp>
+<url>rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</url>
+<backup_url></backup_url>
+<stream>'.$article->get("publish_point").'</stream>
+</rtmp>
+<file>
+<limitbysize>
+<enable>false</enable>
+<size>10</size>
+</limitbysize>
+<limitbyduration>
+<enable>false</enable>
+<hours>1</hours>
+<minutes>0</minutes>
+</limitbyduration>
+<path>sample.flv</path>
+</file>
+</output>
+<metadata></metadata>
+<preview>
+<video>
+<input>
+<zoom>100%</zoom>
+</input>
+<output>
+<zoom>100%</zoom>
+</output>
+</video>
 <audio></audio>
-    </preview>
-    <log>
-        <level>100</level>
-        <directory></directory>
-    </log>
-		</flashmedialiveencoder_profile>';
+</preview>
+<log>
+<level>100</level>
+<directory></directory>
+</log>
+</flashmedialiveencoder_profile>
+';
 	}
 
 	if($_POST) {
@@ -400,23 +262,54 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 
 		LiveAPI::setEncoderDelay(intval($_POST["articleId"]), $timestamp-gmmktime());
 
-		header("Content-Type: text/xml");
-		header("Content-Type: application/force-download");
-		header("Content-Disposition: attachment; filename=fme_config_".$_POST["articleId"].".xml");
-		header("Content-Type: application/octet-stream");
-		header("Content-Type: application/download");
-		header("Content-Description: File Transfer");
+//		header("Content-Type: text/xml");
+//		header("Content-Type: application/force-download");
+//		header("Content-Disposition: attachment; filename=fme_config_".$_POST["articleId"].".xml");
+//		header("Content-Type: application/octet-stream");
+//		header("Content-Type: application/download");
+//		header("Content-Description: File Transfer");
 
-		$html.=generateXML($article);
+//		$html.=generateXML($article);
 
-		SERIA_Template::disable();
+//		SERIA_Template::disable();
+		$template = '<html style="height:100%;background-color:#3d3d3d;"><head>
+				<title>Klokkesynkronisering</title>
+				</head>';
 
-		echo $html;
+		$template.= '<body style="margin:0px;padding:0px;"><div style="awidth:100%;aheight:100%;">';
+
+		$template.= '<div style="width:500px;height:370px;margin:auto;padding:10px;margin-top:150px;background-color:#FFF;border:2px solid #C3C3C3;-webkit-border-radius: 6px;-moz-border-radius: 6px;border-radius: 6px;">';
+
+		$template.= '<div style="text-align:left;width:100%;"><h1>'.("Klokken mellom din datamaskin og Seria Live er synkronisert!").'</h1></div>';
+
+		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: F&oslash;lgende publiseringspunkt vil bare v&aelig;re synkronisert hvis de blir brukt fra denne datamaskinen!").'</p></td></tr></table>';
+
+		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: Husk &aring; aktivere funksjonen \"Timecode\" i Flash Media Encoder!").'</p></td></tr></table>';
+
+		$template.= '<table style="margin-top:10px;">
+				<tr>
+					<td style="width:200px;">Publiseringspunkt: </td><td style="font-weight:bold;">'.$article->get("publish_point").'</td>
+				</tr>
+				<tr>
+					<td>Flash Media Server: </td><td style="font-weight:bold;">rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</td>
+				</tr>
+				</table>';
+
+		$template.= '</div></div>';
+
+		$template.= '</body></html>';
+
+		SERIA_Template::parse($template);
+
+		//echo $html;
 	} else {
+
+		if(!$_GET["articleId"])
+			throw new SERIA_Exception('Invalid Article ID');
 
 		SERIA_Template::jsInclude('jQuery');
 
-		$template = '<html><head>
+		$template = '<html style="height:100%;background-color:#3d3d3d"><head>
 					<script type="text/javascript" language="javascript">
 
 					function setTime()
@@ -440,14 +333,19 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 					</script>
 				</head>';
 
-		$template.= '<body><h1>'.("Generer konfigurasjonsfil for din Flash Media Encoder").'</h1>';
+		$template.= '<body style="margin:0px;padding:0px;"><div style="awidth:100%;aheight:100%;">';
 
-		$template.= '<p style="color:red;">'.("Obs obs: Det er veldig viktig at datamaskinen som benytter seg av konfigurasjonsfilen ogs&aring; er datamaskinen som laster denne filen ned!").'</p>';
+		$template.= '<div style="width:500px;height:250px;margin:auto;padding:10px;padding-left:20px;margin-top:150px;background-color:#FFF;border:2px solid #C3C3C3;-webkit-border-radius: 6px;-moz-border-radius: 6px;border-radius: 6px;">';
 
-		$template.= '<form action="'.SERIA_HTTP_ROOT.'/seria/apps/live/api/generateFMEConfigXML.php" method="post">
-					<table>
+		$template.= '<div style="text-align:left;width:100%;"><h1>'.("Synkronisering av klokke").'</h1></div>';
+
+		$template.= '<table><tr><td><img style="width:110px;height:90px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: G&aring; bare videre til neste steg hvis dette er datamaskinen som kj&oslash;rer Flash Media Encoder! Hvis dette ikke er datamaskinen som kj&oslash;rer Flash Media Encoder for presentasjonen, s&aring; vil presentasjonens PowerPoint slides v&aelig;re usynkronisert med videostr&oslash;mmen.").'</p></td></tr></table>';
+
+		$template.= '<br>
+			<form action="'.SERIA_HTTP_ROOT.'/seria/apps/live/api/generateFMEConfigXML.php?joakim=1" method="post">
+					<table style="width:100%;">
 						<tr>
-							<td>
+							<td style="width:100%;text-align:right;">
 								<input type="hidden" id="localYear" name="localYear" value="0" />
 								<input type="hidden" id="localMonth" name="localMonth" value="0" />
 								<input type="hidden" id="localDate" name="localDate" value="0" />
@@ -456,11 +354,13 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 								<input type="hidden" id="localSeconds" name="localSeconds" value="0" />
 								<input type="hidden" name="articleId" value="'.$_GET["articleId"].'" />
 								<input type="hidden" name="hash" value="'.$_GET["hash"].'" />
-								<input type="submit" value="Last ned XML profil" id="submitButton" onmousedown="setTime();" />
+								<input type="submit" value="Synkroniser klokken" id="submitButton" onmousedown="setTime();" />
 							</td>
 						</tr>
 					</table>
 				</form>';
+
+		$template.= '</div></div>';
 
 		$template.= '</body></html>';
 

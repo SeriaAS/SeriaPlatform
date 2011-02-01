@@ -30,6 +30,7 @@
 			"keyProtected" => "boolean",
 			"broadcast_method" => "string",
 			"lock_time" => "string",
+			"customer_id" => "string",
 			"recording" => "string",
 			"status" => "string",
 			"preview_image_id" => "file",
@@ -59,6 +60,22 @@ $quality_defaults = array(
 */
 			"uploaded_video_file_id" => "string",
 			"video_files" => "string",
+			"protection_methods" => "string",
+
+			"calculatedBlockHours" => "boolean",
+
+
+			"requires_authentication" => "string",
+
+			"requires_registration" => "string",
+
+			"requires_password" => "string",
+			"presentation_password" => "string",
+
+			"requires_emailcheck" => "string",
+			"emailcheck_domain" => "string",
+
+
 			"published" => "string",
 			"files_metadata" => "string",
 			"files_metadata_populated" => "string",
@@ -66,11 +83,12 @@ $quality_defaults = array(
 		);
 
 		protected $fulltextFields = array(
+			"customer_id" => "customer_id",
 		);
 
 		function validateData() {
 			parent::validateData();
-			
+
 			return $this;
 		}
 
@@ -164,6 +182,11 @@ $quality_defaults = array(
 				header("Location: ".SERIA_HTTP_ROOT."/seria/apps/live/edit.php?id=".$form->article->get("id"));
 			}
 			return $form->output(dirname(__FILE__).'/../templates/live_form.php');		
+		}
+
+		function isFinished()
+		{
+			return ($this->get("status") == 'finished' || $this->get("status") == 'published');
 		}
 
 		function getForm($prefix = false, $errors = array())
