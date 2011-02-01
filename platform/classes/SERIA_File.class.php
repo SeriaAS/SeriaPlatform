@@ -4,7 +4,7 @@
 	*
 	*	All files must be referenced trough this object
 	*/
-	class SERIA_File
+	class SERIA_File implements SERIA_IMetaField
 	{
 		private $id, $url, $filename, $row, $filesize, $contentType, $updatedAt, $thumbnails, $createdAt, $fileArticleId;
 
@@ -1196,5 +1196,39 @@
 		function isVideo() {
 			list($type) = explode("/", $this->contentType);
 			return $type==="video";
+		}
+
+		function __toString() {
+			return $this->filename;
+		}
+
+		public static function createFromUser($value)
+		{
+			return SERIA_File::createObject($value);
+		}
+
+		public static function renderFormField($fieldName, $value, array $params = NULL, $hasError = false)
+		{
+			$r = '<input type="hidden" name="'.$fieldName.'" class="fileselect'.($hasError?' ui-state-error':'').'" id="'.$fieldName.'" />';
+
+			return $r;
+		}
+
+		public static function createFromDb($value)
+		{
+			return SERIA_File::createObject($value);
+		}
+
+		public function toDbFieldValue()
+		{
+			return $this->id;
+		}
+
+		public static function MetaField()
+		{
+			return array(
+				'type' => 'integer',
+				'class' => 'SERIA_File',
+			);
 		}
 	}
