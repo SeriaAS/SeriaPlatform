@@ -185,8 +185,10 @@ class LiveAPI implements SERIA_RPCServer {
 		$r['event_value'] = $event_value;
 		$r['event_type'] = $event_type;
 		if($event_type == 'SET_FOIL') {
-			$foil = SERIA_File::createObject($event_value);
-			$r['preview_url'] = $foil->getThumbnailURL(1400,1280);
+			$foil = SERIA_Meta::load('Slide', $event_value);
+			//$foil = SERIA_File::createObject($event_value);
+			//$r['preview_url'] = $foil->getThumbnailURL(1400,1280);
+			$r['preview_url'] = $foil->getHttpUrl();
 		}
 
 		return $r;
@@ -249,28 +251,30 @@ class LiveAPI implements SERIA_RPCServer {
 		LiveAPI::authenticate();
 		if($articleId) {
 			$article = LiveAPI::createArticle($articleId);
-			$foilsId = $article->get("foils_id");
-			if($foilsId) {
-				//$foils = SERIA_File::createObject($foilsId)->convertTo('Ziptoimages');
-				$foils_file = SERIA_File::createObject($foilsId);
-				$foils = LiveAPI::generateFoilsFromPPT($foils_file);
-		
-				if(is_array($foils)) {
-					$foilsArray = array();
-					foreach($foils as $foil) {
-						$foilData['id'] = $foil->get("id");
-						$foilData['url'] = $foil->getThumbnailURL(1280,1024);
-						$foilsArray[] = $foilData;
+			try {
+				if($slides = $article->getSlides('default', 800)) {
+					//$foils = SERIA_File::createObject($foilsId)->convertTo('Ziptoimages');
+					//$foils_file = SERIA_File::createObject($foilsId);
+					//$foils = LiveAPI::generateFoilsFromPPT($foils_file);
+			
+					$slidesArray = array();
+					foreach($slides as $slide) {
+						$slideData['id'] = $slide["id"];
+						$slideData['url'] = $slide->getHttpUrl();
+						$slidesArray[] = $slideData;
 					}
-					return $foilsArray;
+					return $slidesArray;
 				} else {
-					return 'not_transcoded';
+					return "No slides found";
 				}
-			} else {
-				return false;
+			} catch(SERIA_Exception $e) {
+				if($e->getCode() == SERIA_Exception::NOT_FOUND)
+					return "Error: ".$e->getMessage();
+
+				throw $e;
 			}
 		} else {
-			return false;
+			return "No article found";
 		}
 	}
 
@@ -301,9 +305,7 @@ class LiveAPI implements SERIA_RPCServer {
 		}
 	}
 	public static function verifyKey($articleId, $key) {
-return true;
-		$res = SERIA_Base::db()->query('SELECT id FROM serialive_keys WHERE id=:id AND secretkey=:secretkey', array('id' => $articleId, 'secretkey' => $key))->fetch(PDO::FETCH_COLUMN,0);
-		return $res;
+		return true;
 	}
 
 	public static function generateKey($id)
@@ -379,8 +381,6 @@ return true;
 		return $article;
 	}
 	static function finishArticle($article) {
-		$fp = fopen(dirname(__FILE__).'/log.txt', 'a+');
-		fwrite($fp, 'here');
 		$curr_token = intval(SERIA_Base::getParam('token'));
 		$streamVars = array(
 			'key' => md5(($curr_token+1).STREAM_API_SERIALIVE_KEY),
@@ -389,12 +389,9 @@ return true;
 			'publish_point' => $article->get("publish_point"),
 			'stream_name' => $article->get("streamname")
 		);
-		fwrite($fp, 'here2');
 		SERIA_Base::setParam('token', intval($curr_token+1));
 
-		fwrite($fp, 'here3 now comes files: ');
 		$files_serialized = file_get_contents(STREAM_API_SERIALIVE_URL."/finish.php?key=".$streamVars['key']."&host=".$streamVars['host']."&token=".$streamVars['token']."&publishPoint=".$streamVars['publish_point']."&streamName=".$streamVars['stream_name'], 'rb');
-		fwrite($fp, print_r($files_serialized, true));
 
 		// files_serialized should be an array
 		// $files_serialized[0] => array('filename' => $filename, 'duration' => $duration); duration in ms.
@@ -414,7 +411,6 @@ return true;
 		$article->set("status", "finished");
 		$article->set("application_name", "serialive_vod");
 		$article->set("video_files", $files_serialized);
-fwrite($fp, 'setting video files');
 		return $article;
 	}
 
@@ -443,12 +439,13 @@ fwrite($fp, 'setting video files');
 			$article = SERIA_Article::createObject("SERIA_Live");
 
 			$stream = LiveAPI::createStream();
-			
+
 			// If we did not receive a publish point or the publish point starts with an _ (I'm using this for error codes) - -die.
 			if(!$stream['publish_point'] || $stream['publish_point'][0] == '_') {
 				throw new SERIA_Exception('Encountered an error while trying to generate streampoint');
 			}
 			$article->writable();
+			$article->set('producerId', ProducerUser::getCurrent()->getProducer()->get("id"));
 			$article->set('publish_point', $stream['publish_point']);
 			$article->set('streamname', $stream['stream_name']);
 		}
@@ -492,6 +489,8 @@ fwrite($fp, 'setting video files');
 				case "speaker_image_id" :
 				case "foils_id" :
 				case "background_image_id" :
+				case "not_publically_available" :
+				case "not_publically_available_infotext" :
 				case "company_logo_id" :
 				case "company_title" :
 				case "company_description" :
@@ -567,7 +566,8 @@ fwrite($fp, 'setting video files');
 		if(!$id)
 			throw new SERIA_Exception('Invalid ID given, unable to create article from id '.intval($id));
 
-		$article = LiveAPI::createArticle($id);
+//		$article = LiveAPI::createArticle($id);
+		$article = SERIA_Article::createObjectFromId($id);
 
 		$fields['requires_authentication'] = $article->get("requires_authentication");
 		$fields['requires_registration'] = $article->get("requires_registration");
@@ -585,7 +585,10 @@ fwrite($fp, 'setting video files');
 		}
 
 		$fields['event_date'] = $article->get("event_date");
+		$fields['not_publically_available'] = $article->get("not_publically_available");
+		$fields['not_publically_available_infotext'] = $article->get("not_publically_available_infotext");
 
+		$fields['isViewable'] = $article->isViewable();
 
 		return $fields;
 	}
@@ -646,9 +649,35 @@ fwrite($fp, 'setting video files');
 
 	public static function rpc_fetchArticle($id, $secretKey='', $secureAccessToken='') {
 		session_start();
-		$article = LiveAPI::createArticle($id);
+//		$article = LiveAPI::createArticle($id);
+		$article = SERIA_Article::createObjectFromId($id);
+
+		if(!$article->isViewable())
+			throw new SERIA_Exception('Access denied', SERIA_Exception::ACCESS_DENIED);
 
 		$article->countView();
+
+		if(!$article->isViewable()) {
+			if($article->get("background_image_id")) {
+				try {
+					$file = SERIA_File::createObject($article->get("background_image_id"));;
+					$backgroundImageLarge = $file->getThumbnailURL(1600,1200);
+					$backgroundImage = $file->getThumbnailURL(110,75);
+					$fields['backgroundWidth'] = $file->getMeta("image_width");
+					$fields['backgroundHeight'] = $file->getMeta("image_height");
+				} catch(SERIA_Exception $e) {
+					$backgroundImage = false;
+					$backgroundImageLarge = false;
+				}
+				$fields['background_image_url'] = $backgroundImage;
+				$fields['background_image_large_url'] = $backgroundImageLarge;
+			}
+
+			$fields['not_publically_available'] = true;
+			$fields['not_publically_available_infotext'] = $article->get("not_publically_available_infotext");
+			return $fields;
+		}
+
 
 		// JOAKIM
 
@@ -680,6 +709,21 @@ fwrite($fp, 'setting video files');
 				$fields['uploaded_video_file_url'] = 'Kunne ikke finne videofil: '.$e->getMessage();
 			}
 		}
+		if($article->get("background_image_id")) {
+			try {
+				$file = SERIA_File::createObject($article->get("background_image_id"));;
+				$backgroundImageLarge = $file->getThumbnailURL(1600,1200);
+				$backgroundImage = $file->getThumbnailURL(110,75);
+				$fields['backgroundWidth'] = $file->getMeta("image_width");
+				$fields['backgroundHeight'] = $file->getMeta("image_height");
+			} catch(SERIA_Exception $e) {
+				$backgroundImage = false;
+				$backgroundImageLarge = false;
+			}
+			$fields['background_image_url'] = $backgroundImage;
+			$fields['background_image_large_url'] = $backgroundImageLarge;
+		}
+
 		if($article->get("company_logo_id")) {
 			try {
 				$companyLogo = SERIA_File::createObject($article->get("company_logo_id"))->getThumbnailUrl(110,75);
@@ -696,56 +740,48 @@ fwrite($fp, 'setting video files');
 			}
 			$fields['speaker_image_url'] = $speakerImage;
 		}
-		if($article->get("background_image_id")) {
-			try {
-				$file = SERIA_File::createObject($article->get("background_image_id"));;
-				$backgroundImageLarge = $file->getThumbnailURL(1600,1200);
-				$backgroundImage = $file->getThumbnailURL(110,75);
-				$fields['backgroundWidth'] = $file->getMeta("image_width");
-				$fields['backgroundHeight'] = $file->getMeta("image_height");
-			} catch(SERIA_Exception $e) {
-				$backgroundImage = false;
-				$backgroundImageLarge = false;
-			}
-			$fields['background_image_url'] = $backgroundImage;
-			$fields['background_image_large_url'] = $backgroundImageLarge;
-		}
-		if($foil_file_id = $article->get("foils_id")) {
-			$fields['hasfoils'] = true;
-			try {
-				$foils_file = SERIA_File::createObject($article->get("foils_id"));
-				$foilsURL = $foils_file->get("url");
-
-				$foils = LiveAPI::generateFoilsFromPPT($foils_file);
-				if(!is_array($foils)) {
-					$foils = false;
-				} else {
-					$foilsArray = array();
-					$foilsUrl = array();
-					foreach($foils as $foil) {
-						$foilData['id'] = $foil->get("id");
-						$foilData['url'] = $foil->getThumbnailURL(1280,1024);
-						$foilsUrl[$foil->get("id")] = $foilData['url'];
-						$foilsArray[] = $foilData;
-					}
-					$fields['foils'] = $foilsArray;
-				}	
-			} catch(SERIA_Exception $e) {
-				$foilsURL = false;
-				$fields['foils_error'] = $e->getMessage();
-			}
-			$fields['foils_filename'] = $foils_file->get("filename");
-
-			if($fields['current_foil']) {
-				$current_foil = SERIA_File::createObject($fields['current_foil']);
+//		if($foil_file_id = $article->get("foils_id")) {
+		try {
+			if($slides = $article->getSlides('default', 800)) {
+				$fields['hasfoils'] = true;
+				try {
+					//$foils_file = SERIA_File::createObject($article->get("foils_id"));
+					//$foilsURL = $foils_file->get("url");
 	
-				$currentFoilObject = array();
-				$currentFoilObject['id'] = $current_foil->get("id");
-				$currentFoilObject['url'] = $current_foil->getThumbnailURL(1280,1024);
-		
-				$fields['current_foil'] = $currentFoilObject;
-			}
+					//$foils = LiveAPI::generateFoilsFromPPT($foils_file);
+					//if(!is_array($foils)) {
+					//	$foils = false;
+					//} else {
+						$foilsArray = array();
+						$foilsUrl = array();
+						foreach($slides as $slide) {
+							$foilData['id'] = $slide["id"];
+							$foilData['url'] = $slide->getHttpUrl();
+							$foilsUrl[$slide["id"]] = $foilData['url'];
+							$foilsArray[] = $foilData;
+						}
+						$fields['foils'] = $foilsArray;
+					//}
+				} catch(SERIA_Exception $e) {
+					$foilsURL = false;
+					$fields['foils_error'] = $e->getMessage();
+				}
+				//$fields['foils_filename'] = $foils_file->get("filename");
+				$fields['foils_filename'] = 'Foils attached';
+				if($fields['current_foil']) {
+					$current_foil = SERIA_Meta::load('Slide', $article->get("current_foil"));
 
+					$currentFoilObject = array();
+					$currentFoilObject['id'] = $current_foil["id"];
+					$currentFoilObject['url'] = $current_foil->getHttpUrl();
+
+					$fields['current_foil'] = $currentFoilObject;
+				}
+			}
+		} catch(SERIA_Exception $e) {
+			if($e->getCode() !== SERIA_Exception::NOT_FOUND)
+				throw $e;
+			$fields['foils'] = false;
 		}
 
 
@@ -760,7 +796,9 @@ fwrite($fp, 'setting video files');
 
 		$fields['chapters'] = unserialize($article->get("chapters"));
 
+
 		$events = $article->getEvents();
+
 		if(is_array($events)) {
 			foreach($events as $event)
 			{
@@ -773,6 +811,7 @@ fwrite($fp, 'setting video files');
 				$events_array[] = $event;
 			}
 		}
+
 		$fields['events'] = $events_array;
 
 
@@ -958,28 +997,23 @@ fwrite($fp, 'setting video files');
 	}
 
 	private static function generateFoilsUrl($article) {
-		if($foil_file_id = $article->get("foils_id")) {
+		//if($foil_file_id = $article->get("foils_id")) {
 			try {
-				$foils_file = SERIA_File::createObject($article->get("foils_id"));
-				$foilsURL = $foils_file->get("url");
+//				$foils_file = SERIA_File::createObject($article->get("foils_id"));
+//				$foilsURL = $foils_file->get("url");
 
-				$foils = LiveAPI::generateFoilsFromPPT($foils_file);
-				//$foils = $foils_file->convertTo('ppt2png');
-				//$foils = $foils_file->convertTo('Ziptoimages');
-				if(!is_array($foils)) {
-					return false;
-				} else {
-					$foilsUrl = array();
-					foreach($foils as $foil) {
-						$foilsUrl[$foil->get("id")] = $foil->getThumbnailURL(1280,1024);
-					}
-					return $foilsUrl;
-				}	
+				$slides = $article->getSlides('default', 800);;
+
+				$slidesUrl = array();
+				foreach($slides as $slide) {
+					$slidesUrl[$slide->get('id')] = $slide->getHttpUrl();
+				}
+				return $slidesUrl;
 			} catch(SERIA_Exception $e) {
 				return false;
 			}
-		}
-		return false;
+		//}
+		//return false;
 	}
 
 	public static function getEvents($article)
@@ -991,6 +1025,7 @@ fwrite($fp, 'setting video files');
 		$article = LiveAPI::createArticle($articleId);
 		$events = $article->getEvents();
 		$foilsUrl = LiveAPI::generateFoilsUrl($article);
+
 		$startTime = -1;
 
 		if(is_array($events)) {

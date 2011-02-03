@@ -103,7 +103,6 @@
 					<Foils>".$foilsXML."</Foils>
 					<FoilsStatus>".$foilConvertStatus."</FoilsStatus>
 			</Article>";
-file_put_contents(dirname(__FILE__).'/log.txt', $articleXML);
 		SERIA_Template::override('text/xml', $articleXML);
 	}
 
