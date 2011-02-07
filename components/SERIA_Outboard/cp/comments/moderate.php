@@ -37,6 +37,10 @@
 	<td>".$form->field('displayName')."</td>
 </tr>
 <tr>
+	<th>".$form->label('userEMail')."</th>
+	<td>".$form->field('userEMail')."</td>
+</tr>
+<tr>
 	<th>".$form->label('message')."</th>
 	<td>".$form->field('message')."</td>
 </tr>
