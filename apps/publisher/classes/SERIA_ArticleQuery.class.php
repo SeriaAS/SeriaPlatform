@@ -448,10 +448,11 @@
 		{
 			$db = SERIA_Base::db();
 
-//			if(SERIA_Base::user() && !SERIA_Base::isAdministrator() && !SERIA_Base::hasRight('view_others_articles'))
-//			{
-//				$this->where('@author_id:'.SERIA_Base::user()->get("id"));
-//			}
+			// This was removed, added it again because of security.
+			if(SERIA_Base::viewMode() == 'admin' && SERIA_Base::user() && !SERIA_Base::isAdministrator() && !SERIA_Base::hasRight('view_others_articles'))
+			{
+				$this->where('@author_id:'.SERIA_Base::user()->get("id"));
+			}
 
 			$sql = "SELECT id,type FROM ".SERIA_PREFIX."_articles".$this->generateWhere();
 			if($this->order)
