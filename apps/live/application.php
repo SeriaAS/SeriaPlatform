@@ -25,7 +25,6 @@
 	{
 		SERIA_Hooks::listen(SERIA_GuiHooks::EMBED, 'serialiveGui');
 		SERIA_Hooks::listen(SERIA_PlatformHooks::MAINTAIN, 'serialiveMaintain');
-		SERIA_Hooks::listen(SERIA_MetaTemplateHooks::EXTEND, 'serialiveTemplateEmbed');
 		SERIA_Hooks::listen(SERIA_PlatformHooks::ROUTER_EMBED, 'serialiveRouterEmbed');
 		SERIA_Hooks::listen(SERIA_MAINTAIN_1_HOUR_HOOK, 'serialiveAggregateBlockUsage');
 	}
@@ -33,13 +32,6 @@
 	function serialiveRouterEmbed($router)
 	{
 		$router->addRoute('serialive', 'front', array('SERIA_LivePages', 'front'), 'live');
-	}
-
-	function serialiveTemplateEmbed($tpl)
-	{
-		$tpl->serialive = array(
-			'presentations' => SERIA_Meta::all('Presentation'),
-		);
 	}
 
 	function serialiveGui($gui)
