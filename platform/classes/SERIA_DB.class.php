@@ -77,7 +77,9 @@
 		                // MySQL must be told to operate in UTF-8 mode, and we tell it which timezone we work in
 		                $this->_db->exec("SET NAMES utf8");
 		                $this->_db->exec("SET time_zone = '".date("P")."'");
-		        }	
+				// Will prevent a lot of deadlocks, while preserving the possibility of rollback.
+				$this->_db->exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
+		        }
 			register_shutdown_function(array("SERIA_Base","closeDB"));
 		}
 
