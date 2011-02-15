@@ -26,6 +26,13 @@
 			die();
 		}
 
+		$delete = $comment->deleteAction();
+		if ($delete->success)
+		{
+			header("Location: ".SERIA_Url::current());
+			die();
+		}
+
 		echo $form->begin()."<table>
 <tbody>
 <tr>
@@ -47,7 +54,7 @@
 </tbody>
 <tfoot>
 	<td colspan=2>
-		".$form->submit(_t("Save"))." <a href='".$approve."'>"._t("Approve")."</a> <a href='".$reject."'>"._t("Reject")."</a>
+		".$form->submit(_t("Save"))." <a href='".$approve."'>"._t("Approve")."</a> <a href='".$reject."'>"._t("Reject")."</a> <a href='".$delete."'>"._t("Delete")."</a>
 	</td>
 </tfoot>
 </table>".$form->end();
