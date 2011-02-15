@@ -13,4 +13,6 @@
   'edd815756046e666546ec87f9374aba7' => 'Ingen varsling',
   '95837bad150e4682ce7061fe93903639' => 'Captcha felt (skriv ordene):',
   '0b09638ce3b284278a1e348e8016300b' => 'Ikke korrekt. Skriv eksakt det du ser.',
+  'f7833f535a7cc2c463d31b21bb4bc792' => 'Godkjent som lav kvalitet',
+  'adc9c3017ba12ec69ce4631c8048c6eb' => 'Avvis',
 )); ?>
