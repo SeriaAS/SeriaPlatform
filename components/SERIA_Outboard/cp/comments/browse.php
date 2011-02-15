@@ -69,7 +69,9 @@
 					else if($row->get('approved'))
 						echo _t("Approved");
 					else if($row->get('rejected'))
-						echo _t("Rejected");
+						echo _t("Low quality approved");
+					else if($row->get('hidden'))
+						echo _t('Rejected');
 					else
 						echo _t("Awaiting approval");
 				?></td>
@@ -99,7 +101,7 @@
 						if (!$row->get('approved')) {
 							?><a title="<?php echo htmlspecialchars(_t('Approve')); ?>" href="<?php echo htmlspecialchars($approveAction->__toString()); ?>"><span class='ui-icon ui-icon-check' style='float: left;'><?php echo _t('Approve'); ?></span></a><?php
 						}
-						if (!$row->get('rejected')) {
+						if (!$row->get('hidden')) {
 							?><a title="<?php echo htmlspecialchars(_t('Reject')); ?>" href="<?php echo htmlspecialchars($rejectAction->__toString()); ?>"><span class='ui-icon ui-icon-cancel' style='float: left;'><?php echo _t('Reject'); ?></span></a><?php
 						}
 					?>
@@ -131,7 +133,7 @@
 									$approval = $_GET['approval'];
 								else
 									$approval = false;
-								$approval_ch = array('all', 'unmoderated', 'approved', 'rejected', 'flagged');
+								$approval_ch = array('all', 'unmoderated', 'approved', 'lowq', 'rejected', 'flagged');
 								if (!in_array($approval, $approval_ch))
 									$approval = $approval_ch[0];
 							?>
@@ -139,6 +141,16 @@
 								<option value='all'<?php if ($approval == 'all') echo ' selected=\'selected\''; ?>><?php echo _t('All'); ?></option>
 								<option value='unmoderated'<?php if ($approval == 'unmoderated') echo ' selected=\'selected\''; ?>><?php echo _t('Unmoderated'); ?></option>
 								<option value='approved'<?php if ($approval == 'approved') echo ' selected=\'selected\''; ?>><?php echo _t('Approved'); ?></option>
+								<?php
+									/*
+									 * Only show the low-quality category when it is in use.
+									 */
+									if ($approval == 'lowq' || SERIA_Meta::all('SERIA_Comment')->where('rejected != 0')->current()) {
+										?>
+											<option value='lowq'<?php if ($approval == 'lowq') echo ' selected=\'selected\''; ?>><?php echo _t('Low quality approved'); ?></option>
+										<?php
+									}
+								?>
 								<option value='rejected'<?php if ($approval == 'rejected') echo ' selected=\'selected\''; ?>><?php echo _t('Rejected'); ?></option>
 								<option value='flagged'<?php if ($approval == 'flagged') echo ' selected=\'selected\''; ?>><?php echo _t('Flagged'); ?></option>
 							</select>
@@ -170,8 +182,10 @@
 			$comments->where('(rejected = 0 OR rejected IS NULL) AND (approved = 0 OR approved IS NULL)');
 		else if ($approval == 'approved')
 			$comments->where('approved != 0');
-		else if ($approval == 'rejected')
+		else if ($approval == 'lowq')
 			$comments->where('rejected != 0');
+		else if ($approval == 'rejected')
+			$comments->where('hidden != 0');
 		else if ($approval == 'flagged')
 			$comments->where('flagged = 1');
 	}

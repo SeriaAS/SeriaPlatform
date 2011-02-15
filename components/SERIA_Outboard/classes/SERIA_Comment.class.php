@@ -43,9 +43,18 @@
 					// The contents of the comment
 					'message' => array('message required', _t('Message')),
 
-					// Is the comment approved?
+					/*
+					 * We have several states here. They should not have been named like this.
+					 * To preserve strict backwards compatibility, I have just redefined the meaning:
+					 *  'approved' => Approved good meaninful comment
+					 *  'rejected' => Not so good meaningful comment, but still nothing wrong, so not a priority but
+					 *                still no need to hide from public.
+					 *  'hidden'   => Rejected, don't show publicly (not anywhere). Only admins can view.
+					 */
 					'approved' => array('boolean', _t('Approved')),
-					'rejected' => array('boolean', _t('Rejected')),
+					'rejected' => array('boolean', _t('Low quality approved')),
+					'hidden' => array('boolean', _t('Reject')),
+
 					'flagged' => array('boolean', _t("Flagged by user")),
 
 					'notFlaggable' => array('boolean', _t("Not flaggable")),
@@ -68,22 +77,25 @@
 
 		public static function getAllUnmoderatedComments()
 		{
-			return SERIA_Meta::all('SERIA_Comment')->where('(approved=0 OR approved IS NULL) AND (rejected=0 OR rejected IS NULL)')->order('createdDate');
+			return SERIA_Meta::all('SERIA_Comment')->where('(approved=0 OR approved IS NULL) AND (rejected=0 OR rejected IS NULL) AND (hidden=0 OR hidden IS NULL)')->order('createdDate');
 		}
 
 		public static function getAllModeratedComments()
 		{
-			return SERIA_Meta::all('SERIA_Comment')->where('approved=1 OR rejected=1')->order('createdDate');
+			return SERIA_Meta::all('SERIA_Comment')->where('approved=1 OR rejected=1 OR hidden=1')->order('createdDate');
 		}
 
 		public static function getAllApprovedComments()
 		{
-			return SERIA_Meta::all('SERIA_Comment')->where('approved=1 AND (rejected=0 OR rejected IS NULL)')->order('createdDate');
+			return SERIA_Meta::all('SERIA_Comment')->where('approved=1')->order('createdDate');
 		}
-
+		public static function getAllLowQualityComments()
+		{
+			return SERIA_Meta::all('SERIA_Comment')->where('rejected=1')->order('createdDate');
+		}
 		public static function getAllRejectedComments()
 		{
-			return SERIA_Meta::all('SERIA_Comment')->where('(approved=0 OR approved IS NULL) AND rejected=1')->order('createdDate');
+			return SERIA_Meta::all('SERIA_Comment')->where('hidden=1')->order('createdDate');
 		}
 
 		public static function createAction(SERIA_MetaObject $object, $subset='default')
@@ -134,21 +146,35 @@
 			$a = new SERIA_ActionUrl('accept', $this);
 			if($a->invoked())
 			{
+				$this->set('hidden', false);
 				$this->set('rejected', false);
 				$this->set('approved', true);
 				$a->success = SERIA_Meta::save($this);
 			}
 			return $a;
 		}
-
+		public function lowQualityApproveAction()
+		{
+//@TODO: Check access
+			$a = new SERIA_ActionUrl('lowqapprove', $this);
+			if($a->invoked())
+			{
+				$this->set('hidden', false);
+				$this->set('approved', false);
+				$this->set('rejected', true);
+				$a->success = SERIA_Meta::save($this);
+			}
+			return $a;
+		}
 		public function rejectAction()
 		{
 //@TODO: Check access
 			$a = new SERIA_ActionUrl('reject', $this);
 			if($a->invoked())
 			{
-				$this->set('rejected', true);
+				$this->set('hidden', true);
 				$this->set('approved', false);
+				$this->set('rejected', false);
 				$a->success = SERIA_Meta::save($this);
 			}
 			return $a;
