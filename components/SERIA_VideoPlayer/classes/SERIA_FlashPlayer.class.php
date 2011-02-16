@@ -1,6 +1,6 @@
 <?php
 
-	class SERIA_FlashPlayer implements SERIA_RPCServer {
+	class SERIA_VideoPlayer implements SERIA_RPCServer {
 
 		private $_object;
 		private $_modules;
@@ -16,7 +16,7 @@
 			$this->_modules[$moduleName] = $moduleUrl;
 		}
 
-		public function output() {
+		public function output($width="100%",$height="100%") {
 			//SERIA_ScriptLoader::loadScript('js/flowplayer-3.2.4.min.js');
 			$flashvars = array(
 				'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
@@ -29,15 +29,21 @@
 				$flashvars[$moduleName] = urlencode($moduleURL);
 			}
 
-			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
-<param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf'></param>
+			if(!isset($this->_modules['controlBar']))
+				$flashvars['controlBar'] = urlencode(SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/SeriaControlbar.swf');
+
+
+			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='$width' height='$height'>
+<param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf'></param>
 <param name='allowFullscreen' value='true'></param>
+<param name='wmode' value='opaque'></param>
 <param name='allowscriptaccess' value='always'></param> 
 <param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
 <!--[if !IE]>-->
-<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_FlashPlayer/bin/SeriaPlayer.swf' width='100%' height='100%'>
+<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf' width='$width' height='$height'>
 <param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
 <param name='allowscriptaccess' value='always'></param> 
+<param name='wmode' value='opaque'></param>
 <param name='allowFullscreen' value='true'></param>
 <!--<![endif]-->
 <!--[if !IE]>-->
@@ -54,8 +60,6 @@
 		/**
 		* $metaObjectGUID is for example: 'SERIA_Video:5353'
 		* MUST be SERIA_MetaObject:ID
-		*
-		*
 		*/
 		public static function rpc_getFlashPlayerData($objectKey, $stage=false)
 		{
@@ -66,7 +70,7 @@
 			}
 			if($stage) {
 				$arrayS = $o->getVideoData();
-				$arrayS['site'] = $_SER;
+				//$arrayS['site'] = $_SER;
 				return $arrayS;
 			} else {
 				return $o->getVideoData();
