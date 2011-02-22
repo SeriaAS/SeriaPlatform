@@ -325,35 +325,52 @@
 			{
 				if(!is_array($info))
 				{ // $spec['fields']['myField'] = 'createdBy';
-					switch($info)
+					/*
+					 * Split info in tokens by any whitespace (regex any-whitespace=\s).
+					 */
+					$tokens = preg_split("/[\\s]+/", $info);
+					if (!$tokens)
+						throw new SERIA_Exception('No type or spec of field '.$key.' specified!');
+					$specialName = array_shift($tokens);
+					switch($specialName)
 					{
 						case "createdBy" : case "modifiedBy" :
 							$spec['fields'][$key] = self::_getMappedFieldSpec('SERIA_User');
-							$spec['fields'][$key]['caption'] = ($info==='createdBy' ? _t("Registered by") : _t('Modified by'));
-							$spec['fields'][$key]['special'] = $info;
+							$spec['fields'][$key]['caption'] = ($specialName==='createdBy' ? _t("Registered by") : _t('Modified by'));
+							$spec['fields'][$key]['special'] = $specialName;
 							break;
 						case "createdDate" : case "modifiedDate" :
 							$spec['fields'][$key] = self::_getMappedFieldSpec('datetime');
-							$spec['fields'][$key]['caption'] = ($info==='createdDate' ? _t("Registration") : _t('Modification'));
-							$spec['fields'][$key]['special'] = $info;
+							$spec['fields'][$key]['caption'] = ($specialName==='createdDate' ? _t("Registration") : _t('Modification'));
+							$spec['fields'][$key]['special'] = $specialName;
+							if ($tokens) {
+								foreach ($tokens as $token) {
+									if ($token == 'sortable')
+										$spec['fields'][$key]['sortable'] = true;
+								}
+							}
 							break;
 						case "isEnabled" :
 							$spec['fields'][$key] = self::_getMappedFieldSpec('boolean');
 							$spec['fields'][$key]['caption'] = _t("Enabled");
-							$spec['fields'][$key]['special'] = $info;
+							$spec['fields'][$key]['special'] = $specialName;
 							break;
-						case "parent" : case "parent required" :
+						case "parent":
 							// try to identify the primary key spec here, without causing a loop
 							$res = array(
 								"type" => self::$_primaryKeySpecs[$item],
 								"validator" => new SERIA_Validator(array(array(SERIA_Validator::META_OBJECT, $item))),
 								"class" => $item,
 								"caption" => _t("Parent"),
-								"special" => $info,
+								"special" => $specialName,
 							);
-							if($info=='parent required')
-							{
-								$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
+							if ($tokens) {
+								foreach ($tokens as $token) {
+									if($token=='required')
+									{
+										$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
+									}
+								}
 							}
 							$spec['fields'][$key] = $res;
 							break;
@@ -809,7 +826,6 @@
 							$newRow[$name] = 1;
 							break;
 						case 'parent':
-						case 'parent required':
 							$newRow[$name] = $row[$name];
 							break;
 					}
