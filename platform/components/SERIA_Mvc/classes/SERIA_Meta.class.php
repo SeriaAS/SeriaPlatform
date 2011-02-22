@@ -341,7 +341,7 @@
 							break;
 						case "createdDate" : case "modifiedDate" :
 							$spec['fields'][$key] = self::_getMappedFieldSpec('datetime');
-							$spec['fields'][$key]['caption'] = ($specialName==='createdDate' ? _t("Registration") : _t('Modification'));
+							$spec['fields'][$key]['caption'] = ($specialName==='createdDate' ? _t("Created date") : _t('Last modified date'));
 							$spec['fields'][$key]['special'] = $specialName;
 							if ($tokens) {
 								foreach ($tokens as $token) {
