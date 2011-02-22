@@ -83,7 +83,7 @@
 	}
 	$comments->order('-createdDate');
 	$grid = new SERIA_MetaGrid($comments);
-	$contents .= $grid->output(array('user' => 150, 'metaObject', 'title', 'approved' => 125, _t('Operations') => 100), array('SERIA_BrowseCommentsTemplate', 'browseCommentFilter'));
+	$contents .= $grid->output(array('user' => 150, 'createdDate', 'metaObject', 'title', 'approved' => 125, _t('Operations') => 100), array('SERIA_BrowseCommentsTemplate', 'browseCommentFilter'));
 
 	ob_start();
 	?>

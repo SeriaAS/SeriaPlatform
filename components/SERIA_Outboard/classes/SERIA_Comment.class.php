@@ -59,9 +59,9 @@
 
 					'notFlaggable' => array('boolean', _t("Not flaggable")),
 
-					'createdDate' => 'createdDate',
+					'createdDate' => 'createdDate sortable',
 					'createdBy' => 'createdBy',
-					'alteredDate' => 'modifiedDate',
+					'alteredDate' => 'modifiedDate sortable',
 					'alteredBy' => 'modifiedBy',
 				),
 			);

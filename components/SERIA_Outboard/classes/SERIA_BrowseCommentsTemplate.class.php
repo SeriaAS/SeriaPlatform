@@ -22,6 +22,7 @@ class SERIA_BrowseCommentsTemplate
 		?>
 			<tr onclick="location.href = <?php echo htmlspecialchars(SERIA_Lib::toJSON($editUrl->__toString())); ?>">
 				<td><?php echo $row->get('user'); ?></td>
+				<td><?php echo $row->get('createdDate'); ?></td>
 				<td>
 					<?php
 						$obj = $row->get('metaObject');
