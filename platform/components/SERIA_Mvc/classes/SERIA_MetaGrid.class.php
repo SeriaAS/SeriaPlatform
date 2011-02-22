@@ -5,6 +5,7 @@
 	class SERIA_MetaGrid
 	{
 		protected $_query, $_buttons = array(), $rowClick=false, $_activeOrdering = false;
+		protected $_headingOverride = array();
 
 		function __construct(SERIA_MetaQuery $query)
 		{
@@ -44,6 +45,17 @@
 		{
 			$this->_rowClick = $urlTemplate;
 			return $this;
+		}
+
+		/**
+		 *
+		 * Overrides the meta-specs title field.
+		 * @param string $columnName
+		 * @param string $title
+		 */
+		public function setColumnTitle($columnName, $title)
+		{
+			$this->_headingOverride[$columnName] = $title;
 		}
 
 		public function userRequestedOrdering($order)
@@ -259,15 +271,24 @@
 					$columnWidths[] = $width = $spec;
 				}
 
+				if (isset($this->_headingOverride[$fieldName]))
+					$title = $this->_headingOverride[$fieldName];
+				else
+					$title = false;
 				if(!isset($fieldSpec[$fieldName]))
 				{
-					$r .= "<th ".($width!==false?'style="width:'.$width.(strpos($width, 'px')===false?'px':'').'"':'').">".htmlspecialchars(strip_tags($fieldName))."</th>";
+					if (!$title)
+						$title = $fieldName;
+					$r .= "<th ".($width!==false?'style="width:'.$width.(strpos($width, 'px')===false?'px':'').'"':'').">".htmlspecialchars(strip_tags($title))."</th>";
 				}
 				else
 				{
 					if(!isset($fieldSpec[$fieldName]['caption']))
 						throw new SERIA_Exception('Property "caption" not specified for attribute "'.$fieldName.'" '.$this->_query->className);
-					$heading = htmlspecialchars(strip_tags($fieldSpec[$fieldName]['caption']));
+					if ($title)
+						$heading = htmlspecialchars(strip_tags($title));
+					else
+						$heading = htmlspecialchars(strip_tags($fieldSpec[$fieldName]['caption']));
 					if (isset($fieldSpec[$fieldName]['sortable']) && $fieldSpec[$fieldName]['sortable'])
 						$heading = "<a onclick=\"".htmlspecialchars('SERIA.MetaGrid.sortTableBy(document.getElementById('.SERIA_Lib::toJSON($table_id).'), '.SERIA_Lib::toJSON($fieldName).'); return false;')."\" href=''>".$heading."</a>";
 					$r .= "<th ".($width!==false?'style="width:'.$width.(strpos($width, 'px')===false?'px':'').'"':'').">".$heading."</th>";
