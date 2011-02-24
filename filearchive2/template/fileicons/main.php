@@ -213,8 +213,22 @@
 						{
 							var obj = document.getElementById('file_icon_ided_'+fileArticleId);
 
-							if (!obj)
-								return false;
+							if (!obj) {
+								var data = $.ajax({
+									url: <?php echo SERIA_Lib::toJSON(SERIA_Filesystem::getUrlFromPath(dirname(__FILE__).'/../../json/filename.php')); ?>,
+									data: {
+										'fileArticleId': fileArticleId
+									},
+									async: false,
+									dataType: 'text'
+								}).responseText;
+								data = eval("("+data+")");
+								if (data && data.filename)
+									return data.filename;
+								else {
+									return false;
+								}
+							}
 							/* TODO - This probably does not work in IE7 */
 							var match = $(obj).find('div.the_name > a');
 							match = match[0];
