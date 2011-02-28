@@ -18,7 +18,7 @@
 					$this->args[$key] = $val;
 			}
 			if($this->where === NULL) $this->where = $where;
-			else $this->where = $where." AND (".$this->where.")";
+			else $this->where = "(".$where.") AND (".$this->where.")";
 			return $this;
 		}
 		final public function limit($a,$b = NULL) {
