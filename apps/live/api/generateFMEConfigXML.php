@@ -273,25 +273,25 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 
 //		SERIA_Template::disable();
 		$template = '<html style="height:100%;background-color:#3d3d3d;"><head>
-				<title>Klokkesynkronisering</title>
+				<title>Synchronization</title>
 				</head>';
 
 		$template.= '<body style="margin:0px;padding:0px;"><div style="awidth:100%;aheight:100%;">';
 
 		$template.= '<div style="width:500px;height:370px;margin:auto;padding:10px;margin-top:150px;background-color:#FFF;border:2px solid #C3C3C3;-webkit-border-radius: 6px;-moz-border-radius: 6px;border-radius: 6px;">';
 
-		$template.= '<div style="text-align:left;width:100%;"><h1>'.("Klokken mellom din datamaskin og Seria Live er synkronisert!").'</h1></div>';
+		$template.= '<div style="text-align:left;width:100%;"><h1>'._t("This computer is now synchronized with Seria Media Servers").'</h1></div>';
 
-		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: F&oslash;lgende publiseringspunkt vil bare v&aelig;re synkronisert hvis de blir brukt fra denne datamaskinen!").'</p></td></tr></table>';
+		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'._t("The following publish points will only have synchronized slides if used from this computer!").'</p></td></tr></table>';
 
-		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: Husk &aring; aktivere funksjonen \"Timecode\" i Flash Media Encoder!").'</p></td></tr></table>';
+		$template.= '<table><tr><td><img style="width:60px;height:53px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'._t("You must also remember to activate the \"Timecode\" function in Flash Media Encoder!").'</p></td></tr></table>';
 
 		$template.= '<table style="margin-top:10px;">
 				<tr>
-					<td style="width:200px;">Publiseringspunkt: </td><td style="font-weight:bold;">'.$article->get("publish_point").'</td>
+					<td style="width:200px;">'._t("Publish point").':</td><td style="font-weight:bold;">'.$article->get("publish_point").'</td>
 				</tr>
 				<tr>
-					<td>Flash Media Server: </td><td style="font-weight:bold;">rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</td>
+					<td>'._t("Flash Media Server").': </td><td style="font-weight:bold;">rtmp://'.$article->get("fms").'/'.$article->get("application_name").'</td>
 				</tr>
 				</table>';
 
@@ -335,11 +335,11 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 
 		$template.= '<body style="margin:0px;padding:0px;"><div style="awidth:100%;aheight:100%;">';
 
-		$template.= '<div style="width:500px;height:250px;margin:auto;padding:10px;padding-left:20px;margin-top:150px;background-color:#FFF;border:2px solid #C3C3C3;-webkit-border-radius: 6px;-moz-border-radius: 6px;border-radius: 6px;">';
+		$template.= '<div style="width:500px;height:280px;margin:auto;padding:10px;padding-left:20px;margin-top:150px;background-color:#FFF;border:2px solid #C3C3C3;-webkit-border-radius: 6px;-moz-border-radius: 6px;border-radius: 6px;">';
 
-		$template.= '<div style="text-align:left;width:100%;"><h1>'.("Synkronisering av klokke").'</h1></div>';
+		$template.= '<div style="text-align:left;width:100%;"><h1>'._t("Synchronize with server").'</h1></div>';
 
-		$template.= '<table><tr><td><img style="width:110px;height:90px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'.("Obs: G&aring; bare videre til neste steg hvis dette er datamaskinen som kj&oslash;rer Flash Media Encoder! Hvis dette ikke er datamaskinen som kj&oslash;rer Flash Media Encoder for presentasjonen, s&aring; vil presentasjonens PowerPoint slides v&aelig;re usynkronisert med videostr&oslash;mmen.").'</p></td></tr></table>';
+		$template.= '<table><tr><td><img style="width:110px;height:90px;" src="'.SERIA_HTTP_ROOT.'/templates/images/warning_finished.png" /></td><td><p style="color:red;">'._t("If the webcast has presentation slides it is assosciated with, they will not be synchronized unless this is the computer running the Flash Media Encoder program. Clicking the button below will synchronize this computer with the mediaserver distributing your webcast. If this is not the computer running Flash Media Encoder, please visit this url on that computer to obtain synchronization.").'</p></td></tr></table>';
 
 		$template.= '<br>
 			<form action="'.SERIA_HTTP_ROOT.'/seria/apps/live/api/generateFMEConfigXML.php?joakim=1" method="post">
@@ -354,7 +354,7 @@ return '<?xml version="1.0" encoding="UTF-8"?>
 								<input type="hidden" id="localSeconds" name="localSeconds" value="0" />
 								<input type="hidden" name="articleId" value="'.$_GET["articleId"].'" />
 								<input type="hidden" name="hash" value="'.$_GET["hash"].'" />
-								<input type="submit" value="Synkroniser klokken" id="submitButton" onmousedown="setTime();" />
+								<input type="submit" value="Synchronize" id="submitButton" onmousedown="setTime();" />
 							</td>
 						</tr>
 					</table>
