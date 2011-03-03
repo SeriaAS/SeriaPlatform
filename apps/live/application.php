@@ -36,7 +36,7 @@
 
 	function serialiveGui($gui)
 	{
-		$gui->addMenuItem('serialive', _t("SeriaLIVE"), _t("Create a new live presentation"), SERIA_HTTP_ROOT.'/seria/apps/live/', SERIA_HTTP_ROOT.'/seria/apps/live/icon.png', 0);
+		//$gui->addMenuItem('serialive', _t("SeriaLIVE"), _t("Create a new live presentation"), SERIA_HTTP_ROOT.'/seria/apps/live/', SERIA_HTTP_ROOT.'/seria/apps/live/icon.png', 0);
 		$gui->addMenuItem('serialive/presentations', _t("Presentations"), _t("Manage your presentations"), SERIA_HTTP_ROOT.'/seria/apps/live/presentations/');
 		$gui->addMenuItem('serialive/presentationcompanies', _t("Companies"), _t("Edit companies"), SERIA_HTTP_ROOT.'/seria/apps/live/presentationcompanies/');
 		$gui->addMenuItem('serialive/presentationcompanies/edit', _t("Add company"), _t("Create new company"), SERIA_HTTP_ROOT.'/seria/apps/live/presentationcompanies/edit.php');
