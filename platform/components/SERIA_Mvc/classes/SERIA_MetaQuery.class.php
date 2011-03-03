@@ -79,7 +79,7 @@
 
 		function key()
 		{
-			return $this->_data->FluentBackdoor('get_key');
+			return $this->_data->key();
 		}
 
 		function next()
@@ -90,7 +90,7 @@
 
 		function rewind()
 		{
-			$this->_data->next();
+			$this->_data->rewind();
 			return $this->current();
 		}
 

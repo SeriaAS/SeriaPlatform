@@ -1,5 +1,7 @@
 <?php
-
+/**
+*	Would be helpful with a short description of purpose
+*/
 require_once(dirname(__FILE__).'/../../../../main.php');
 
 if (isset($_GET['metaGridKey']) && isset($_GET['op']) &&

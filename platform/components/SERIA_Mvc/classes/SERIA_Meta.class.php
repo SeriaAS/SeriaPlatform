@@ -511,6 +511,15 @@
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
+				case "slug" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(100)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::SLUG),
+							array(SERIA_Validator::MAX_LENGTH, 100),
+						)),
+					);
 				case "filepath" :
 					return array(
 						"fieldtype" => "text",

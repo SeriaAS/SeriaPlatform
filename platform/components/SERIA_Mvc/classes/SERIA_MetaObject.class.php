@@ -170,6 +170,22 @@
 		}
 
 		/**
+		*	Save the object to the database. Warning! Overriding this method is not perfect, since
+		*	SERIA_MetaObjects often are saved using SERIA_Meta::save($object) and this method will
+		*	not be invoked.
+		*/
+		protected final function save() {
+			return SERIA_Meta::save($this);
+		}
+
+		/**
+		*	Load an instance of this object class.
+		*/
+		protected final static function load($id) {
+			return SERIA_Meta::load(get_called_class, $id);
+		}
+
+		/**
 		*	Returns a string that uniquely identifies this object.
 		*/
 		public function getObjectId() {

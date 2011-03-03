@@ -207,13 +207,12 @@ $form->begin()."<table><thead>';
 		*/
 		public function field($name, array $attributes=NULL)
 		{
-			$legal = array('style','class');
+			$legal = array('style','class','title');
 			foreach($attributes as $key => $val)
 			{
 				if(!in_array($key, $legal))
 					unset($attributes[$key]);
 			}
-
 			if(!isset($this->_spec[$name]))
 				throw new SERIA_Exception('No such field "'.$name.'".');
 
@@ -455,6 +454,7 @@ $form->begin()."<table><thead>';
 		public function htmlarea($name, array $attributes=NULL)
 		{
 			return self::renderTag('textarea', $attributes, array(
+				'id' => $this->_prefix.$name,
 				'name' => $this->_prefix.$name,
 				'class' => 'htmlarea'.($this->hasError($name)?' ui-state-error':''),
                         ), htmlspecialchars($this->get($name)));
@@ -463,6 +463,7 @@ $form->begin()."<table><thead>';
 		public function textarea($name, array $attributes=NULL)
 		{
 			return self::renderTag('textarea', $attributes, array(
+				'id' => $this->_prefix.$name,
 				'name' => $this->_prefix.$name,
 				'class' => 'textarea'.($this->hasError($name)?' ui-state-error':''),
 			), htmlspecialchars($this->get($name)));

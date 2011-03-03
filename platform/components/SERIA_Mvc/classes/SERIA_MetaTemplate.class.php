@@ -162,17 +162,23 @@
 		*/
 		public function __get($name)
 		{
-			if(isset($this->_vars[$name]))
-				return $this->_vars[$name];
-			else if(isset($this->_callbacks[$name]))
+			if(array_key_exists($name, $this->_vars))
 			{
-				if(isset($this->_callbackParams[$name]))
+				return $this->_vars[$name];
+			}
+			else if(array_key_exists($name, $this->_callbacks))
+			{
+				if(array_key_exists($name, $this->_callbackParams))
 					return call_user_func_array($this->_callbacks[$name], $this->_callbackParams[$name]);
 				else
 					return call_user_func($this->_callbacks[$name]);
 			}
 			return '[No template variable named "'.$name.'"]';
 			throw new SERIA_Exception('Template variable "'.$name.'" not found.', SERIA_Exception::NOT_FOUND);
+		}
+
+		public function __isset($name) {
+			return array_key_exists($name, $this->_vars) || array_key_exists($name, $this->_callbacks);
 		}
 
 		/**
@@ -226,9 +232,15 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 			/* overrride the translation context because we do eval from another file */
 			$_t_context = _t_setContext($templateFileName);
 
-
 			ob_start();
-			eval('?'.'>'.$code);
+			if(sizeof(self::$_stack)>0)
+			{
+				self::displayError('Missing end tag for '.self::$_stack[sizeof(self::$_stack)-1]);
+			}
+			else
+			{
+				eval('?'.'>'.$code);
+			}
 			$contents = ob_get_contents();
 			ob_end_clean();
 //echo "<pre>".htmlspecialchars($contents)."</pre>";die();
@@ -270,13 +282,12 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 
 						break;
 					case "{{" : // FOUND A VARIABLE THAT IS TO BE OUTPUT USING PHP's echo (which is why double {{ )
-
 						$end = strpos($code, "}}", $cursor+2);
 						$variableName = substr($code, $cursor+2, $end-$cursor-2);
 
 						$cursor += 4 + strlen($variableName);
 
-						$result .= '<'.'?php echo '.$this->_compileVariable($variableName, $templateFileName).'; ?'.'>';
+						$result .= '<'.'?php echo '.self::_compileVariable($variableName, $templateFileName).'; ?'.'>';
 
 						break;
 					default : die("ERROR: |$found|");
@@ -529,9 +540,10 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 			foreach ($_delims as $delim)
 				$delimMark[] = $mark;
 
-			$hash = hash('md4', $input);
+//			$hash = hash('md4', $input);
+			$hash = md5($input);
 			/*
-			 * The memory is not (md4) collision safe.
+			 * The memory is not (md5) collision safe.
 			 * Collisions are very unlikely, but may cause
 			 * very strange results.
 			 */
@@ -582,6 +594,7 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 							$tokens[] = $token;
 					}
 				}
+
 				/*
 				 * Create a token tree.
 				 */
@@ -609,7 +622,8 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 							$key = array_pop($key);
 							$level =& $levelStack[$key];
 							unset($levelStack[$key]);
-							if ($newlevel)
+// Removed this, since it causes variable->getTag() to be translated to variable->getTag
+//							if ($newlevel)
 								$level[] =& $newlevel;
 							unset($newlevel);
 							break;
@@ -702,14 +716,16 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 			foreach ($tokens as $key => $group) {
 				$gtree = self::_tokenTreeReassemble($group);
 				$tokens[$key] = $gtree;
-				$memory[hash('md4', $gtree)] = $group;
+				$memory[md5($gtree)] = $group;
 			}
 			return $tokens;
 		}
 
 		public /*package*/ static function _compileVariable($name, $templateFileName, $mustBeAssignable=false)
 		{
+//if($name=='video->getPlayer()') $debug = true;
 			$parts = self::_tokenizeVariable($name, true);
+//if($debug) var_dump($parts);
 			$var = $parts[0];
 			if ($var[0] != '"' && $var[0] != '\'')
 				$varParts = explode(".", $var);
@@ -829,7 +845,10 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 						'strtoupper'			=> 'mb_strtoupper(%%)',
 						'left'				=> 'mb_substr(%%,0,%1)',
 						'right'				=> 'mb_substr(%%,-%1)',
-
+						'dateformat'			=> 'SERIA_MetaTemplate::renderDateFormat(%%,%1)',
+						'date'				=> 'SERIA_MetaTemplate::renderDate(%%)',
+						'datetime'			=> 'SERIA_MetaTemplate::renderDateTime(%%)',
+						'time'				=> 'SERIA_MetaTemplate::renderTime(%%)',
 						'_t'				=> array(
 							'call' => array('SERIA_MetaTemplate', '_translate'),
 							'args' => array(var_export($templateFileName, true))
@@ -895,6 +914,7 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 		*/
 		public /*package*/ static function displayError($message)
 		{
+			SERIA_ProxyServer::noCache();
 			echo "<span class='SERIA_MetaTemplate_error'><strong>MetaTemplate error: </strong> ".$message."</span>";
 		}
 
@@ -920,7 +940,42 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 		 */
 
 		/**
-		 * 
+		 * Parse a date and render it to a user defined format
+		 * Filter: |dateformat
+		 */
+		public static function renderDateFormat(SERIA_DateTimeMetaField $datetime, $format)
+		{
+			return $datetime->getDateTimeObject()->render($format);
+		}
+
+		/**
+		 * Date renders a supplied date to the current users locale
+		 * @filter |date
+		 */
+		public static function renderDate(SERIA_DateTimeMetaField $datetime) {
+			return $datetime->getDateTimeObject()->renderUserDate();
+		}
+
+		/**
+		 * DateTime renders a supplied date and time to the current users locale
+		 * @todo Actually use the locale
+		 * @filter |datetime
+		 */
+		public static function renderDateTime($datetime) {
+			return $datetime->getDateTimeObject()->renderUserDateTime();
+		}
+
+		/**
+		 * Time renders a supplied time to the current users locale
+		 * @todo Actually use the locale
+		 * @filter |time
+		 */
+		public static function renderTime($datetime) {
+			return $datetime->getDateTimeObject()->renderUserTime();
+		}
+
+
+		/**
 		 * Special filter. Do not call from normal code.
 		 */
 		public function _translate()

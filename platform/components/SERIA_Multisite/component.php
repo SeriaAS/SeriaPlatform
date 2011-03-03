@@ -25,3 +25,18 @@
 			),
 		);
 	}
+
+	function SERIA_MultisiteInit() {
+		SERIA_Hooks::listen(SERIA_MetaTemplateHooks::EXTEND, 'SERIA_Multisite_extend');
+	}
+
+	function SERIA_Multisite_extend($tpl) {
+		$tpl->addVariableCallback('site', 'SERIA_Multisite_site');
+	}
+
+	function SERIA_Multisite_site() {
+		if(isset($GLOBALS['seriamultisite']))
+			return $GLOBALS['seriamultisite'];
+
+		return NULL;
+	}

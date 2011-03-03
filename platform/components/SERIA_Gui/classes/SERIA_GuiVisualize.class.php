@@ -67,12 +67,22 @@ class SERIA_GuiVisualize {
 	}
 
 	/**
-	*	Renders a list of shortcuts that a user can click to quickly navigate to often performed tasks.
+	*	Renders a box with a picture and a text, possibly clickable
 	*/
-	public static function box($title, $text)
+	public static function imageBox($title, $image, $width, $height, $onClick=NULL)
 	{
 		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
-		$res = "<div class='SERIA_GuiVisualize box'><h2><span class='ui-icon ui-icon-bullet' style='float:left;'></span>".htmlspecialchars($title)."</h2><div class='contents'>$text</div></div>";
+		$res = "<div class='SERIA_GuiVisualize imageBox'".($onClick!==NULL?' onclick="'.htmlspecialchars($onClick).'"':'')." style='".($onClick!==NULL?'cursor:pointer;':'').";width:".$width."px;height:".$height."px; overflow: hidden;'><h2><span class='ui-icon ui-icon-image' style='float:left;'></span>".htmlspecialchars($title)."</h2><table style='border-collapse:collapse;margin:0;padding:0;border:1px solid #ccc;width:".($width)."px;'><tr><td class='contents' style='text-align: center;margin:0;padding:0;background-color:#eee;height:".($height-18)."px;overflow:hidden;vertical-align:middle;'><img src='$image' style='width:".($width-4)."px;max-height:".($height-20)."px;margin:0;padding:0;'></td></tr></table></div>";
+		return $res;
+	}
+
+	/**
+	*	Renders a list of shortcuts that a user can click to quickly navigate to often performed tasks.
+	*/
+	public static function box($title, $contents, $icon='bullet')
+	{
+		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
+		$res = "<div class='SERIA_GuiVisualize box'><h2><span class='ui-icon ui-icon-".$icon."' style='float:left;'></span>".htmlspecialchars($title)."</h2><div class='contents'>$contents</div></div>";
 		return $res;
 	}
 }

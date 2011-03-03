@@ -80,7 +80,8 @@ div.SERIA_GuiVisualize.toolbar input[type=text] {
 	color: #444;
 }
 div.SERIA_GuiVisualize.shortcuts,
-div.SERIA_GuiVisualize.box
+div.SERIA_GuiVisualize.box,
+div.SERIA_GuiVisualize.imageBox
 {
 	background-image: url('gradient.png');
 	background-position: bottom;
@@ -94,4 +95,14 @@ div.SERIA_GuiVisualize.box
 	padding: 15px;
 	padding-bottom: 7px;
 	padding-top: 0px;
+}
+div.SERIA_GuiVisualize.imageBox {
+	padding: 3px;
+	margin: 0px;
+	margin-right: 2px;
+	margin-bottom: 2px;
+	float: left;
+}
+div.SERIA_GuiVisualize.imageBox h2 {
+	margin: 0;
 }
