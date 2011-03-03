@@ -36,6 +36,7 @@ class SERIA_Validator
 	const TIMEZONE = 29;			// array(SERIA_Validator::TIMEZONE[, 'Custom error message']);
 	const CURRENCYCODE = 30;		// array(SERIA_Validator::CURRENCYCODE[, 'Custom error message']);
 	const FILEPATH = 31;			// array(SERIA_Validator::FILEPATH[, 'Custom error message']);
+	const SLUG = 32;			// array(SERIA_Validator::SLUG[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -347,6 +348,10 @@ class SERIA_Validator
 							if(strpos($part, $illegalChars[$i])!==false)
 								return isset($rule[1]) ? $rule[1] : _t("Illegal character %CHAR% in path component.", array('CHAR' => $illegalChars[$i]));
 					}
+					break;
+				case self::SLUG:
+					if($value != SERIA_Sanitize::slug($value))
+						return isset($rule[1]) ? $rule[1] : _t("Invalid slug. A slug is lowercase characters, and dashes in place of spaces.");
 					break;
 			}
 		}

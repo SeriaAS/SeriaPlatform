@@ -219,15 +219,31 @@ class SERIA_Manifests {
 				if($installedVersion===NULL) $installedVersion = 0;
 				if($newVersion>$installedVersion)
 				{
-/**
-*	Synchronize database definition
-*/
+					/**
+					*	This is a new manifest, so register it
+					*/
+					if($installedVersion===0)
+					{ // this is a new manifest
+						SERIA_Base::setParam('manifest:'.$className.':serial', $newVersion);
+						$db->exec("INSERT INTO {manifests} (name) VALUES (?)", array($className));
+						$db->exec("INSERT INTO {manifests_logs} (category, title, manifestName, serial, targetserial) VALUES (?,?,?,?,?)", array(
+							'install',
+							'First installation of the "'.$className.'" manifest.', 
+							$className,
+							$newVersion,
+							$newVersion,
+						));
+					}
+
+					/**
+					*	Synchronize database definition
+					*/
 					try {
 						$database = $reflection->getStaticPropertyValue('database');
 						// perform custom alter tables and drop tables for this manifest
 						if($installedVersion>0)
 						{ // do not drop or alter tables for new manifests
-						for($i = $installedVersion+1; $i <= $newVersion; $i++)
+							for($i = $installedVersion+1; $i <= $newVersion; $i++)
 							{
 								if(isset($database['drops']) && isset($database['drops'][$i]))
 								{ // there are drop table instructions for this version
@@ -280,20 +296,45 @@ class SERIA_Manifests {
 								}
 							}
 						}
-						else
-						{ // this is a new manifest
-							SERIA_Base::setParam('manifest:'.$className.':serial', $newVersion);
-							$db->exec("INSERT INTO {manifests} (name) VALUES (?)", array($className));
-							$db->exec("INSERT INTO {manifests_logs} (category, title, manifestName, serial, targetserial) VALUES (?,?,?,?,?)", array(
-								'install',
-								'First installation of the "'.$className.'" manifest.', 
-								$className,
-								$newVersion,
-								$newVersion,
-							));
-						}
+					} catch (ReflectionException $e) {
+					}
+
 //todo check altered table type!
-						// synchronize table definitions with actual database
+
+					/**
+					*	Synchronize folder definition
+					*/
+					try {
+						$folders = $reflection->getStaticPropertyValue('folders');
+						foreach($folders as $const => $paths)
+						{
+							if(!defined($const)) continue;
+							if(!is_array($paths))
+								$paths = array($paths);
+							foreach($paths as $rpath)
+							{
+								$path = rtrim(constant($const),'/').'/'.ltrim($rpath,'/');
+								if(!file_exists($path))
+								{
+									mkdir($path, 0777);
+									$db->exec('INSERT INTO {manifests_folders} (pathName, path, manifestName) VALUES (?,?,?)', array(
+										$const,
+										$rpath,
+										$className,
+									));
+								}
+								else if(!is_dir($path))
+									throw new SERIA_Exception('Want to create a folder at "'.$path.'" but there is a file with the same name.');
+							}
+						}
+					} catch(ReflectionException $e) {
+					}
+
+					/**
+					*	Synchronize database definitions
+					*/
+					try {
+						$database = $reflection->getStaticPropertyValue('database');
 						if(isset($database['creates']))
 						{
 							foreach($database['creates'] as $create)
@@ -506,15 +547,15 @@ class SERIA_Manifests {
 							$newVersion,
 						), true);
 						SERIA_Base::debug('Updated manifest for "'.$className.'" to version '.$newVersion);
-						SERIA_Base::setParam('manifest:'.$className.':serial', $newVersion);
 					}
 					catch (ReflectionException $e)
 					{
 					}
-/**
-*	Synchronize folder definitions
-*/
 
+					/**
+					*	Finished with synchronizing manifests
+					*/
+					SERIA_Base::setParam('manifest:'.$className.':serial', $newVersion);
 				}
 				else if($newVersion<$installedVersion)
 				{

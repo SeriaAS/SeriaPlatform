@@ -254,7 +254,11 @@ $message
 
 	Backtrace:
 
-$trace");
+$trace
+
+	DB Queries:
+
+".SERIA_Base::db()->getQueryLog());
 							} catch (Exception $e) { 
 								echo "Unable to send e-mail error report: ".$e->getMessage()."<br>\n".SERIA_Base::$requestError; 
 							}

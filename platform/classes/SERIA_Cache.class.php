@@ -25,18 +25,18 @@ class SERIA_Cache implements SERIA_ICache // mysql
 	public static function garbageCollectCache()
 	{
 		if(SERIA_INSTALL) return;
-		SERIA_Base::db()->exec('DELETE FROM {cache} WHERE expiry < UNIX_TIMESTAMP()');
+		SERIA_Base::db()->exec('DELETE FROM {cache} WHERE expiry < UNIX_TIMESTAMP()', NULL, true);
 	}
 
 	public function deleteAll() {
 		$db = SERIA_Base::db();
-		$db->exec("DELETE FROM seria_cache WHERE name LIKE :namespace", array("namespace" => $this->namespace."%"));
+		$db->exec("DELETE FROM seria_cache WHERE name LIKE :namespace", array("namespace" => $this->namespace."%"), NULL, true);
 	}
 
 	public function delete($name) {
 		$db = SERIA_Base::db();
 		$name = $this->namespace.":".md5($name);
-		$db->exec("DELETE FROM seria_cache WHERE name=:name", array("name" => $name));
+		$db->exec("DELETE FROM seria_cache WHERE name=:name", array("name" => $name), true);
 	}
 
 	public function set($name, $value, $expires=1800)
@@ -50,13 +50,13 @@ class SERIA_Cache implements SERIA_ICache // mysql
 
 		try
 		{
-			return SERIA_Base::db()->exec("INSERT INTO seria_cache (name, value, expiry) VALUES (:name, :value, UNIX_TIMESTAMP()+".intval($expires).")", array("name" => $name, "value" => $data)) ? true : false;
+			return SERIA_Base::db()->exec("INSERT INTO seria_cache (name, value, expiry) VALUES (:name, :value, UNIX_TIMESTAMP()+".intval($expires).")", array("name" => $name, "value" => $data), true) ? true : false;
 		}
 		catch (PDOException $e)
 		{
 			if($e->getCode() == "23000")
 			{ // it was already there
-				$res = SERIA_Base::db()->exec("UPDATE seria_cache SET value=:value, expiry=UNIX_TIMESTAMP()+".intval($expires)." WHERE name=:name", array("value" => $data, "name" => $name));
+				$res = SERIA_Base::db()->exec("UPDATE seria_cache SET value=:value, expiry=UNIX_TIMESTAMP()+".intval($expires)." WHERE name=:name", array("value" => $data, "name" => $name), true);
 				if ($res === 0 && SERIA_DEBUG)
 					SERIA_Base::debug('Updating cache key "'.$name.'" in namespace "'.$this->namespace.'" with identical expiration and contents.');
 				return true;

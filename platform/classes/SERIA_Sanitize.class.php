@@ -1,6 +1,14 @@
 <?php
 	class SERIA_Sanitize
 	{
+		/**
+		*	Will translate a string into a valid url component, suitable for nice urls. Spaces becomes dashes,
+		*	non-ascii characters become ascii characters etc.
+		*/
+		function slug($string) {
+	                return strtolower(trim(preg_replace(array('~[^0-9a-z]~i', '~-+~'), '-', preg_replace('~&([a-z]{1,2})(acute|cedil|circ|grave|lig|orn|ring|slash|th|tilde|uml);~i', '$1', htmlentities($string, ENT_QUOTES, 'UTF-8'))), '-'));
+	        }
+
 		function filename($filename, $sourceEncoding="UTF-8")
 		{
 			$filename = mb_convert_encoding($filename, 'ISO-8859-1', $sourceEncoding);
