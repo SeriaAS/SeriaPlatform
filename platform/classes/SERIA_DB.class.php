@@ -393,7 +393,7 @@
 			$colnames = array();
 			foreach ($updateColumnNames as $val) {
 				if (isset($assocFieldData[$val])) {
-					$colnames[] = $val;
+					$colnames[] = '`' . $val . '`';
 					$mapList[] = $assocFieldData[$val];
 					$num++;
 				}
@@ -434,7 +434,7 @@
 			$num = 0;
 			foreach ($updateColumnNames as $val) {
 				if (isset($assocFieldData[$val])) {
-					$paramStr[] = $val.' = ?';
+					$paramStr[] = '`' . $val . '` = ?';
 					$mapList[] = $assocFieldData[$val];
 					$num++;
 				}
@@ -445,7 +445,7 @@
 			$primStr = array();
 			foreach ($primaryKey as $nam => $val) {
 				$mapList[] = $val;
-				$primStr[] = $nam.' = ?';
+				$primStr[] = '`' . $nam . '` = ?';
 			}
 			$primStr = implode(' AND ', $primStr);
 
@@ -498,7 +498,7 @@
 			$mapList = array();
 			foreach ($updateColumnNames as $val) {
 				if (isset($assocFieldData[$val])) {
-					$paramStr[] = $val.' = ?';
+					$paramStr[] = '`' . $val . '` = ?';
 					$mapList[] = $assocFieldData[$val];
 					$num++;
 				}
@@ -511,7 +511,7 @@
 			foreach ($prim as $nam => $val) {
 				$selectMap[] = $val;
 				$mapList[] = $val;
-				$primStr[] = $nam.' = ?';
+				$primStr[] = '`' . $nam . '` = ?';
 			}
 			$primStr = implode(' AND ', $primStr);
 			/*
