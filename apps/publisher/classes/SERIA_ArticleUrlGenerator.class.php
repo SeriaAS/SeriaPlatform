@@ -8,34 +8,55 @@
 		);
 		
 		public function createGenerator($articleType, $key, $description, $baseUrl, $staticParams = array(), $specialParams = array()) {
-			if (!$urlGenerator = SERIA_ArticleUrlGenerators::find_first_by_key($key, array('criterias' => array('articletype' => $articleType)))) {
-				$urlGenerator = new SERIA_ArticleUrlGenerator();
-				$urlGenerator->articletype = $articleType;
+			/*
+			 * PHP crashes with segfault. So I have to rewrite without ActiveRecord.
+			 */
+			$gen = SERIA_Base::db()->query('SELECT * FROM {article_url_generators} WHERE articletype = :articletype', array('articletype' => $articleType))->fetch(PDO::FETCH_ASSOC);
+			if ($gen) {
+				$data = array(
+					'baseurl' => $baseUrl,
+					'key' => $key,
+					'description' => $description
+				);
+				foreach ($data as $name => $value)
+					$gen[$name] = $value;
+				if (SERIA_Base::db()->update('{article_url_generators}', array('id' => $gen['id']), array_keys($data), $data) === false)
+					throw new SERIA_Exception('Failed to update url generator!');
+			} else {
+				$data = array(
+					'articletype' => $articleType,
+					'baseurl' => $baseUrl,
+					'key' => $key,
+					'description' => $description
+				);
+				if (SERIA_Base::db()->insert('{article_url_generators}', array_keys($data), $data) === false)
+					throw new SERIA_Exception('Failed to add url generator!');
+				$gen = SERIA_Base::db()->query('SELECT * FROM {article_url_generators} WHERE articletype = :articletype', array('articletype' => $articleType))->fetch(PDO::FETCH_ASSOC);
+				if (!$gen)
+					throw new SERIA_Exception('Failed to add url generator!');
 			}
-			
-			$urlGenerator->baseurl = $baseUrl;
-			$urlGenerator->key = $key;
-			$urlGenerator->description = $description;
-			$urlGenerator->save();
-			
-			$params = $urlGenerator->Params;
-			foreach ($params as $param) {
-				$param->delete();
-			}
-			
+
+			/* Delete old params */
+			if (SERIA_Base::db()->exec('DELETE FROM {article_url_params} WHERE urlgenerator_id = :id', array('id' => $gen['id'])) === false)
+				throw new SERIA_Exception('Failed to remove old urlgenerator params!');
+
 			foreach ($staticParams as $key => $value) {
-				$param = new SERIA_ArticleUrlGeneratorParam();
-				$param->urlgenerator_id = $urlGenerator->id;
-				$param->name = $key;
-				$param->value = $value;
-				$param->save();
+				$data = array(
+					'urlgenerator_id' => $gen['id'],
+					'name' => $key,
+					'value' => $value
+				);
+				if (SERIA_Base::db()->insert('{article_url_params}', array_keys($data), $data) === false)
+					throw new SERIA_Exception('Failed to set urlgenerator param!');
 			}
 			foreach ($specialParams as $key => $value) {
-				$param = new SERIA_ArticleUrlGeneratorParam();
-				$param->urlgenerator_id = $urlGenerator->id;
-				$param->name = $key;
-				$param->specialvalue = $value;
-				$param->save();
+				$data = array(
+					'urlgenerator_id' => $gen['id'],
+					'name' => $key,
+					'specialvalue' => $value
+				);
+				if (SERIA_Base::db()->insert('{article_url_params}', array_keys($data), $data) === false)
+					throw new SERIA_Exception('Failed to set urlgenerator param!');
 			}
 			
 			return true;
