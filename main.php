@@ -390,7 +390,7 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 
 	// try to resolve routes
 	try {
-		list($callback, $variables) = $router->resolve(trim($_GET['route'], "/\r\n\t "));
+		list($callback, $variables) = $router->resolve(trim($_GET['route'], "/\r\n\t ")); // keep this change
 		if(is_callable($callback))
 		{
 			call_user_func($callback, $variables);
@@ -411,7 +411,7 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 	{
 		if($e->getCode() == SERIA_Exception::NOT_FOUND)
 		{
-			SERIA_Hooks::dispatchToFirst(SERIA_PlatformHooks::ROUTER_FAILED, trim($_GET['route'], "/\r\n\t "));
+			SERIA_Hooks::dispatchToFirst(SERIA_PlatformHooks::ROUTER_FAILED, trim($_GET['route'], "/\r\n\t ")); // and keep this
 
 			list($callback, $variables) = $router->resolve('error/404');
 			call_user_func($callback, $variables);
