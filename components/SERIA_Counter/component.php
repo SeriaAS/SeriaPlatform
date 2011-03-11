@@ -18,7 +18,7 @@
 	*
 	*	$counter = new SERIA_Counter('my_namespace');
 	*	// Count the event "view" for the year 2010, the month november 2010, hour 16, category 3123 etc.
-	*	$counter->count(array('y=2010','y=2010&m=11','month=11','total','h=16','category=3123'));
+	*	$counter->add(array('y=2010','y=2010&m=11','month=11','total','h=16','category=3123'));
 	*
 	*	echo "Total views in 2010: ".$counter->get("y=2010")."<br>";
 	*	echo "At 16 o'clock every day since this article was published, it have been viewed ".$counter->get("h=16")." times<br>";
