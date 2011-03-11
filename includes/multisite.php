@@ -69,7 +69,7 @@
 		return $site;
 	}
 
-	$site = multisiteInit();
+	$GLOBALS['seriamultisite'] = $site = multisiteInit();
 
 	if($site===false)
 	{
