@@ -46,12 +46,23 @@
 			);
 		}
 
+		/**
+		*	Whenever this blob is saved to the database
+		*/
+		public function MetaAfterSave()
+		{
+			if($this->MetaIsNew())
+			{
+				SERIA_Hooks::dispatch(SERIA_BlobManifest::NEW_BLOB_HOOK, $this);
+			}
+		}
+
 		public function getEditions() {
 			return SERIA_Meta::all('SERIA_Blob')->where('editionOf=:id', $this);
 		}
 
 		public function getEdition($editionName) {
-			$edition = SERIA_Meta::all('SERIA_Blob')->where('editionOf=:id AND editionName=:name', array('id' => $this->get('id'), 'name' => $editionName)->fetch();
+			$edition = SERIA_Meta::all('SERIA_Blob')->where('editionOf=:id AND editionName=:name', array('id' => $this->get('id'), 'name' => $editionName))->fetch();
 			if($edition) return $edition;
 			throw new SERIA_Exception('Could not find that edition of this file.', SERIA_Exception::NOT_FOUND);
 		}
@@ -83,7 +94,9 @@
 		*	Return the url of this file
 		*/
 		public function getUrl($protocol) {
-			return $this->getBackend()->getUrl($protocol);
+			if($this->get('isAccessible'))
+				return $this->getBackend()->getUrl($protocol);
+			throw new SERIA_Exception('The file is currently not available. It may take some time to upload a file to an external hosting provider.', SERIA_Exception::NOT_READY);
 		}
 
 		public function delete() {

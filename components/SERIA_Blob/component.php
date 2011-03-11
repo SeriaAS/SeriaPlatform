@@ -11,6 +11,15 @@
 		const NAME = "blobs";
 
 		/**
+		*	Hook is dispatched whenever a new blob is added to the database. The listener is called with the SERIA_Blob object
+		*	as the first parameter.
+		*
+		*	Note! A listener should return immediately, so place any lengthy processes on a queue to be performed
+		*	asynchronously!
+		*/
+		const NEW_BLOB_HOOK = 'SERIA_BlobManifest::NEW_BLOB_HOOK';
+
+		/**
 		*	Whenever a new file is added find a consumer to handle storage of this file.
 		*	Consumers must listen to this hook, and will be provided with an instance of SERIA_Blob as well
 		*	as the path to the current local location of the file. If the storage provider accepts the file
