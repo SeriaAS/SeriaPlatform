@@ -90,6 +90,8 @@
 			$rs = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->where($spec['primaryKey'].'=:key', array(':key' => $key), $shardValue);
 			if(isset($spec['selectWhere']))
 				$rs->where($spec['selectWhere']);
+			if($where = call_user_func(array($className, 'MetaSelect')))
+				$rs->where($where);
 			$row = $rs->limit(1)->current();
 			if($row === false)
 				throw new SERIA_Exception($className.':'.$key.' not found', SERIA_Exception::NOT_FOUND);
