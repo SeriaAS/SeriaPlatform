@@ -28,6 +28,7 @@
 
 		public static function renderFormField($name, $value, array $params=NULL, $hasError=false)
 		{
+			return '<input type="datetime" value="'.date('c', $value->getDateTimeObject()->getTimestamp()).'">';
 			$formName = /*$prefix.*/$name; /* FIXME - We don't know the prefix. Assuming empty */
 			SERIA_ScriptLoader::loadScript('jQuery-ui');
 			$id = $name.mt_rand();

@@ -717,8 +717,23 @@
 						))
 					);
 				case "datetime" :
-					return SERIA_DateTimeMetaField::MetaField();
+//					return SERIA_DateTimeMetaField::MetaField();
+//				case "datetime2" :
+					return array(
+						"fieldtype" => 'datetime',
+						"type" => 'datetime',
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::ISODATETIME),
+						)),
+					);
 				case "date" :
+					return array(
+						"fieldtype" => "date",
+						"type" => "date",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::ISODATE),
+						)),
+					);
 					return SERIA_DateMetaField::MetaField();
 				case "seria_metaobject" :
 					return array(
@@ -897,9 +912,11 @@
 						$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 						switch(strtolower($tokens[0]))
 						{
+/**
 							case 'date' : case 'datetime' : case 'year' :
 								$newRow[$name] = strtotime($row[$name]);
 								break;
+*/
 							default :
 								$newRow[$name] = $row[$name];
 								break;

@@ -263,7 +263,7 @@
 						else if(isset($spec['fields'][$name]['type']))
 						{
 							$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
-
+/*
 							switch(strtolower($tokens[0]))
 							{
 								case 'date' : case 'datetime' :
@@ -275,6 +275,8 @@
 								case 'tinyint' :
 									
 							}
+*/
+var_dump($row);
 						}
 						else
 						{
@@ -306,7 +308,7 @@
 		/**
 		*	Get a value. If the field references a SERIA_Meta-object, SERIA_MetaField or a SERIA_FluentObject
 		*	the object will be instantiated. If the field does not exist, an exception will be thrown. Datetime,
-		*	date and time column types will be changed to a unix timestamp.
+		*	date and time column types will NOT be changed to a unix timestamp. Expected format YYYY-MM-DD HH:MM:SS
 		*
 		*	@param $name	The field name to fetch. The field name may be aliased in the Meta() fieldAliases array.
 		*	@return mixed
@@ -322,7 +324,9 @@
 				$name = $spec['fieldAliases'][$name];
 
 			if(isset($this->metaCache[$name]))
+			{
 				return $this->metaCache[$name];
+			}
 
 			if(!isset($spec['fields'][$name]))
 			{
@@ -338,9 +342,11 @@
 			if(empty($this->row[$name]))
 				return $this->row[$name];
 
+
 			// Referred classes are instantiated, stored in $this->metaCache[$name] then returned, but only when they are accessed.
 			if(isset($spec['fields'][$name]['class']))
 			{ // this field is a special field type that should return an instance of the specified class
+
 				if($spec['fields'][$name]['class'] == 'SERIA_MetaObject')
 					return $this->metaCache[$name] = SERIA_Meta::getByReference($this->row[$name]);
 				else if(is_subclass_of($spec['fields'][$name]['class'], 'SERIA_MetaObject'))
@@ -354,15 +360,15 @@
 
 			}
 
+
 			if(isset($spec['fields'][$name]['type']))
 			{
 				$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 				switch(strtolower($tokens[0]))
 				{
-					case 'date' : case 'datetime' :
-						return $this->metaCache[$name] = strtotime($this->row[$name]);
-					case 'year' :
-						return $this->metaCache[$name] = strtotime($this->row[$name].'-01-01');
+					case 'date' : case 'year' : case 'datetime' :
+						if(trim($this->row[$name],'0- :')=='') return NULL;
+						break;
 				}
 			}
 
@@ -393,9 +399,19 @@
 					$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 					switch(strtolower($tokens[0]))
 					{
-						case 'date' : case 'datetime' : case 'year' :
-							$this->row[$name] = date('Y-m-d H:i:s', $value);
+/*
+						case 'year' :
+							if(strlen($value)==4) // assume year
+								$this->row[$name] = $value;
+							else // assume timestamp
+								$this->row[$name] = date('Y', $value);
+						case 'date' : case 'datetime' :
+							if(trim($value, "0123456789")=="") // assume timestamp
+								$this->row[$name] = date('Y-m-d H:i:s', $value);
+							else // assume database format
+								$this->row[$name] = $value;
 							break;
+*/
 						default :
 							$this->row[$name] = $value;
 							break;

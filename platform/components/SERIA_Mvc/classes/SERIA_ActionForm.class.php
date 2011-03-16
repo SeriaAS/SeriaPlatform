@@ -399,6 +399,18 @@ $form->begin()."<table><thead>';
 			));
 		}
 
+		public function datetime($name, array $attributes=NULL)
+		{
+
+			return self::renderTag('input', $attributes, array(
+				'type' => 'text',
+				'id' => $this->_prefix.$name,
+				'name' => $this->_prefix.$name,
+				'value' => ($this->get($name) ? $this->get($name) : ''),
+				'class' => 'datetime'.($this->hasError($name)?' ui-state-error':''),
+			));
+		}
+
 		public function email($name, array $attributes=NULL)
 		{
 			return self::renderTag('input', $attributes, array(
