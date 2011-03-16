@@ -260,22 +260,15 @@
 							else
 								throw new SERIA_Exception('Unsupported class "'.get_class($value).'" specified for field "'.$name.'".');
 						}
-						else if(isset($spec['fields'][$name]['type']))
+						else if(!empty($spec['fields'][$name]['type']))
 						{
-/*
 							$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 							switch(strtolower($tokens[0]))
 							{
-								case 'date' : case 'datetime' :
-									$this->row[$name] = date('Y-m-d H:i:s', $this->metaCache[$name]);
+								case 'year' : case 'date' : case 'datetime' :
+									if(trim($this->row[$name],'0- :')=='') $this->row[$name] = NULL;
 									break;
-								case 'year' :
-									$this->row[$name] = date('Y', $this->metaCache[$name]);
-									break;
-								case 'tinyint' :
-									
 							}
-*/
 						}
 						else
 						{

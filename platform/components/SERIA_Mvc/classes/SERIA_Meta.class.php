@@ -133,6 +133,7 @@
 
 			$row = self::_rowToDB($instance->MetaBackdoor('get_row'), $spec, $saveReferences);
 
+
 			if($instance->MetaBackdoor('is_new'))
 			{
 				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->insert($row);
@@ -889,6 +890,12 @@
 				else if(isset($row[$name]))
 				{ // this is not good, since we do not have database model information in the MetaSpec.
 					throw new SERIA_Exception('The \'type\' was not specified for field '.$name.' in MetaObject for table '.$spec['table'].'. This is required for updating the database.');
+				}
+				else
+				{
+					if(array_key_exists($name, $row) && $row[$name]===NULL)
+						$newRow[$name] = $row[$name];
+
 				}
 			}
 			if(empty($row[$spec['primaryKey']]))
