@@ -37,6 +37,9 @@ class SERIA_Validator
 	const CURRENCYCODE = 30;		// array(SERIA_Validator::CURRENCYCODE[, 'Custom error message']);
 	const FILEPATH = 31;			// array(SERIA_Validator::FILEPATH[, 'Custom error message']);
 	const SLUG = 32;			// array(SERIA_Validator::SLUG[, 'Custom error message']);
+	const ISODATE = 33;			// array(SERIA_Validator::ISODATE[, 'Custom error message']);
+	const ISOTIME = 34;			// array(SERIA_Validator::ISOTIME[, 'Custom error message']);
+	const ISODATETIME = 35;			// array(SERIA_Validator::ISODATETIME[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -352,6 +355,18 @@ class SERIA_Validator
 				case self::SLUG:
 					if($value != SERIA_Sanitize::slug($value))
 						return isset($rule[1]) ? $rule[1] : _t("Invalid slug. A slug is lowercase characters, and dashes in place of spaces.");
+					break;
+				case self::ISODATE: // check taht format is exactly YYYY-MM-DD
+					if(date('Y-m-d', strtotime($value)) != $value)
+						return isset($rule[1]) ? $rule[1] : _t("Invalid date. Expected format is a standard ISO date YYYY-MM-DD.");
+					break;
+				case self::ISOTIME: // check taht format is exactly HH:MM:SS
+					if(date('H:i:s', strtotime($value)) != $value && date('H:i', strtotime($value)) != $value)
+						return isset($rule[1]) ? $rule[1] : _t("Invalid time. Expected format is a standard ISO time HH:MM in 24-hour time.");
+					break;
+				case self::ISODATETIME: // check taht format is exactly HH:MM:SS
+					if(date('Y-m-d H:i:s', strtotime($value)) != $value && date('Y-m-d H:i', strtotime($value)) != $value)
+						return isset($rule[1]) ? $rule[1] : _t("Invalid date/time. Expected format is a standard ISO date time YYYY-MM-DD HH:MM.");
 					break;
 			}
 		}
