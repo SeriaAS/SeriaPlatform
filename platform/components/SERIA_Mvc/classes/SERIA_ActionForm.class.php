@@ -406,8 +406,22 @@ $form->begin()."<table><thead>';
 				'type' => 'text',
 				'id' => $this->_prefix.$name,
 				'name' => $this->_prefix.$name,
+				'title' => _t("Format is YYYY-MM-DD HH:MM"),
 				'value' => ($this->get($name) ? $this->get($name) : ''),
 				'class' => 'datetime'.($this->hasError($name)?' ui-state-error':''),
+			));
+		}
+
+		public function date($name, array $attributes=NULL)
+		{
+
+			return self::renderTag('input', $attributes, array(
+				'type' => 'text',
+				'id' => $this->_prefix.$name,
+				'name' => $this->_prefix.$name,
+				'title' => _t("Format is YYYY-MM-DD"),
+				'value' => ($this->get($name) ? $this->get($name) : ''),
+				'class' => 'date'.($this->hasError($name)?' ui-state-error':''),
 			));
 		}
 
