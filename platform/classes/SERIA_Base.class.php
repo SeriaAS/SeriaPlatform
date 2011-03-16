@@ -4,6 +4,7 @@
 		/* VIEW MODES */
 		const PUBLIC_VIEWMODE = 'public';			// data is to be presented publicly, for example on the website and you should remove unpublished elements
 		const ADMIN_VIEWMODE = 'admin';				// data is to be previewed by a logged in administrative user, so you may chose to display unpublished elements
+		const SYSTEM_VIEWMODE = 'system';
 
 		/* HOOKS */
 		const LOGIN_HOOK = 'beforeLogin';
@@ -744,6 +745,7 @@ $trace
 			switch($mode)
 			{
 				case false : return $currentMode;
+				case self::SYSTEM_VIEWMODE :
 				case self::ADMIN_VIEWMODE :
 				case self::PUBLIC_VIEWMODE : return $currentMode = $mode;
 				default : throw new SERIA_Exception("Unsupported view mode '$mode'.");
