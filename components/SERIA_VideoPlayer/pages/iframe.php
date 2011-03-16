@@ -1,5 +1,17 @@
 <?php
-	$video = SERIA_NamedObjects::getInstanceByPublicId($_GET['objectKey'], 'SERIA_IVideoData');
+	try {
+		$video = SERIA_NamedObjects::getInstanceByPublicId($_GET['objectKey'], 'SERIA_IVideoData');
+	} catch (SERIA_Exception $e) {
+		SERIA_Base::viewMode('admin');
+		try {
+			$video = SERIA_NamedObjects::getInstanceByPublicId($_GET['objectKey'], 'SERIA_IVideoData');
+			echo "Not published"; 
+			return;
+		} catch (SERIA_Exception $e) {
+			echo "Not found";
+			return;
+		}
+	}
 	$vd = $video->getVideoData();
 	$sources = $vd['sources'];
 	$source = current($sources);
