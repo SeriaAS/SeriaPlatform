@@ -262,8 +262,8 @@
 						}
 						else if(isset($spec['fields'][$name]['type']))
 						{
-							$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 /*
+							$tokens = SERIA_DB::sqlTokenize($spec['fields'][$name]['type']);
 							switch(strtolower($tokens[0]))
 							{
 								case 'date' : case 'datetime' :
@@ -276,7 +276,6 @@
 									
 							}
 */
-var_dump($row);
 						}
 						else
 						{
