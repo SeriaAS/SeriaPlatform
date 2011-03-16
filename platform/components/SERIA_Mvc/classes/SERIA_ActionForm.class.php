@@ -207,7 +207,7 @@ $form->begin()."<table><thead>';
 		*/
 		public function field($name, array $attributes=NULL)
 		{
-			$legal = array('style','class','title');
+			$legal = array('style','class','title','id');
 			foreach($attributes as $key => $val)
 			{
 				if(!in_array($key, $legal))
