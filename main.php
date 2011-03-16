@@ -413,7 +413,7 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 		{
 			SERIA_Hooks::dispatchToFirst(SERIA_PlatformHooks::ROUTER_FAILED, trim($_GET['route'], "/\r\n\t ")); // and keep this
 
-			list($callback, $variables) = $router->resolve('error/404');
+			list($callback, $variables) = $router->resolve('errors/404');
 			call_user_func($callback, $variables);
 		}
 		else throw $e;
