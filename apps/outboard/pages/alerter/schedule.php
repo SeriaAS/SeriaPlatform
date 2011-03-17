@@ -32,8 +32,8 @@
 					$channels[] = $channel->get('name');
 				?>
 					<tr onclick="top.location.href = <?php echo htmlspecialchars(SERIA_Lib::toJSON(SERIA_HTTP_ROOT.'?route=outboard/schedule/'.$object->get('message')->get('id').'/message/'.$object->get('id'))); ?>">
-						<td><?php echo $object->get('start')->__toString(); ?></td>
-						<td><?php echo $object->get('stop')->__toString(); ?></td>
+						<td><?php echo $object->get('start'); ?></td>
+						<td><?php echo $object->get('stop'); ?></td>
 						<td><?php echo implode(', ', $channels); ?></td>
 					</tr>
 				<?php
