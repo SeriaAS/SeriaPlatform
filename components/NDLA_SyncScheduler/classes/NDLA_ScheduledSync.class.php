@@ -20,20 +20,10 @@ class NDLA_ScheduledSync extends SERIA_MetaObject
 			'description'
 		);
 		$obj = new self();
-		$obj->set('syncDate', new SERIA_DateTimeMetaField(time()));
+		$obj->set('syncDate', date('Y-m-d H:i:s'));
 		$action = new SERIA_ActionForm('AddScheduledSync', $obj, $fields);
 		if ($action->hasData()) {
-			$value = $action->get('syncDate');
-			try {
-				$syncDate = SERIA_DateTimeMetaField::createFromDb($value);
-			} catch (SERIA_Exception $first) {
-				try {
-					$syncDate = SERIA_DateTimeMetaField::createFromUser($value);
-				} catch (SERIA_Exception $e) {
-					throw $e;
-				}
-			}
-			$obj->set('syncDate', $syncDate);
+			$obj->set('syncDate', $action->get('syncDate'));
 			$obj->set('description', $action->get('description'));
 			$action->errors = SERIA_Meta::validate($obj);
 			if ($action->errors === false) {
@@ -51,19 +41,7 @@ class NDLA_ScheduledSync extends SERIA_MetaObject
 		);
 		$action = new SERIA_ActionForm('EditScheduledSync', $this, $fields);
 		if ($action->hasData()) {
-			$value = $action->get('syncDate');
-			if (!($value instanceof SERIA_DateTimeMetaField))
-				throw new SERIA_Exception('Expected an object.');
-			/*try {
-				$syncDate = SERIA_DateTimeMetaField::createFromDb($value);
-			} catch (SERIA_Exception $first) {
-				try {
-					$syncDate = SERIA_DateTimeMetaField::createFromUser($value);
-				} catch (SERIA_Exception $e) {
-					throw $e;
-				}
-			}*/
-			$this->set('syncDate', $syncDate);
+			$this->set('syncDate', $action->get('syncDate'));
 			$this->set('description', $action->get('description'));
 			$action->errors = SERIA_Meta::validate($this);
 			if ($action->errors === false) {

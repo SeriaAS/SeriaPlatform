@@ -50,7 +50,7 @@ class NDLA_SyncLog extends SERIA_MetaObject
 	public static function doSync($description, $syncTypes=null)
 	{
 		$log = new self();
-		$log->set('executedAt', new SERIA_DateTimeMetaField(time()));
+		$log->set('executedAt', date('Y-m-d H:i:s'));
 		$log->set('description', $description);
 		SERIA_Meta::save($log);
 		/* Do the sync!: */
@@ -77,7 +77,7 @@ class NDLA_SyncLog extends SERIA_MetaObject
 		/* Get latest sync */
 		$lastSync = SERIA_Meta::all('NDLA_SyncLog')->order('-executedAt')->limit(0, 1)->current();
 		if ($lastSync)
-			$fromTime = $lastSync->get('executedAt')->getDateTimeObject()->getTimestamp();
+			$fromTime = strtotime($lastSync->get('executedAt'));
 		else {
 			/* Create a starting-point */
 			self::writeSyncLogEntry('Polled: Did not sync. (Started sync-scheduler from here)');
