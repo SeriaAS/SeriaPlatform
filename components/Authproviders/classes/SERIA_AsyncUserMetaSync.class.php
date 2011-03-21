@@ -38,7 +38,9 @@ class SERIA_AsyncUserMetaSync
 		SERIA_Authproviders::loadProviders('SERIA_ExternalAuthprovider');
 		$providers = SERIA_Authproviders::getProviders();
 		foreach ($providers as $key => $provider) {
-			if (get_class($provider) != 'SERIA_ExternalAuthprovider' || !$provider->isAvailable())
+			if (get_class($provider) != 'SERIA_ExternalAuthprovider' ||
+			    !$provider->isAvailable() ||
+			    !($provider->isEnabled(SERIA_IAuthprovider::LOGIN_SYSTEM) || $provider->isEnabled(SERIA_IAuthprovider::LOGIN_GUEST) || $provider->isEnabled(SERIA_IAuthprovider::LOGIN_AUTO)))
 				unset($providers[$key]);
 		}
 		$startTime = time();
