@@ -132,19 +132,36 @@
 				$file_loaded[$file_hash] = 0;
 			$rootpath = realpath(SERIA_ROOT);
 			$rootpath_len = strlen($rootpath);
-			if (substr($filename, 0, $rootpath_len) != $rootpath)
-				throw new Exception('The included file ('.$filename.') is outside SERIA_ROOT. Translation is not implemented.');
+			if (substr($filename, 0, $rootpath_len) != $rootpath) {
+				/*
+				 * Autodetect a translation directory.
+				 * This means that if you have code that is outside the SERIA_ROOT
+				 * you can still use _t in it provided that you create a seria_lang directory
+				 * there.
+				 */
+				$rootpath = dirname($filename);
+				while (!is_dir($rootpath.'/seria_lang')) {
+					if ($rootpath == dirname($rootpath))
+						throw new Exception('The included file ('.$filename.') is outside SERIA_ROOT. Translation is not implemented.');						
+					$rootpath = dirname($rootpath);
+				}
+				$rootpath_len = strlen($rootpath);
+				$lang_root = $rootpath.'/seria_lang';
+			} else
+				$lang_root = null;
 			$relpath = substr($filename, $rootpath_len);
 			if ($relpath[0] == DIRECTORY_SEPARATOR)
 				$relpath = substr($relpath, 1);
 			$seria_base_path = 'seria'.DIRECTORY_SEPARATOR;
 			$seria_base_path_len = strlen($seria_base_path);
-			if (substr($relpath, 0, $seria_base_path_len) == $seria_base_path) {
-				/* seria/ code: */
-				$lang_root = SERIA_ROOT.'/seria/lang';
-			} else {
-				/* user/local code: */
-				$lang_root = SERIA_LANG_PATH;
+			if ($lang_root === null) {
+				if (substr($relpath, 0, $seria_base_path_len) == $seria_base_path) {
+					/* seria/ code: */
+					$lang_root = SERIA_ROOT.'/seria/lang';
+				} else {
+					/* user/local code: */
+					$lang_root = SERIA_LANG_PATH;
+				}
 			}
 			if ($file_loaded[$file_hash] < 2) {
 				/* PHASE IIc: Load locale language file */
