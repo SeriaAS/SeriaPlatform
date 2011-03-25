@@ -27,6 +27,11 @@
 
 		}
 
+		function __clone()
+		{
+			$this->_data = clone $this->_data;
+		}
+
 		/**
 		*	Returns the number of rows matching this query
 		*/
