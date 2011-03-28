@@ -32,9 +32,9 @@ class SERIA_GenericAuthproviderLogin
 			}
 		}
 		if (count($users) > 1)
-			throw new SERIA_Exception('One of our users of authprovider:'.$authproviderId.' has managed to get duplicate accounts.');
+			SERIA_AuthproviderFault::recordFaultMessage(SERIA_AuthproviderFault::WARNING, 'One of our users of authprovider:'.$authproviderId.' has managed to get duplicate accounts.', array('attr' => $attributes, 'matches' => $users));
 		$user = SERIA_Base::user();
-		if (count($users) == 1)
+		if (count($users) >= 1)
 			$user =& $users[0];
 		else if ($user) {
 			$plist = SERIA_PropertyList::createObject($user);
