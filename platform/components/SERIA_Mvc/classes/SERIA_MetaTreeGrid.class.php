@@ -133,8 +133,8 @@
 //			$expander = "<span class='texticon' onclick='document.getElementById(\"childGrid%id%\").style.display=\"block\";this.innerHTML=\"-\";event.cancelBubble=true;event.stopPropagation();alert(123);return false;'>+</span>";
 //			$expander = "<span class='texticon' onclick='document.getElementById(\"childrenGrid%id%\").style.display=\"block\"; event.cancelBubble=true;event.stopPropagation();alert(123);return false;'>+</span>";
 
-			$expander = '<span style="position:absolute"><span class="texticon SERIA_MetaTreeGrid_expander" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;">-</span></span>';
-			$marker = '<span style="position:absolute"><span class="texticon" style="position:relative; left:-20px;font-family: courier, monospace;font-weight:bold;" onclick="event.cancelBubble=true;event.stopPropagation();">&nbsp;</span></span>';
+			$expander = '<span style="position:relative;left:2px;"><span class="texticon SERIA_MetaTreeGrid_expander" style="position:relative; left:0px;font-family: courier, monospace;font-weight:bold;">-</span></span>';
+			$marker = '<span style="position:relative;left:2px;"><span class="texticon" style="position:relative; left:0px;font-family: courier, monospace;font-weight:bold;" onclick="event.cancelBubble=true;event.stopPropagation();">&nbsp;</span></span>';
 
 			// Generate the rows
 			$rows = '';
@@ -180,7 +180,7 @@
 				else
 					$tr->set('class', $tr->get('class').' '.$classes);
 
-				$style = 'padding-left:'.(20+($_depth*10)).'px';
+				$style = 'padding-left:'.(0+($_depth*10)).'px';
 				if($existing = $td->get('style'))
 				{
 					$td->set('style', rtrim($existing,';').';'.$style);
