@@ -51,6 +51,8 @@ class SERIA_UserLoginXml
 	}
 	public static function parseXml($xmlData)
 	{
+		if (!trim($xmlData))
+			return false;
 		$tree = ArrayXmlParser::parseToTree($xmlData);
 		$users = array();
 		foreach ($tree['children'] as $item) {
