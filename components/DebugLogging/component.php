@@ -1,6 +1,6 @@
 <?php
 
-$debug_lockfile = false;
+$GLOBALS['debug_lockfile'] = false;
 function DL_debug_logging_lock()
 {
 	global $debug_lockfile;
@@ -65,7 +65,12 @@ if (SERIA_DEBUG && defined('DEBUG_LOGFILE')) {
 		$sysparams['$_SESSION'] = $_SESSION;
 	}
 	SERIA_Base::debug('sysparams:'.base64_encode(serialize($sysparams)));
-	DL_debug_logging_lock();
+	try {
+		DL_debug_logging_lock();
+	} catch (SERIA_Exception $e) {
+		SERIA_Base::debug('Debug logger fails with message: '.$e->getMessage());
+		return;
+	}
 	if (defined('DEBUG_LOGFILE_MAX_SIZE')) {
 		$st = stat(DEBUG_LOGFILE);
 		if ($st) {
