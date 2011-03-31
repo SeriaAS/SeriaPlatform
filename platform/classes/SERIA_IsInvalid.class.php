@@ -275,10 +275,18 @@
 
 			// check schema
 
+			$schema = substr($url, 0, strpos($url, "://"));
+			if(!ctype_alpha($schema))
+				return _t("Url schema must consist of only characters");
+			if(!ctype_lower($schema))
+				return _t("All characters in url schema must be lowercase");
+
+/**
 			if(strpos($url, "http://")===0) $restURL = substr($url, 7);
 			else if(strpos($url, "https://")===0) $restURL = substr($url, 8);
 			else if(strpos($url, "ftp://")===0) $restURL = substr($url, 6);
 			else return _t("Must start with either http://, https:// or ftp://");
+*/
 
 			// check domain and/or password
 
