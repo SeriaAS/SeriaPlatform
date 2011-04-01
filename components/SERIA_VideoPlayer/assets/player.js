@@ -42,6 +42,10 @@ function VideoPlayer() {
 		return false;
 	}
 
+	/**
+	*	Parameters are passed trough the hash of the URL:
+	*	http://host/path#param1&param2&param3=323
+	*/
 	this._parseParams = function() {
 		var p = new Object();
 		var h = location.href;
@@ -52,7 +56,10 @@ function VideoPlayer() {
 		for(var i in h) if(h[i])
 		{
 			var parts = h[i].split('=');
-			p[parts[0]] = parts[1];
+			if(parts[1])
+				p[parts[0]] = parts[1];
+			else
+				p[parts[0]] = true;
 		}
 		return p;
 	}
@@ -400,8 +407,11 @@ function VideoPlayer() {
 
 	this._countSimpleEvent = function() {
 		var args = new Array();
+
 		for(i = 0; i < arguments.length; i++)
 			args[i] = arguments[i];
+alert(args.join(","));
+
 		return S.rpc('SERIA_VideoPlayer', 'countSimpleEvent')(window.videoData.objectKey, args.join(','))();
 	};
 }

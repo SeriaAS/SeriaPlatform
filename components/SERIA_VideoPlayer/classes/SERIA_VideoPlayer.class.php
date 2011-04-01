@@ -87,37 +87,57 @@ her
 		*/
 		public static function rpc_countSimpleEvent($objectKey, $name) {
 			$names = explode(",", $name);
+			$fpAll = fopen(SERIA_LOG_ROOT.'/SERIA_VideoPlayer/countsimpleEvent.log', 'ab');
 			foreach($names as $name)
 			{
 				$fp = fopen(SERIA_LOG_ROOT.'/SERIA_VideoPlayer/countSimpleEvent.'.$name.'.'.$objectKey.'.log', 'ab');
 				fwrite($fp, date('Y:m:d:H:N')."\n");
 				fclose($fp);
-				$fp = fopen(SERIA_LOG_ROOT.'/SERIA_VideoPlayer/countsimpleEvent.log', 'ab');
-				fwrite($fp, date('Y:m:d H:i:s')."\t".$_SERVER['REMOTE_ADDR']."\t".$_SERVER['USER_AGENT']."\t".$name."\t".$objectKey."\n");
-				fclose($fp);
+				fwrite($fpAll, date('Y:m:d H:i:s')."\t".$_SERVER['REMOTE_ADDR']."\t".$_SERVER['USER_AGENT']."\t".$name."\t".$objectKey."\n");
 			}
+			fclose($fpAll);
+
+			return true;
 		}
 
 		public static function commitSimpleEvents() {
-			if(!$this->counter) $this->counter = new SERIA_Counter('SERIA_VideoPlayer');
-			list($y,$m,$d,$h,$wd) = explode(':', date('Y:m:d:H:N'));
-			$keys = array(
-				"e=$name&y=$y",
-				"e=$name&y=$y&m=$m",
-				"e=$name&y=$y&m=$m&d=$d",
-				"e=$name&y=$y&m=$m&wd=$wd",
-				"e=$name&wd=$wd",
-				"e=$name&y=$y&h=$h",
-				"e=$name&y=$y&m=$m&h=$h",
+			$counter = new SERIA_Counter('SERIA_VideoPlayer');
+			$files = glob(SERIA_LOG_ROOT.'/SERIA_VideoPlayer/countSimpleEvent.*.*.log');
+			foreach($files as $file)
+			{
+				list($type, $name, $objectKey) = explode(".", substr($file, strrpos($file, '/')+1));
 
-				"e=$name&y=$y&ok=$objectKey",
-				"e=$name&y=$y&m=$m&ok=$objectKey",
-				"e=$name&y=$y&m=$m&d=$d&ok=$objectKey",
-				"e=$name&y=$y&m=$m&wd=$wd&ok=$objectKey",
-				"e=$name&wd=$wd&ok=$objectKey",
-				"e=$name&y=$y&h=$h&ok=$objectKey",
-				"e=$name&y=$y&m=$m&h=$h&ok=$objectKey",
-			);
+				if(!file_exists($file.'.tmp'))
+				{ // the file does not exist, so it is safe to take away the current statistics
+					rename($file, $file.'.tmp');
+				}
+
+				$fp = fopen($file.'.tmp', 'r');
+				while($line = trim(fgets($fp, 4096)))
+				{
+					list($y,$m,$d,$h,$wd) = explode(":", $line);
+					$keys = array(
+						"e=$name&y=$y",
+						"e=$name&y=$y&m=$m",
+						"e=$name&y=$y&m=$m&d=$d",
+						"e=$name&y=$y&m=$m&wd=$wd",
+						"e=$name&wd=$wd",
+						"e=$name&y=$y&h=$h",
+						"e=$name&y=$y&m=$m&h=$h",
+
+						"e=$name&y=$y&ok=$objectKey",
+						"e=$name&y=$y&m=$m&ok=$objectKey",
+						"e=$name&y=$y&m=$m&d=$d&ok=$objectKey",
+						"e=$name&y=$y&m=$m&wd=$wd&ok=$objectKey",
+						"e=$name&wd=$wd&ok=$objectKey",
+						"e=$name&y=$y&h=$h&ok=$objectKey",
+						"e=$name&y=$y&m=$m&h=$h&ok=$objectKey",
+					);
+					$counter->add($keys);
+				}
+				fclose($fp);
+				unlink($file.'.tmp');
+			}
 		}
 
 		/**
@@ -125,11 +145,15 @@ her
 		*/
 		public static function rpc_getVideoPlayerData($objectKey, $stage=false)
 		{
+			if(SERIA_Base::hasSystemAccess()) SERIA_Base::viewMode('system');
 			$o = SERIA_NamedObjects::getInstanceByPublicId($objectKey);
 
 			if(!($o instanceof SERIA_IVideoData)) {
 				throw new SERIA_Exception($objectName.' is not an instance of SERIA_IVideoData');
 			}
+
+			return $o->getVideoData();
+
 			if($stage) {
 				$arrayS = $o->getVideoData();
 				//$arrayS['site'] = $_SER;
@@ -151,3 +175,5 @@ her
 			return $flashvarString;
 		}
 	}
+
+
