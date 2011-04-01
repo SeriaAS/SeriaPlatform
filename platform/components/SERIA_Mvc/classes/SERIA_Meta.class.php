@@ -650,6 +650,18 @@
 						"type" => "varchar(150)",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::RTMP_URL))),
 					);
+				case "rtp_url" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(150)",
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::RTP_URL))),
+					);
+				case "rtsp_url" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(150)",
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::RTSP_URL))),
+					);
 				case "gender" :
 					return array(
 						"fieldtype" => "select",
