@@ -97,4 +97,18 @@
 
 			return $isMobile;
 		}
+
+		/**
+		*	Should return true only for android mobile devices
+		*/
+		public function supportsRtsp()
+		{
+			$ua = strtolower($this->userAgent);
+			$supportsRtsp = !empty($_SERVER['HTTP_X_OPERAMINI_PHONE'])
+                         || strpos($ua, 'android') !== false
+                         || strpos($ua, 'maemo') !== false
+                         || strpos($ua, 'series60') !== false;
+
+			return $supportsRtsp;
+		}
 	}
