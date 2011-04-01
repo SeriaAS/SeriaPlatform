@@ -40,6 +40,9 @@ class SERIA_Validator
 	const ISODATE = 33;			// array(SERIA_Validator::ISODATE[, 'Custom error message']);
 	const ISOTIME = 34;			// array(SERIA_Validator::ISOTIME[, 'Custom error message']);
 	const ISODATETIME = 35;			// array(SERIA_Validator::ISODATETIME[, 'Custom error message']);
+	const RTSP_URL = 36;			// array(SERIA_Validator::RTSP_URL[, 'Custom error message']);
+	const RTP_URL = 37;			// array(SERIA_Validator::RTP_URL[, 'Custom error message']);
+	const HTTP_URL = 38;			// array(SERIA_Validator::HTTP_URL[, 'Custom error message']);
 
 	function __construct($rules, $trimTheValue = true)
 	{
@@ -180,14 +183,35 @@ class SERIA_Validator
 					$err = SERIA_IsInvalid::phone($value);
 					if ($err)
 						return isset($rule[1]) ? $rule[1] : $err;
-					break;					
+					break;
 				case self::URL:
 					$err = SERIA_IsInvalid::url($value);
 					if($err) return isset($rule[1]) ? $rule[1] : $err;
 					break;
-				case self::RTMP_URL:
-					$err = SERIA_IsInvalid::flashStreamUrl($value);
+				case self::HTTP_URL:
+					$err = SERIA_IsInvalid::url($value);
 					if($err) return isset($rule[1]) ? $rule[1] : $err;
+					break;
+				case self::RTMP_URL:
+					$err = SERIA_IsInvalid::url($value);
+					if($err) return isset($rule[1]) ? $rule[1] : $err;
+					$schema = substr($value, 0, strpos($value, '://'));
+					if($schema!=='rtmp' && $schema!=='rtmpt' && $schema!=='rtmps')
+						return isset($rule[1]) ? $rule[1] : _t("RTMP urls must have a rtmp://, rtmpt:// or rtmps:// schema");
+					break;
+				case self::RTP_URL:
+					$err = SERIA_IsInvalid::url($value);
+					if($err) return isset($rule[1]) ? $rule[1] : $err;
+					$schema = substr($value, 0, strpos($value, '://'));
+					if($schema!=='rtp')
+						return isset($rule[1]) ? $rule[1] : _t("RTP urls must have an rtp:// schema").'Tried: '.$value;
+					break;
+				case self::RTSP_URL:
+					$err = SERIA_IsInvalid::url($value);
+					if($err) return isset($rule[1]) ? $rule[1] : $err;
+					$schema = substr($value, 0, strpos($value, '://'));
+					if($schema!=='rtsp')
+						return isset($rule[1]) ? $rule[1] : _t("RTSP urls must have a rtsp://");
 					break;
 				case self::COUNTRYCODE:
 					$dictionary = SERIA_Dictionary::getDictionary('iso-3166');
