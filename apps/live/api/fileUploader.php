@@ -36,8 +36,8 @@
 			case 'foils_id' :
 				try {
 					$webcast = SERIA_Article::createObjectFromId($_POST['presentationId']);
-					$webcast->deleteSlides();
-					$result = $webcast->importSlides('default', $_FILES[$label]['tmp_name'], $_FILES[$label]['name']);
+//					$webcast->deleteSlides();
+					$result = $webcast->importSlides('default-'.date("YmdHis"), $_FILES[$label]['tmp_name'], $_FILES[$label]['name']);
 					SERIA_Lib::publishJSON(
 						array('slides' => LiveAPI::rpc_getFoilStatus($webcast->get('id')))
 					);
