@@ -410,7 +410,6 @@ function VideoPlayer() {
 
 		for(i = 0; i < arguments.length; i++)
 			args[i] = arguments[i];
-alert(args.join(","));
 
 		return S.rpc('SERIA_VideoPlayer', 'countSimpleEvent')(window.videoData.objectKey, args.join(','))();
 	};
