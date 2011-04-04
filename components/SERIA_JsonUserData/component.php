@@ -7,6 +7,6 @@ function SERIA_JsonUserData_init()
 		SERIA_ScriptLoader::init();
 		SERIA_Template::jsInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_JsonUserData/js/Cache.js');
 		SERIA_Template::jsInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_JsonUserData/js/User.js');
-		SERIA_Template::jsInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_JsonUserData/js/UserPropertyList.js');
+		SERIA_Template::jsInclude(SERIA_HTTP_ROOT.'/seria/components/SERIA_JsonUserData/js/UserPropertyList.js?rev=2');
 	}
 }

@@ -19,10 +19,18 @@ try {
 
 	$storage = new SERIA_JsonUserPropertyStorageDriver($user);
 
-	if (isset($_REQUEST['value']))
-		$storage->set($_REQUEST['namespace'], $_REQUEST['name'], $_REQUEST['value']);
-	else
-		$storage->delete($_REQUEST['namespace'], $_REQUEST['name']);
+	if (isset($_REQUEST['name'])) {
+		if (isset($_REQUEST['value']))
+			$storage->set($_REQUEST['namespace'], $_REQUEST['name'], $_REQUEST['value']);
+		else
+			$storage->delete($_REQUEST['namespace'], $_REQUEST['name']);
+	} else if (isset($_REQUEST['batch'])) {
+		$batch = SERIA_Lib::fromJSON($_REQUEST['batch']);
+		foreach ($batch as $name => $value) {
+			$storage->set($_REQUEST['namespace'], $name, $value);
+		}
+	} else
+		throw new SERIA_Exception('setProperty: Invalid argument!');
 
 	SERIA_Lib::publishJSON(array(
 		'error' => false

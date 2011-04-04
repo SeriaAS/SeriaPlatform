@@ -49,6 +49,19 @@
 						);
 						updateTable();
 					}
+					setBatch = function ()
+					{
+						if (!propertyList) {
+							alert('Please open a property-list first.');
+							return;
+						}
+						var data = {
+						}
+						data[document.getElementById('setName1').value] = document.getElementById('setValue1').value;
+						data[document.getElementById('setName2').value] = document.getElementById('setValue2').value;
+						propertyList.setBatch(data);
+						updateTable();
+					}
 					deleteValue = function (name)
 					{
 						propertyList.unset(name);
@@ -167,6 +180,30 @@
 					</tr>
 				</tfoot>
 				<tbody id='valuetable'>
+				</tbody>
+			</table>
+			<h2>Batch set</h2>
+			<table>
+				<thead>
+					<tr>
+						<th>Name</th>
+						<th>Value</th>
+					</tr>
+				</thead>
+				<tfoot>
+					<tr>
+						<td colspans='2'><button type='button' onclick='setBatch();'>Set</button></td>
+					</tr>
+				</tfoot>
+				<tbody>
+					<tr>
+						<td><input type='text' id='setName1' value='' /></td>
+						<td><input type='text' id='setValue1' value='' /></td>
+					</tr>
+					<tr>
+						<td><input type='text' id='setName2' value='' /></td>
+						<td><input type='text' id='setValue2' value='' /></td>
+					</tr>
 				</tbody>
 			</table>
 		</div>
