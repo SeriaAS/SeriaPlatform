@@ -60,7 +60,16 @@
 				$menus = $reflector->getStaticPropertyValue('menu');
 				if($menus) foreach($menus as $menuName => $spec)
 				{
-					$parts = explode("/", $menuName);
+					if(isset($spec['page']))
+					{
+						$page = $spec['page'];
+					}
+					else
+					{
+						$page = $menuName;
+					}
+
+					$parts = explode("/", $page);
 					$app = array_shift($parts);
 					$url = SERIA_Meta::manifestUrl($app, implode("/", $parts));
 					$gui->addMenuItem($menuName, $spec['title'], $spec['description'], $url, !empty($spec['icon']) ? SERIA_HTTP_ROOT.substr(dirname($reflector->getFileName()), strlen(SERIA_ROOT)).'/'.$spec['icon'] : false, !empty($spec['weight']) ? $spec['weight'] :  0);
@@ -257,6 +266,30 @@
 		return '<?php } ?>';
 	}
 
+	function SERIA_MetaTemplate_sGrid($tag, $templateFileName) {
+		if(!$tag->get('columns'))
+			return '<?php echo SERIA_MetaTemplate::displayError(\'Required parameters for s:grid is "columns" as a comma separated list.\'); ?>';
+
+		SERIA_MetaTemplate::push('s:grid', $tag);
+		return '<?php ob_start(); ?>';
+	}
+
+	function SERIA_MetaTemplate_sGridClose($tag, $templateFileName) {
+throw new Exception("s:grid is not finished yet");
+		try {
+			// we don't need a reference to the closing tag so we replace it with the opening tag.
+			$tag = SERIA_MetaTemplate::pop('s:grid');
+		} catch (SERIA_MetaTemplateException $e) {
+			return '<?php echo SERIA_MetaTemplate::displayError('.var_export($e->getMessage(), true).'); ?>';
+		}
+
+		return '<?php
+$___rowTemplate = ob_get_contents();
+ob_end_clean();
+var_dump(str_replace("{{", "", $___rowTemplate));
+?>';
+	}
+
 	/**
 	*	Extends SERIA_MetaTemplate with the following:
 	*	<s:form for="{site}" action="edit">
@@ -371,23 +404,25 @@ try {
 		return '<?php echo $sForm->field('.SERIA_MetaTemplate::attributeToConstant($tag->get('for'), $templateFileName).', '.var_export($tag->getProperties(), true).'); ?>';
 	}
 
-
 	function SERIA_MetaTemplate_sLoop($tag, $templateFileName)
 	{
-		if($tag->get('trough') && $tag->get('as'))
+		$through = $tag->get('through');
+		if(!$through) $through = $tag->get('trough'); // brilliant mistake by Frode backward compatability layer
+
+		if($through && $tag->get('as'))
 		{
 			SERIA_MetaTemplate::push('s:loop');
 			return '<'.'?php
-$___TMP = '.SERIA_MetaTemplate::attributeToConstant($tag->get('trough')).';
+$___TMP = '.SERIA_MetaTemplate::attributeToConstant($through).';
 if($___TMP === NULL)
-	SERIA_MetaTemplate::displayError(\'The variable "'.$tag->get('trough').'" does not exist!\');
+	SERIA_MetaTemplate::displayError(\'The variable "'.$through.'" does not exist!\');
 else if(!is_array($___TMP) && !($___TMP instanceof Traversable))
-	SERIA_MetaTemplate::displayError(\'The variable "'.$tag->get('trough').'" is not traversable using s:loop!\');
-else foreach('.SERIA_MetaTemplate::attributeToConstant($tag->get('trough')).' as '.($tag->get('key')?SERIA_MetaTemplate::attributeToVariable($tag->get('key')).'=>':'').SERIA_MetaTemplate::attributeToVariable($tag->get('as')).') { ?'.'>';
+	SERIA_MetaTemplate::displayError(\'The variable "'.$through.'" is not traversable using s:loop!\');
+else foreach('.SERIA_MetaTemplate::attributeToConstant($through).' as '.($tag->get('key')?SERIA_MetaTemplate::attributeToVariable($tag->get('key')).'=>':'').SERIA_MetaTemplate::attributeToVariable($tag->get('as')).') { ?'.'>';
 		}
 		else
 		{
-			return '<?php echo SERIA_MetaTemplate::displayError(\'Required parameters for s:loop is "trough" and "as".\'); ?>';
+			return '<?php echo SERIA_MetaTemplate::displayError(\'Required parameters for s:loop is "through" and "as".\'); ?>';
 		}
 
 	}
