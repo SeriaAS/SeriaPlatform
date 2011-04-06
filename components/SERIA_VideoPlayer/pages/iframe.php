@@ -65,15 +65,25 @@
 	<body><?php
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');
+
+
+		// Let's find out if this user has a custom videoplayer 
+
+		if(file_exists(SERIA_DYN_ROOT.'/SERIA_VideoPlayer/SeriaPlayer.swf')) {
+			$swfRoot = SERIA_DYN_HTTP_ROOT.'/SERIA_VideoPlayer/SeriaPlayer.swf';
+		} else {
+			$swfRoot = SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf';
+		}
+
 ?>
 		<object id='ieflash' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
-			<param name='movie' value='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf?rev=1'></param>
+			<param name='movie' value='<?php echo $swfRoot; ?>'></param>
 			<param name='allowFullscreen' value='true'></param>
 			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
 			<param name='allowscriptaccess' value='always'></param>
 			<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
 			<!--[if !IE]>-->
-				<object id='nieflash' type='application/x-shockwave-flash' data='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf?rev=1' width='100%' height='100%'>
+				<object id='nieflash' type='application/x-shockwave-flash' data='<?php echo $swfRoot; ?>' width='100%' height='100%'>
 					<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
 					<param name='allowscriptaccess' value='always'></param>
 					<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
