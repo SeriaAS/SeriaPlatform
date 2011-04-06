@@ -24,6 +24,8 @@
 		'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
 	);
 	$newSourcesArray = array();
+
+/*
 	if(SERIA_BrowserInfo::current()->supportsRtsp()) {
 		foreach($sources as $source) {
 			if((strpos($source['src'], 'rtsp') === 0) || (strpos($source['src'], 'http') === 0)) { //RTSP PROTOCOL
@@ -32,6 +34,7 @@
 		}
 		$sources = $newSourcesArray;
 	}
+*/
 
 	function arrayToFlash($flashvarsArray)
 	{
@@ -61,8 +64,50 @@
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/flash_detect.js' type='text/javascript' language='javascript'></script>
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
 		<script src='http://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
+		<script type='text/javascript'>
+jQuery(function(){
+	jQuery("#video").bind('click', function() {
+		if(this.networkState==2 || this.networkState==1) {
+			this.play();
+		} else if(this.networkState==3){
+			if(this.ended || this.paused) this.play();
+		} else if(navigator.userAgent.toLowerCase().indexOf('android')>0 || this.networkState==4) // unknown network state - but appears in dolphin browser on android
+		{ // look for rtsp first, then http second
+			if(this.src && this.src.indexOf('rtsp:')==0)
+			{
+this.play();
+//				location.href = this.src;
+				return false;
+			}
+			else
+			{
+				var vp = this;
+				var sources = new Array();
+				jQuery(this).find('source').each(function() {
+					if(!vp.src && (this.src.indexOf('rtsp:')==0))
+					{
+						vp.src = this.src;
+						location.href = this.src;
+						vp.play();
+					}
+				});
+				jQuery(this).find('source').each(function() {
+					if(!vp.src && (this.src.indexOf('http:')==0 || this.src.indexOf('https:')==0))
+					{
+						vp.src = this.src;
+						top.location.href = this.src;
+//						vp.play();
+					}
+				});
+				return false;
+			}
+		}
+	});
+});
+		</script>
 	</head>
-	<body><?php
+	<body>
+<?php
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');
 
@@ -88,7 +133,20 @@
 					<param name='allowscriptaccess' value='always'></param>
 					<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
 					<param name='allowFullscreen' value='true'></param>
-					<video controls id='video' poster='<?php echo $vd['previewImage']; ?>' <?php if(SERIA_BrowserInfo::current()->supportsRtsp()) echo 'src="'.$source['src'].'"'; ?>>
+					<video controls id='video' poster='<?php echo $vd['previewImage']; ?>' <?php 
+
+
+if(SERIA_BrowserInfo::current()->supportsRtsp()) {
+	foreach($sources as $source) {
+		if(substr($source['src'],0,5)=='rtsp:')
+		{
+			echo 'src="'.$source['src'].'"';
+			break;
+		}
+	}
+}
+
+?>>
 						<?php foreach($sources as $source) echo "<source src='".$source['src']."'".(!empty($source['type'])?" type='".$source['type']."'":"").(!empty($source['media'])?" media='".$source['media']."'":"").">"; ?>
 					</video>
 				</object>

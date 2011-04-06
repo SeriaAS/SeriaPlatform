@@ -31,7 +31,7 @@ $sc->add(array('totalviews', 'totalviews_2011_03_08', 'totalviews_2011_03'),rand
 $sc->add(array('totalviews', 'totalviews_2011_03_07', 'totalviews_2011_03'),rand(0,1000));
 $sc->add(array('totalviews', 'totalviews_2011_03_10', 'totalviews_2011_03'),rand(0,1000));
 */
-			return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object)));
+			return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
 		}
 
 		public function output($width="100%",$height="100%") {

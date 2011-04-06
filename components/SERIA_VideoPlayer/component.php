@@ -18,4 +18,12 @@
 		public static $folders = array(
 			'SERIA_LOG_ROOT' => 'SERIA_VideoPlayer',		// used for temporary storing log files before they are added to the database
 		);
+
+		public static $menu = array(
+			'controlpanel/other/videoplayer' => array(
+				'title' => 'VideoPlayer configuration',
+				'description' => 'Configure your videoplayer',
+				'page' => 'videoplayer/config/index',
+			),
+		);
 	}
