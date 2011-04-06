@@ -997,9 +997,9 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 		/**
 		*	Special methods for helping with debugging meta template nesting. Push tags that require a closing tag and pop them when closing it.
 		*/
-		public static function push($tag)
+		public static function push($tag, $data=NULL)
 		{
-			array_push(self::$_stack, $tag);
+			array_push(self::$_stack, array($tag, $data));
 		}
 
 		/**
@@ -1007,17 +1007,23 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 		*/
 		public static function inStack($tag)
 		{
-			return in_array($tag, self::$_stack);
+			foreach(self::$_stack as $data)
+				if($data[0]==$tag)
+					return true;
+			return false;
 		}
 
 		/**
 		*	Special method for helping with debugging meta template nesting. Pop whenever handling a closing tag, then catch any exception from this method.
+		*	@param $tag		The tag expected to match in the hierarchy
+		*	@return $data		Returns the $data provided by SERIA_MetaTemplate::push($tag, $data)
 		*/
 		public static function pop($tag)
 		{
 			$l = sizeof(self::$_stack);
 			if($l===0) throw new SERIA_MetaTemplateException('No opening tag for "'.$tag.'".');
-			if(self::$_stack[$l-1]!==$tag) throw new SERIA_MetaTemplateException('Expected closing tag for "'.self::$_stack[$l-1].'" but got "'.$tag.'".');
-			return array_pop(self::$_stack);
+			if(self::$_stack[$l-1][0]!==$tag) throw new SERIA_MetaTemplateException('Expected closing tag for "'.self::$_stack[$l-1][0].'" but got "'.$tag.'".');
+			$data = array_pop(self::$_stack);
+			return $data[1] ? $data[1] : $data[0];
 		}
 	}
