@@ -6,6 +6,8 @@
 
 	class SERIA_WebBrowser
 	{
+		const INSTANCE_HOOK = 'SERIA_WebBrowser::__construct';
+
 		// options
 		public $supportCookies = true;
 		public $sendReferrer = true;
@@ -17,6 +19,18 @@
 		public $customRequestHeaders = array();
 		public $requestDataTimeout = false; /* No data received for this amount of seconds will fail the request */
 		public $followRedirect = true;
+		/**
+		 *
+		 * Fill this array with username/password data as follows:
+		 * array(
+		 *   'hostname' => array(
+		 *     'username' => 'username',
+		 *     'password' => 'password'
+		 *   ), repeat for each host...
+		 * )
+		 * @var array
+		 */
+		public $authentication = array();
 
 		// automatically maintained
 		public $cookies = array();
@@ -33,6 +47,7 @@
 		public $method = null;
 
 		// internal
+		protected $authenticationRequested = array();
 		protected $nextRequest = array();
 		protected $currentRequest = false;
 		protected $socket = null;
@@ -49,6 +64,7 @@
 
 		function __construct()
 		{
+			SERIA_Hooks::dispatch(self::INSTANCE_HOOK, $this);
 		}
 
 		function __sleep()
@@ -132,6 +148,22 @@
 					'Connection' => 'close',
 				) + $this->customRequestHeaders,
 			);
+			if (isset($this->authenticationRequested[$p['host']]) &&
+			    $this->authenticationRequested[$p['host']] &&
+			    isset($this->authentication[$p['host']]) &&
+			    isset($this->authentication[$p['host']]['username']) &&
+			    isset($this->authentication[$p['host']]['password'])) {
+				switch (strtolower($this->authenticationRequested[$p['host']])) {
+					case 'basic':
+						$username = $this->authentication[$p['host']]['username'];
+						$password = $this->authentication[$p['host']]['password'];
+						$auth = base64_encode($username.':'.$password);
+						$this->nextRequest['headers']['Authorization'] = 'Basic '.$auth;
+						break;
+					default:
+						throw new SERIA_Exception('Authentication type '.$this->authenticationRequested[$p['host']].' is not supported.');
+				}
+			}
 
 			if($ip)
 				$this->nextRequest['ip'] = $ip;
@@ -236,6 +268,35 @@
 			 * HTTP-reset
 			 */
 			$this->httpTransferCoding = null;
+		}
+		/**
+		 *
+		 * Restart current request (abort+restart).
+		 */
+		public function redoCurrentRequest()
+		{
+			/*
+			 * Check whether this is a post request:
+			 */
+			if (isset($this->currentRequest['postFields']) && $this->currentRequest['postFields'])
+				$post = $this->currentRequest['postFields'];
+			else {
+				if (isset($this->currentRequest['postFiles']) && $this->currentRequest['postFiles'])
+					$post = true;
+				else
+					$post = false;
+			}
+			if (isset($this->currentRequest['postFiles']) && $this->currentRequest['postFiles'])
+				$postFiles = $this->currentRequest['postFiles'];
+			else
+				$postFiles = array();
+			$ip = false;
+			if (isset($this->currentRequest['ip']))
+				$ip = $this->currentRequest['ip'];
+			$port = $this->currentRequest['port'];
+			$this->navigateTo($this->url, $post, $ip, $port);
+			foreach ($postFiles as $name => $file)
+				$this->postFile($name, $file);
 		}
 		public function postField($name, $value)
 		{
@@ -394,6 +455,22 @@
 							$this->fetchHeaders();
 						else
 							$this->send();
+					}
+					break;
+				case 401:
+					if (isset($this->currentRequest['headers']['WWW-Authenticate']))
+						throw new SERIA_Exception('Failed www-authentication for '.$this->currentRequest['host']);
+					if (isset($this->authentication[$this->currentRequest['host']]) &&
+					    isset($this->authentication[$this->currentRequest['host']]['username']) &&
+					    isset($this->authentication[$this->currentRequest['host']]['password'])) {
+						if (isset($this->responseHeaders['Www-Authenticate'])) {
+							$auth = $this->responseHeaders['Www-Authenticate'];
+							$auth = preg_split("/[\s]+/", $auth);
+							$this->authenticationRequested[$this->currentRequest['host']] = array_shift($auth);
+							$this->redoCurrentRequest();
+							$this->fetchHeaders();
+						} else
+							throw new SERIA_Exception('401 response requires a WWW-Authenticate header!');
 					}
 					break;
 			}
