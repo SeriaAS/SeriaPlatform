@@ -37,6 +37,12 @@
 			}
 			return null;
 		}
+		public function delete($name)
+		{
+			$fn = $this->root.'/'.md5($name);
+			if (file_exists($fn))
+				unlink($fn);
+		}
 
 		public function deleteAll()
 		{

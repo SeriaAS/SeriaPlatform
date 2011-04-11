@@ -3,5 +3,6 @@
 		public function __construct($namespace='');
 		public function get($name);
 		public function set($name, $value, $expires=1800);
+		public function delete($name);
 		public function deleteAll();
 	}
