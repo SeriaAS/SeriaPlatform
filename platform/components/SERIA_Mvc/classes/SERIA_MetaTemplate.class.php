@@ -40,6 +40,13 @@
 		protected $_includes = array();
 
 		/**
+		 *
+		 * The parse method does chdir, this is a stack of original cwds.
+		 * @var array
+		 */
+		protected $cwdRestore = array();
+
+		/**
 		*	Provide an array of paths to search for the template file, when calling ::parse()
 		*	@param array $templatePaths	Array of paths
 		*/
@@ -239,7 +246,10 @@ if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 			}
 			else
 			{
+				array_push($this->cwdRestore, getcwd());
+				chdir(dirname($templateFileName));
 				eval('?'.'>'.$code);
+				chdir(array_pop($this->cwdRestore));
 			}
 			$contents = ob_get_contents();
 			ob_end_clean();
