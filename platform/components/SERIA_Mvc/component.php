@@ -92,13 +92,13 @@
 	*/
 	function SERIA_MetaTemplate_router($route)
 	{
-		if(strpos($route, "seria/api/rest/")===0)
+		if(strpos($route, "api/")===0)
 		{ // support RESTful access of SERIA_MetaObjects trough an URL matching /seria/rest/ClassName
-			$route = trim(substr($route, 15), "/");
+			$route = trim(substr($route, 4), "/");
 			$parts = explode("/", $route);
 			if(sizeof($parts)==0) // could provide a list of class names
 				return;
-			require(dirname(__FILE__).'/includes/restApi.php');
+			require(dirname(__FILE__).'/includes/apiAccess.php');
 			die();
 		}
 		else if(strpos($route, "seria/")===0)

@@ -36,6 +36,8 @@
 	*/
 	interface SERIA_IApiAccess {
 
+		public static function apiQuery($params);
+
 		/**
 		*	Methods related to collections of data
 		*/

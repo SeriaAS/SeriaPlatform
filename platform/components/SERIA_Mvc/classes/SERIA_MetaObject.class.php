@@ -1,5 +1,5 @@
 <?php
-	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField, SERIA_IApiAccess
+	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField
 	{
 		abstract public static function Meta($instance=NULL); 
 		/* EXAMPLE IMPLEMENTATION {
