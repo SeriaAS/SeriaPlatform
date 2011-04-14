@@ -65,44 +65,146 @@
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
 		<script src='http://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
+
 jQuery(function(){
-	jQuery("#video").bind('click', function() {
-		if(this.networkState==2 || this.networkState==1) {
-			this.play();
-		} else if(this.networkState==3){
-			if(this.ended || this.paused) this.play();
-		} else if(navigator.userAgent.toLowerCase().indexOf('android')>0 || this.networkState==4) // unknown network state - but appears in dolphin browser on android
-		{ // look for rtsp first, then http second
-			if(this.src && this.src.indexOf('rtsp:')==0)
+	if(!FlashDetect.installed) {
+		// detect if html5 video is supported
+		var v = document.createElement('video');
+		if(!v.canPlayType)
+		{
+			jQuery('#fallback').html("<?php echo _t("Please install Adobe Flash player or upgrade to a newer browser that supports HTML 5 video"); ?>");
+		}
+		else if(navigator.userAgent.indexOf('Mobile Safari')==-1 && !v.canPlayType('video/mp4') && !v.canPlayType('video/webm; codecs="vp8, vorbis"') && !v.canPlayType('video/webm; codecs="vp8, vorbis"'))
+		{
+//		else if(!v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') && !v.canPlayType('video/webm; codecs="vp8, vorbis"') && !v.canPlayType('video/webm; codecs="vp8, vorbis"'))
+			jQuery('#fallback').html("<?php echo _t("Your browser does not support mp4, webm or Ogg/Theora video compression"); ?>");
+		}
+		else
+		{
+			jQuery('#fallback').html("<?php echo _t("Loading video player"); ?>");
+			v.style.height = '100%';
+			v.style.width = '100%';
+			v.controls = true;
+			if(window.videoData.poster)
+				v.poster = window.videoData.poster;
+			var i;
+			if(navigator.userAgent.match(/like Mac OS X/i))
 			{
-this.play();
-//				location.href = this.src;
-				return false;
+				var src;
+				// use the first playable source
+				for(i in window.videoData.sources)
+				{
+					if(!src && window.videoData.sources[i].src.match(/^http/))
+					{
+						if(window.videoData.sources[i].src.match(/.m3u8$/i) && parseInt(jQuery.browser.version)>=533) // earlier versions than 533 does not support m3u8 bitrate switching?
+							src = window.videoData.sources[i].src;
+						else if(window.videoData.sources[i].src.match(/.mp4$/i))
+							src = window.videoData.sources[i].src;
+					}
+				}
+				if(!src)
+				{
+					jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you"); ?>");
+				}
+				else
+				{
+					v.src = src;
+					jQuery('#fallback').replaceWith(v);
+				}
+			}
+			else if
+			(
+				navigator.userAgent.match(/android/i) ||				// Android mobile devices
+				(jQuery.browser.msie && jQuery.browser.version>=9) ||			// Microsoft Internet Explorer 9
+				(jQuery.browser.webkit && /chrome/i.test(navigator.userAgent)) ||	// Google Chrome
+				(jQuery.browser.webkit && /safari/i.test(navigator.userAgent))		// Safari
+			)
+			{
+				var rtspSrc;
+				var httpSrc;
+				for(i in window.videoData.sources)
+				{
+					if(!rtspSrc && window.videoData.sources[i].src.match(/^rtsp/) && window.videoData.sources[i].src.match(/.mp4$/i))
+					{
+						rtspSrc = window.videoData.sources[i].src;
+					}
+					if(!httpSrc && window.videoData.sources[i].src.match(/^http/) && window.videoData.sources[i].src.match(/.mp4$/i))
+					{
+						httpSrc = window.videoData.sources[i].src;
+					}
+				}
+
+				if(!httpSrc)
+				{
+					jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you"); ?>");
+				}
+				else
+				{
+					v.autobuffer = false;
+					v.preload = 'none';
+					v.src = httpSrc;
+					jQuery(v).dblclick(function(){
+						try {
+							if(this.enterFullscreen) this.enterFullscreen();
+							else if(this.webkitEnterFullscreen) this.webkitEnterFullscreen();
+							else throw "No fullscreen for you my dear";
+						} catch(e) {
+							alert("<?php echo _t("Your browser does not support fullscreen video without Adobe Flash player"); ?>");
+						}
+					});
+					// android devices does not currently have a play button when controls is enabled
+					if(navigator.userAgent.match(/android/i))
+						jQuery(v).click(function(){this.play();});
+					jQuery('#fallback').replaceWith(v);
+				}
+/*
+				if(!httpSrc && !rtspSrc)
+				{
+					jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you"); ?>");
+				}
+				else
+				{
+					if(rtspSrc) {
+						var rs = document.createElement('source');
+						rs.src = rtspSrc;
+						v.appendChild(rs);
+					}
+					if(httpSrc) {
+						var hs = document.createElement('source');
+						hs.src = httpSrc;
+						v.appendChild(hs);
+					}
+//					v.src = httpSrc;
+					jQuery(v).click(function(){this.play();});
+					jQuery('#fallback').replaceWith(v);
+//alert(v);
+				}
+*/
+			}
+			else if(jQuery.browser.opera)
+			{ // generic solution where browser auto detects
+				jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser."); ?>");
+//alert('opera ' + jQuery.browser.version);
+			}
+			else if(jQuery.browser.firefox)
+			{
+				jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser."); ?>");
+//alert('firefox ' + jQuery.browser.version);
 			}
 			else
 			{
-				var vp = this;
-				var sources = new Array();
-				jQuery(this).find('source').each(function() {
-					if(!vp.src && (this.src.indexOf('rtsp:')==0))
-					{
-						vp.src = this.src;
-						location.href = this.src;
-						vp.play();
-					}
-				});
-				jQuery(this).find('source').each(function() {
-					if(!vp.src && (this.src.indexOf('http:')==0 || this.src.indexOf('https:')==0))
-					{
-						vp.src = this.src;
-						top.location.href = this.src;
-//						vp.play();
-					}
-				});
-				return false;
+				var s;
+				for(i in window.videoData.sources)
+				{
+					s = document.createElement('source');
+					s.src = window.videoData.sources[i].src;
+					v.appendChild(s);
+				}
+				jQuery('#fallback').replaceWith(v);
 			}
 		}
-	});
+	}
+
 });
 		</script>
 	</head>
@@ -111,8 +213,7 @@ this.play();
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');
 
-
-		// Let's find out if this user has a custom videoplayer 
+		// Let's find out if this site has a custom videoplayer 
 
 		if(file_exists(SERIA_DYN_ROOT.'/SERIA_VideoPlayer/SeriaPlayer.swf')) {
 			$swfRoot = SERIA_DYN_HTTP_ROOT.'/SERIA_VideoPlayer/SeriaPlayer.swf';
@@ -121,41 +222,24 @@ this.play();
 		}
 
 ?>
-		<object id='ieflash' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
+		<!--[if IE]>
+		<object id='flash' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
+<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'><?php echo _t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled."); ?></div>
 			<param name='movie' value='<?php echo $swfRoot; ?>'></param>
 			<param name='allowFullscreen' value='true'></param>
 			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
 			<param name='allowscriptaccess' value='always'></param>
 			<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
-			<!--[if !IE]>-->
-				<object id='nieflash' type='application/x-shockwave-flash' data='<?php echo $swfRoot; ?>' width='100%' height='100%'>
-					<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
-					<param name='allowscriptaccess' value='always'></param>
-					<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
-					<param name='allowFullscreen' value='true'></param>
-					<video controls id='video' poster='<?php echo $vd['previewImage']; ?>' <?php 
-
-
-if(SERIA_BrowserInfo::current()->supportsRtsp()) {
-	foreach($sources as $source) {
-		if(substr($source['src'],0,5)=='rtsp:')
-		{
-			echo 'src="'.$source['src'].'"';
-			break;
-		}
-	}
-}
-
-?>>
-						<?php foreach($sources as $source) echo "<source src='".$source['src']."'".(!empty($source['type'])?" type='".$source['type']."'":"").(!empty($source['media'])?" media='".$source['media']."'":"").">"; ?>
-					</video>
-				</object>
-			<!--<![endif]-->
-			<!--[if IE]>
-				<video controls id='video' poster='<?php echo $vd['previewImage']; ?>'>
-					<?php foreach($sources as $source) echo "<source src='".$source['src']."'".(!empty($source['type'])?" type='".$source['type']."'":"").(!empty($source['media'])?" media='".$source['media']."'":"").">"; ?>
-				</video>
-			<![endif]-->
-		</object>");
+		</object>
+		<![endif]-->
+		<!--[if !IE]>-->
+		<object id='flash' type='application/x-shockwave-flash' data='<?php echo $swfRoot; ?>' width='100%' height='100%'>
+<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'><?php echo _t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled."); ?></div>
+			<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
+			<param name='allowscriptaccess' value='always'></param>
+			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
+			<param name='allowFullscreen' value='true'></param>
+		</object>
+		<!--<![endif]-->
 	</body>
 </html>
