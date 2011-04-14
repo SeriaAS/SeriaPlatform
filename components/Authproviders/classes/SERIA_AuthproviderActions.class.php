@@ -66,6 +66,8 @@ class SERIA_AuthproviderActions
 		if (SERIA_Base::hasSystemAccess())
 			return null;
 		$state = new SERIA_AuthenticationState();
+		if (!$state->exists('continue'))
+			$state->set('continue', SERIA_HTTP_ROOT.$_SERVER["REQUEST_URI"]);
 		$action = new SERIA_ActionAuthenticationStateUrl('login', 'system', $state);
 		if ($action->invoked()) {
 			SERIA_Base::pageRequires('logout'); /* Logout guest */
