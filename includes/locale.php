@@ -116,9 +116,10 @@
 
 		if (!$filename)
 			throw new Exception('Filename not specified.');
-		if (!isset($realpaths[$filename]))
-			$realpaths[$filename] = realpath($filename);
-		$filename = $realpaths[$filename];
+		$cwd = getcwd();
+		if (!isset($realpaths[$cwd.':'.$filename]))
+			$realpaths[$cwd.':'.$filename] = realpath($filename);
+		$filename = $realpaths[$cwd.':'.$filename];
 
 		/* PHASE I: Encoding */
 		$string = mb_convert_encoding($string, "UTF-8", "UTF-8, ISO-8859-1");
