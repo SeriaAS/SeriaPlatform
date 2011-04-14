@@ -222,6 +222,13 @@
 //					return "<strong>".$result."</strong>";
 //			}
 
+			/*
+			 * This can not be left as a relative path because we are going to do chdir before
+			 * eval.
+			 */
+			if (file_exists($templateFileName))
+				$templateFileName = realpath($templateFileName);
+
 			$code = file_get_contents($templateFileName);
 			if(empty($code)) throw new SERIA_Exception('Template "'.$templateFileName.'" not found');
 			$code = $this->compile($code, $templateFileName);
