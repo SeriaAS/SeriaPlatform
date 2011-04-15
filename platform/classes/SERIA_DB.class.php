@@ -23,12 +23,12 @@
 			$this->pass = $pass;
 		}
 
-		function rememberQuery()
+		protected function rememberQuery()
 		{
 			$this->queryMemory[] = func_get_args();
 		}
 
-		function getQueryLog() {
+		public function getQueryLog() {
 			$res = "<pre>\n";
 			foreach($this->queryMemory as $q)
 			{
