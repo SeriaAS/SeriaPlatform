@@ -14,12 +14,28 @@
 		const FLUSH_STATEMENT_CACHE = 1;
 
 		protected $dsn, $user, $pass;
+		protected $queryMemory = array();
 
 		function __construct($dsn, $user, $pass)
 		{
 			$this->dsn = $dsn;
 			$this->user = $user;
 			$this->pass = $pass;
+		}
+
+		function rememberQuery()
+		{
+			$this->queryMemory[] = func_get_args();
+		}
+
+		function getQueryLog() {
+			$res = "<pre>\n";
+			foreach($this->queryMemory as $q)
+			{
+				$res .= implode("\t", $q)."\n";
+			}
+			$html .= "</pre>\n";
+			return $html;
 		}
 
 		function dbLog($message)
@@ -151,6 +167,7 @@
 		}
 
 		function exec($statement, $params=NULL, $transactionLess = false) {
+			$this->rememberQuery('exec', $statement, !$transactionLess);
 			if($params !== NULL && !is_array($params))
 			{
 				if($params instanceof SERIA_MetaObject)
@@ -205,6 +222,7 @@
 		}
 
 		function query($statement, $params=NULL) {
+			$this->rememberQuery('query', $statement);
 			$this->autoCursorClose();
 //			$original = $statement;
 			try
@@ -274,6 +292,7 @@
 		*/
 		function beginTransaction($delayed=false)
 		{
+			$this->rememberQuery('beginTransaction');
 			if($delayed)
 			{ // should start transaction once (if) SERIA_Base::exec is called
 				if($this->delayedTransaction)
@@ -294,6 +313,7 @@
 		}
 		function commit()
 		{
+			$this->rememberQuery('commitTransaction');
 			if($this->delayedTransaction)
 			{ // no transaction was automatically started
 				$this->delayedTransaction = false;
@@ -331,6 +351,7 @@
 		}
 		function rollBack()
 		{
+			$this->rememberQuery('rollback');
 			if($this->delayedTransaction)
 			{ // no transaction was automatically started				
 				$this->delayedTransaction = false;
