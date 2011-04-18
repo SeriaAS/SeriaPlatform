@@ -2,6 +2,12 @@
 	class SERIA_Multisite
 	{
 		public static function isMaster() {
+/*
+var_dump($_SERVER);
+echo $_SERVER['HTTP_HOST'];
+echo "<br>";
+echo SERIA_MULTISITE_DOMAIN;
+*/
 			if($_SERVER['HTTP_HOST']===NULL)
 				return false;
 			$host = $_SERVER['HTTP_HOST'];
@@ -10,5 +16,15 @@
 			if($host===SERIA_MULTISITE_DOMAIN)
 				return true;
 			return false;
+		}
+
+		public static function getAllSites() {
+			$sites = SERIA_Base::db()->query("SELECT * FROM {sites}")->fetchAll(PDO::FETCH_ASSOC);
+			return $sites;
+		}
+
+		public static function getAllSiteAliases() {
+			$aliases = SERIA_Base::db()->query("SELECT * FROM {sites_aliases}")->fetchAll(PDO::FETCH_ASSOC);
+			return $aliases;
 		}
 	}
