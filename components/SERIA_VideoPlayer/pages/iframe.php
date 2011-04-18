@@ -2,6 +2,8 @@
 	if(isset($_GET['admin']) && SERIA_Base::isLoggedIn())
 		SERIA_Base::viewMode('system');
 	try {
+		if(!is_numeric($_GET['objectKey'])) { echo "Not published."; return; }
+
 		$video = SERIA_NamedObjects::getInstanceByPublicId($_GET['objectKey'], 'SERIA_IVideoData');
 	} catch (SERIA_Exception $e) {
 		SERIA_Base::viewMode('admin');
