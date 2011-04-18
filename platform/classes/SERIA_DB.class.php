@@ -25,17 +25,25 @@
 
 		protected function rememberQuery()
 		{
-			$this->queryMemory[] = func_get_args();
+			if ($this->queryMemory !== null)
+				$this->queryMemory[] = func_get_args();
 		}
 
+		public function disableQueryLog()
+		{
+			$this->queryMemory = null;
+		}
 		public function getQueryLog() {
 			$res = "<pre>\n";
-			foreach($this->queryMemory as $q)
-			{
-				$res .= implode("\t", $q)."\n";
-			}
-			$html .= "</pre>\n";
-			return $html;
+			if ($this->queryMemory !== null) {
+				foreach($this->queryMemory as $q)
+				{
+					$res .= implode("\t", $q)."\n";
+				}
+			} else
+				$res .= 'Database query log has been disabled by call to SERIA_DB::disableQueryLog().';
+			$res .= "</pre>\n";
+			return $res;
 		}
 
 		function dbLog($message)
