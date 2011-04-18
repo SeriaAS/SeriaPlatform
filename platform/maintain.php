@@ -19,6 +19,7 @@ $seria_options["cache_expire"] = 0;
 $seria_options['skip_session'] = true;
 $seria_options['skip_authentication'] = true;
 require_once(dirname(__FILE__)."/../main.php");
+SERIA_Base::db()->disableQueryLog();
 
 /**
  * Return quickly (output will not be sent to client)
