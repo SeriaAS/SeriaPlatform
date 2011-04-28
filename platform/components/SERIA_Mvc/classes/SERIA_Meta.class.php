@@ -128,18 +128,28 @@
 				$errors = false; // no errors, _rowToDb() will save everything
 			}
 
-			if($errors!==false)
-				throw new SERIA_ValidationException('Validation errors', $errors);
-
-			$row = self::_rowToDB($instance->MetaBackdoor('get_row'), $spec, $saveReferences);
-
+			$row = self::_rowToDB($instance->MetaBackdoor('get_update_row'), $spec, $saveReferences);
 
 			if($instance->MetaBackdoor('is_new'))
 			{
+				if($errors!==false)
+					throw new SERIA_ValidationException('Validation errors', $errors);
 				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->insert($row);
 			}
 			else
 			{
+				if ($errors!==false) {
+					foreach ($errors as $name => $err) {
+						if (!isset($row[$name])) {
+							/*
+							 * Not changed! Don't fail on validation.
+							 */
+							unset($errors[$name]);
+						}
+					}
+					if ($errors)
+						throw new SERIA_ValidationException('Validation errors', $errors);
+				}
 				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->update($row[$spec['primaryKey']], $row);
 			}
 			$instance->MetaBackdoor('set_row', $row);
@@ -869,7 +879,7 @@
 							break;
 					}
 				}
-				else if(is_object($row[$name]))
+				else if(isset($row[$name]) && is_object($row[$name]))
 				{
 					if($autoSave)
 					{	// saving references

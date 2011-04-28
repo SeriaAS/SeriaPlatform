@@ -1,6 +1,13 @@
 <?php
 	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField
 	{
+		/**
+		 *
+		 * Array that holds keys of changed row-fields as array(fieldName => true).
+		 * @var array
+		 */
+		protected $changedRow = array();
+
 		abstract public static function Meta($instance=NULL); 
 		/* EXAMPLE IMPLEMENTATION {
 			return array(
@@ -277,6 +284,19 @@
 					}
 					return $this->row;
 					break;
+				case 'get_update_row':
+					$fullRow = $this->MetaBackdoor('get_row');
+					if ($this->metaNew)
+						return $fullRow;
+					$updateRow = array();
+					foreach ($this->changedRow as $name => $changed) {
+						if ($changed && isset($fullRow[$name]))
+							$updateRow[$name] = $fullRow[$name];
+					}
+					if ($fullRow[$spec['primaryKey']])
+						$updateRow[$spec['primaryKey']] = $fullRow[$spec['primaryKey']];
+					return $updateRow;
+					break;
 				case 'set_row' : 
 					$spec = SERIA_Meta::_getSpec($this);
 					$this->metaNew = empty($data[$spec['primaryKey']]);
@@ -412,6 +432,8 @@
 
 				$this->metaCache[$name] = $value;
 			}
+
+			$this->changedRow[$name] = true;
 
 			return $this;
 		}
