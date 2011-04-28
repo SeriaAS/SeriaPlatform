@@ -152,7 +152,7 @@
 				}
 				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->update($row[$spec['primaryKey']], $row);
 			}
-			$instance->MetaBackdoor('set_row', $row);
+			$instance->MetaBackdoor('update_row', $row);
 
 			$instance->MetaBackdoor('raise_event', self::AFTER_SAVE_EVENT);
 

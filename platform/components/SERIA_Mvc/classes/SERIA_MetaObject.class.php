@@ -285,6 +285,7 @@
 					return $this->row;
 					break;
 				case 'get_update_row':
+					$spec = SERIA_Meta::_getSpec($this);
 					$fullRow = $this->MetaBackdoor('get_row');
 					if ($this->metaNew)
 						return $fullRow;
@@ -302,6 +303,12 @@
 					$this->metaNew = empty($data[$spec['primaryKey']]);
 					$this->metaCache = array();
 					$this->row = $data;
+					break;
+				case 'update_row':
+					$spec = SERIA_Meta::_getSpec($this);
+					$this->metaNew = empty($data[$spec['primaryKey']]);
+					$this->metaCache = array();
+					$this->row = array_merge($this->row, $data);
 					break;
 				case 'get_key' : 
 					$spec = SERIA_Meta::_getSpec($this);
