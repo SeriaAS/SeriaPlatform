@@ -24,7 +24,7 @@
 		$gui->addMenuItem('controlpanel/outboard', _t("Outboard"), _t("Outboard is special features that can be attached to any content type. Examples are comments, rating, voting and much more."), SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/', SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/icon.png');
 		$gui->addMenuItem('controlpanel/outboard/comments', _t("Comments"), _t("Commenting feature."), SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/comments.php', SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/icon.png');
 		$gui->addMenuItem('controlpanel/outboard/comments/approve', _t("Moderate comments"), _t("Manage and moderate comments."), SERIA_HTTP_ROOT.'?route=outboard/comments/moderate');
-		$gui->addMenuItem('controlpanel/outboard/comments/browse', _t("Browse"), _t("Browse comments."), SERIA_HTTP_ROOT."/seria/components/SERIA_Outboard/cp/comments/browse.php");
+		$gui->addMenuItem('controlpanel/outboard/comments/browse', _t("Browse"), _t("Browse comments."), SERIA_HTTP_ROOT."?route=outboard/comments/browse");
 //		$gui->addMenuItem('controlpanel/outboard/comments/edit', _t("Add comment"), _t("Add a new comment."), SERIA_HTTP_ROOT."/seria/components/SERIA_Outboard/cp/comments/edit.php");
 		$gui->addMenuItem('controlpanel/outboard/ratings', _t("Ratings"), _t("Rating feature."), SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/ratings.php', SERIA_HTTP_ROOT.'/seria/components/SERIA_Outboard/cp/icon.png');
 	}
