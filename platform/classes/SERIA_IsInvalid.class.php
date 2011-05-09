@@ -406,7 +406,7 @@
 			}
 		}
 
-		function uploadedFile($file, $required=false, $maxFileSize="41943040", $filetypes="")
+		function uploadedFile($file, $required=false, $maxFileSize=NULL, $filetypes="")
 		{
 
 			if (!$required && $file == "")
