@@ -21,14 +21,209 @@ class SERIA_AuthenticationState
 	protected $data;
 	protected $created;
 
-	/*
+	/**
 	 * session_id() may not work on systemms with a
 	 * session handler (Drupal). This class is used in a
 	 * library for external login.
 	 */
 	protected static $sessionStarted = false;
+	/**
+	 * Use file-based storage.
+	 * @var boolean
+	 */
+	protected static $fileBasedStorage = false;
 
 	protected static $destroyed = false;
+
+	/**
+	 *
+	 * Clean up tempfiles for authstate.
+	 */
+	protected static function cleanStateFiles()
+	{
+		$timelim = time()-36000;
+		$path = sys_get_temp_dir().'/SERIA_Authproviders/state/';
+		$sfdir = opendir($path);
+		while (($filename = readdir($sfdir))) {
+			$filepath = $path.$filename;
+
+			$data = file_get_contents($filepath);
+			$pre = 'authstatefile:';
+			$post = ':statefile;';
+			if (substr($data, 0, strlen($pre)) != $pre)
+				continue; /* Bad statefile */
+			if (substr($data, -strlen($post)) != $post)
+				continue;
+			$seridata = substr($data, strlen($pre), -strlen($post));
+			$seridata = unserialize($seridata);
+			if ($seridata['time'] < $timelim)
+				unlink($filepath);
+		}
+	}
+	/**
+	 *
+	 * Get the filename of a state-id.
+	 * @param string $id
+	 * @return string Filename
+	 * @throws SERIA_Exception
+	 */
+	protected static function idToStateFilename($id)
+	{
+		/*
+		 * Find the file..
+		 */
+		/* Remove the random part of the filename */
+		$filename = substr($id, 0, -16);
+		$characterCheck = preg_split('//', $filename, -1, PREG_SPLIT_NO_EMPTY);
+		$validChar = preg_split('//', 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-+', -1, PREG_SPLIT_NO_EMPTY);
+		foreach ($characterCheck as $char) {
+			if (!in_array($char, $validChar))
+				throw new SERIA_Exception('Bad authstate id: '.$id);
+		}
+		$path = sys_get_temp_dir().'/SERIA_Authproviders/state/'.$filename;
+		if (file_exists($path))
+			return $path;
+		else
+			return null;
+	}
+	/**
+	 *
+	 * Write the state-file.
+	 * @param string $id
+	 * @param array $data
+	 */
+	protected static function writeStateFile($id, $data)
+	{
+		$seridata = array(
+			'time' => time(),
+			'id' => $id,
+			'data' => $data
+		);
+		$serialized = 'authstatefile:'.serialize($seridata).':statefile;';
+		$path = self::idToStateFilename($id);
+		if ($path === null) {
+			/*
+			 * OOps
+			 */
+			SERIA_Base::debug('Lost the authentication state file');
+			return;
+		}
+		file_put_contents($path, $serialized);
+		self::cleanStateFiles();
+	}
+	/**
+	 *
+	 * Read the state file.
+	 * @param string $id
+	 * @return array
+	 */
+	protected static function readStateFile($id)
+	{
+		$path = self::idToStateFilename($id);
+		if ($path === null)
+			return null;
+		$data = file_get_contents($path);
+		$pre = 'authstatefile:';
+		$post = ':statefile;';
+		if (substr($data, 0, strlen($pre)) != $pre)
+			return null; /* Bad statefile */
+		if (substr($data, -strlen($post)) != $post)
+			return null;
+		$seridata = substr($data, strlen($pre), -strlen($post));
+		$seridata = unserialize($seridata);
+		if ($seridata['id'] == $id)
+			return $seridata['data'];
+		else
+			return null;
+	}
+	/**
+	 *
+	 * Delete the state file.
+	 * @param string $id
+	 */
+	protected static function deleteStateFile($id)
+	{
+		if (self::readStateFile($id) !== null) {
+			$path = self::idToStateFilename($id);
+			unlink($path);
+		}
+	}
+	/**
+	 *
+	 * Create a new state file.
+	 * @return string State id.
+	 * @throws SERIA_Exception
+	 */
+	protected static function createStateFile()
+	{
+		$path = sys_get_temp_dir().'/SERIA_Authproviders/state/';
+		if (!is_dir($path)) {
+			mkdir($path, 0755, true);
+		}
+		$filename = tempnam($path, 'state');
+		if (strpos($filename, $path) === 0) {
+			$idpart = substr($filename, strlen($path));
+			$id = $idpart.substr(sha1(mt_rand().mt_rand().mt_rand()), 0, 16);
+			self::writeStateFile($id, array());
+			return $id;
+		} else
+			throw new SERIA_Exception('Fails to create tempoary file in the specified directory!');
+	}
+	/**
+	 *
+	 * Create a new state id.
+	 * @return string State id.
+	 */
+	protected static function createState()
+	{
+		if (!self::$fileBasedStorage) {
+			return sha1(mt_rand().mt_rand().mt_rand().mt_rand());
+		} else
+			return self::createStateFile();
+	}
+	/**
+	 *
+	 * Get the state.
+	 * @param string $id
+	 * @return array State data.
+	 */
+	protected static function getState($id)
+	{
+		if (!self::$fileBasedStorage) {
+			if (!self::$sessionStarted && !session_id())
+				session_start();
+			if (isset($_SESSION[$id]))
+				return $_SESSION[$id];
+			else
+				return null;
+		} else
+			return self::readStateFile($id);
+	}
+	/**
+	 *
+	 * Forget the state.
+	 * @param string $id
+	 */
+	protected static function forgetState($id)
+	{
+		if (!self::$fileBasedStorage) {
+			unset($_SESSION[$id]);
+		} else
+			self::deleteStateFile($id);
+	}
+	/**
+	 *
+	 * Save the state.
+	 * @param string $id
+	 * @param array $data
+	 */
+	protected static function saveState($id, $data)
+	{
+		if (!self::$fileBasedStorage) {
+			$_SESSION[$id] = $data;
+		} else
+			self::writeStateFile($id, $data);
+	}
 
 	/**
 	 * 
@@ -37,18 +232,16 @@ class SERIA_AuthenticationState
 	 */
 	public function __construct()
 	{
-		if (!self::$sessionStarted && !session_id())
-			session_start();
 		if (isset($_GET['auth_id']) && isset($_GET['auth_abort'])) {
 			$this->id = $_GET['auth_id'];
 			$this->abort = $_GET['auth_abort'];
-			if (isset($_SESSION[$this->id])) {
-				$this->data = $_SESSION[$this->id];
+			$this->data = self::getState($this->id);
+			if ($this->data !== null) {
 				$this->created = false;
 				return;
 			}
 		}
-		$this->id = sha1(mt_rand().mt_rand().mt_rand().mt_rand());
+		$this->id = self::createState();
 		$this->abort = SERIA_HTTP_ROOT;
 		$this->data = array();
 		$this->save();
@@ -69,6 +262,14 @@ class SERIA_AuthenticationState
 	{
 		self::$sessionStarted = true;
 	}
+	/**
+	 *
+	 * Use file based (tempfile) storage instead of session.
+	 */
+	public static function useFileBasedStorage()
+	{
+		self::$fileBasedStorage = true;
+	}
 
 	/**
 	 *
@@ -76,9 +277,9 @@ class SERIA_AuthenticationState
 	 */
 	public static function available()
 	{
-		if (!self::$sessionStarted && !session_id())
+		if (!self::$fileBasedStorage && !self::$sessionStarted && !session_id())
 			session_start();
-		return (isset($_GET['auth_id']) && isset($_GET['auth_abort']) && isset($_SESSION[$_GET['auth_id']]));
+		return (isset($_GET['auth_id']) && isset($_GET['auth_abort']) && self::getState($_GET['auth_id']) !== null);
 	}
 	/**
 	 *
@@ -100,7 +301,7 @@ class SERIA_AuthenticationState
 	 */
 	public function forget()
 	{
-		unset($_SESSION[$this->id]);
+		self::forgetState($this->id);
 		self::$destroyed = true;
 	}
 
@@ -136,7 +337,7 @@ class SERIA_AuthenticationState
 
 	protected function save()
 	{
-		$_SESSION[$this->id] = $this->data;
+		self::saveState($this->id, $this->data);
 	}
 	/**
 	 * 
