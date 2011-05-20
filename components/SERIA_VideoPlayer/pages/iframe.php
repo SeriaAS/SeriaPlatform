@@ -16,6 +16,14 @@
 			return;
 		}
 	}
+
+	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
+	$hostname = $rawurl['host'];
+	$domain = str_replace('www.', '', $hostname);
+
+	$counter = new SERIA_Counter('SeriaWebTVStatistics');
+	$counter->add(array('Referer:'.$video->get("id").':'.date('Y-m-d').':'.$domain),1);
+
 	$vd = $video->getVideoData();
 	$sources = $vd['sources'];
 	$source = current($sources);
@@ -231,13 +239,13 @@ jQuery(function(){
 			<param name='allowFullscreen' value='true'></param>
 			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
 			<param name='allowscriptaccess' value='always'></param>
-			<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
+			<param name='flashvars' value='<?php echo $flashVars; ?>&sks=true'></param>
 		</object>
 		<![endif]-->
 		<!--[if !IE]>-->
 		<object id='flash' type='application/x-shockwave-flash' data='<?php echo $swfRoot; ?>' width='100%' height='100%'>
 <div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'><?php echo _t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled."); ?></div>
-			<param name='flashvars' value='<?php echo $flashVars; ?>'></param>
+			<param name='flashvars' value='<?php echo $flashVars; ?>&sks=true'></param>
 			<param name='allowscriptaccess' value='always'></param>
 			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
 			<param name='allowFullscreen' value='true'></param>
