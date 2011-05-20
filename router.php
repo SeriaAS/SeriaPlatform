@@ -1,6 +1,4 @@
 <?php
-	if (strpos($_GET['q'], '.jpg') !== false) die($_GET['q']);
-
 	require_once(dirname(__FILE__)."/main.php");
 
 	function seria_pageNotFound($url)
