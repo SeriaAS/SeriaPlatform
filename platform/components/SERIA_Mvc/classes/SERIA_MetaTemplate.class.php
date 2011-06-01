@@ -146,7 +146,7 @@
 		public function addVariableCallback($name, $callback, array $params=NULL)
 		{
 			$this->_callbacks[$name] = $callback;
-			if($info!==NULL)
+			if($params!==NULL)
 				$this->_callbackParams[$name] = $params;
 			return $this;
 		}
