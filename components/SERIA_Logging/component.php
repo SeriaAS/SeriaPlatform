@@ -5,7 +5,7 @@
 	 * and aggregate statistical data from it and make this data available to other components and
 	 * applications trough SERIA_Counter.
 	 *
-	 * @author Jan-Espen Pettersen
+	 * @author Joakim Eide, Frode Borli
 	 * @package SERIA_Logging
 	 *
 	 */
