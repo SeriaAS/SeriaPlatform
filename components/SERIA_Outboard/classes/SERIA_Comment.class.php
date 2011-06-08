@@ -16,6 +16,9 @@
 	*/
 	class SERIA_Comment extends SERIA_MetaObject
 	{
+		const BEFORE_DELETE_HOOK = 'SERIA_Comment::beforeDeleteHook';
+		const AFTER_DELETE_HOOK = 'SERIA_Comment::afterDeleteHook';
+		
 		public static function Meta($instance=NULL)
 		{
 			return array(
@@ -215,4 +218,36 @@
 			return $fl->current();
 		}
 
+		public function MetaBeforeDelete()
+		{
+			SERIA_Base::db()->beginTransaction();
+			try {
+				SERIA_Hooks::dispatch(self::BEFORE_DELETE_HOOK, $this);
+				/*
+				 * Delete sub-comments..
+				 */
+				$query = SERIA_Meta::all('SERIA_Comment')->where('metaObject = :metaObject', array('metaObject' => SERIA_Meta::getReference($this)));
+				foreach ($query as $subcomment) {
+					if (!SERIA_Meta::delete($subcomment)) {
+						SERIA_Base::debug('<strong>ERROR: Failed to delete a subcomment (Cascading failed)</strong>');
+						throw new SERIA_OutboardRollback();
+					}
+				}
+				SERIA_Base::db()->commit();
+			} catch (SERIA_OutboardRollback $rollback) {
+				SERIA_Base::debug('<strong>WARNING: Rollback commanded!</strong>');
+				SERIA_Base::db()->rollBack();
+				return false;
+			} catch (Exception $e) {
+				SERIA_Base::debug('<strong>WARNING: Exception: '.$e->getMessage().'</strong>');
+				SERIA_Base::debug('<strong>WARNING: Rollback because of exception!</strong>');
+				SERIA_Base::db()->rollBack();
+				throw $e;
+			}
+			return true;
+		}
+		public function MetaAfterDelete()
+		{
+			SERIA_Hooks::dispatch(self::AFTER_DELETE_HOOK, $this);
+		}
 	}
