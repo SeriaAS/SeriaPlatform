@@ -204,12 +204,7 @@
 			static $db = false;
 
 			if($db === false)
-			{
 				$db = new SERIA_DB(SERIA_DB_DSN, SERIA_DB_USER, SERIA_DB_PASSWORD);
-
-				// start a transaction if updates require so
-				$db->beginTransaction(true);
-			}
 
 			return $db;
 		}

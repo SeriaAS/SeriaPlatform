@@ -10,8 +10,9 @@
 	class SERIA_DB
 	{
 		protected $_db = false;
-		protected $delayedTransaction = false;			// have begin transaction been called?
 		const FLUSH_STATEMENT_CACHE = 1;
+		protected $openTransaction = 0;
+		protected $transactionPartialRollback = false;
 
 		protected $dsn, $user, $pass;
 		protected $queryMemory = array();
@@ -174,8 +175,10 @@
 			return array($statement, $statementParams);
 		}
 
-		function exec($statement, $params=NULL, $transactionLess = false) {
-			$this->rememberQuery('exec', $statement, !$transactionLess);
+		function exec($statement, $params=NULL, $transactionLess = null) {
+			if ($transactionLess !== null)
+				SERIA_Base::debug('<strong>ERROR: $transactionLess is OBSOLETE (AND IGNORED)! You have to start any transaction explicitly!</strong>');
+			$this->rememberQuery('exec', $statement);
 			if($params !== NULL && !is_array($params))
 			{
 				if($params instanceof SERIA_MetaObject)
@@ -187,15 +190,6 @@
 			}
 
 
-			if($transactionLess === false)
-			{
-				$tmp = substr(trim(strtoupper($statement)), 0, 6);
-				if($tmp === "UPDATE" || $tmp === "DELETE" || $tmp === "INSERT" || $tmp === "REPLAC")
-				{
-					if($this->delayedTransaction)
-						$this->beginTransaction();
-				}
-			}
 			$this->autoCursorClose();
 			try
 			{
@@ -296,42 +290,63 @@
 		}
 
 		/**
-		*	Direct mapping of commands from the real PDO object:
-		*/
-		function beginTransaction($delayed=false)
+		 *
+		 * Start a transaction.
+		 * @param unknown_type $delayed OBSOLETE!
+		 * @throws SERIA_Exception
+		 */
+		public function beginTransaction($delayed=null)
 		{
+			if ($delayed !== null)
+				throw new SERIA_Exception('Denied delayed/automatic transaction (REMOVED)');
 			$this->rememberQuery('beginTransaction');
-			if($delayed)
-			{ // should start transaction once (if) SERIA_Base::exec is called
-				if($this->delayedTransaction)
-					throw new SERIA_Exception("Nested transactions not supported");
-
-				$this->delayedTransaction = true;
-				return true;
-			}
-			else if($this->delayedTransaction)
-			{ // we are actually starting the transaction
-				$this->delayedTransaction = false;
-			}
-
 			$this->doConnect();
 			if(SERIA_DEBUG) SERIA_Base::debug("<strong>SERIA_DB->beginTransaction()</strong>");
 			$this->autoCursorClose();
-			return $this->_db->beginTransaction();
-		}
-		function commit()
-		{
-			$this->rememberQuery('commitTransaction');
-			if($this->delayedTransaction)
-			{ // no transaction was automatically started
-				$this->delayedTransaction = false;
-				$this->autoCursorClose();
+			if (!$this->openTransaction) {
+				$this->openTransaction++;
+				return $this->_db->beginTransaction();
+			} else {
+				$this->openTransaction++;
+				SERIA_Base::debug('<strong>WARNING: Nesting transactions is not fully supported!</strong>');
 				return true;
 			}
+		}
+		/**
+		 *
+		 * Returns whether there is an open transaction or not.
+		 * @return boolean
+		 */
+		public function hasOpenTransaction()
+		{
+			return ($this->openTransaction > 0 ? true : false);
+		}
+		/**
+		 *
+		 * Commit an open transaction
+		 * @throws SERIA_Exception
+		 */
+		public function commit()
+		{
+			if ($this->openTransaction <= 0)
+				throw new SERIA_Exception('There is no open transaction to commit!');
+			$this->openTransaction--;
+			$this->rememberQuery('commitTransaction');
 			$this->doConnect();
 			if(SERIA_DEBUG) SERIA_Base::debug("<strong>SERIA_DB->commit()</strong>");
 			$this->autoCursorClose();
-			return $this->_db->commit();
+			if ($this->openTransaction == 0) {
+				/*
+				 * Rollback required flag! A sub-transaction has rolled back which can't be handled
+				 * without rolling back everything.
+				 */
+				if ($this->transactionPartialRollback) {
+					$this->openTransaction++;
+					throw new SERIA_Exception('The transaction can not be commited because a sub-transaction has demanded rollback!');
+				}
+				return $this->_db->commit();
+			} else
+				return true;
 		}
 		function errorCode() { 
 			$this->doConnect();
@@ -357,19 +372,34 @@
 			$this->doConnect();
 			return $this->_db->prepare($statement, $driver_options); 
 		}
-		function rollBack()
+		/**
+		 *
+		 * Roll back the open transaction.
+		 * @throws SERIA_Exception
+		 */
+		public function rollBack()
 		{
+			if ($this->openTransaction <= 0)
+				throw new SERIA_Exception('There is no open transaction to roll back!');
+			$this->openTransaction--;
 			$this->rememberQuery('rollback');
-			if($this->delayedTransaction)
-			{ // no transaction was automatically started				
-				$this->delayedTransaction = false;
-				$this->autoCursorClose();
-				return true;
-			}
 			$this->doConnect();
 			if(SERIA_DEBUG) SERIA_Base::debug("<strong>SERIA_DB->rollBack()</strong>");
 			$this->autoCursorClose();
-			return $this->_db->rollBack();
+			if ($this->openTransaction == 0) {
+				$this->transactionPartialRollback = false;
+				return $this->_db->rollBack();
+			} else {
+				/*
+				 * When the database does not support nested transaction a transaction
+				 * has to be either fully rolled back or fully commited. Therefore
+				 * set a partial rollback flag when a nested transaction has been
+				 * rolled back. This will fail an attempt to commit the first opened
+				 * transaction.
+				 */
+				$this->transactionPartialRollback = true;
+				return true;
+			}
 		}
 		function setAttribute($attribute, $value) { 
 			$this->doConnect();
@@ -425,8 +455,6 @@
 		 */
 		function update($tableName, array $primaryKey, array $updateColumnNames, array $assocFieldData)
 		{
-//			if($this->delayedTransaction)
-//				$this->beginTransaction();
 			if ($tableName[0] == '{') {
 				$len = strlen($tableName);
 				if ($tableName[--$len] == '}') {
@@ -470,8 +498,6 @@
 		 */
 		function updateOrInsert($tableName, $primaryKey, array $updateColumnNames, array $assocFieldData)
 		{
-//			if($this->delayedTransaction)
-//				$this->beginTransaction();
 			if (is_string($primaryKey))
 				$primaryKey = array($primaryKey);
 			else if (!is_array($primaryKey))
