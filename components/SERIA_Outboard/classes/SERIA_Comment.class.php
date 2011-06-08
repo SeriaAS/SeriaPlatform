@@ -234,6 +234,10 @@
 					}
 				}
 				SERIA_Base::db()->commit();
+			} catch (SERIA_RollbackRequiredException $rollback) {
+				SERIA_Base::debug('<strong>WARNING: Rollback required because of sub-transaction rollback!</strong>');
+				SERIA_Base::db()->rollBack();
+				return false;
 			} catch (SERIA_OutboardRollback $rollback) {
 				SERIA_Base::debug('<strong>WARNING: Rollback commanded!</strong>');
 				SERIA_Base::db()->rollBack();
