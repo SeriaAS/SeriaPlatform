@@ -189,6 +189,11 @@
 					throw new SERIA_Exception('SERIA_DB::exec() expects array or MetaObject as parameter 2.');
 			}
 
+			$tmp = substr(trim(strtoupper($statement)), 0, 6);
+			if($tmp === "UPDATE" || $tmp === "DELETE" || $tmp === "INSERT" || $tmp === "REPLAC") {
+				if ($this->transactionPartialRollback)
+					throw new SERIA_RollbackRequiredException();
+			}
 
 			$this->autoCursorClose();
 			try
