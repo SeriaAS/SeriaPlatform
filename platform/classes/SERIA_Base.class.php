@@ -264,7 +264,8 @@ $trace
 					{
 						SERIA_Base::debug('Error reporting failed: '.$e->getMessage());
 					}
-					SERIA_Base::db()->rollBack();
+					while (SERIA_Base::db()->hasOpenTransaction())
+						SERIA_Base::db()->rollBack();
 				}
 			} catch (Exception $exception) {
 				if (SERIA_DEBUG) {
