@@ -40,3 +40,25 @@
 
 		return NULL;
 	}
+
+	// calls maintain.php on every website
+	function SERIA_Multisite_maintain() {
+		if(SERIA_Multisite::isMaster())
+		{
+			// call maintain.php on every site, except for master site
+			$sites = SERIA_Base::db()->query("SELECT * FROM {sites} ORDER BY maintainDate LIMIT 1")->fetchAll(PDO::FETCH_ASSOC);
+			foreach($sites as $site)
+			{
+				$url = parse_url('http://'.$site['domain']."/seria/platform/maintain.php");
+				$s = fsockopen($_SERVER["SERVER_ADDR"], $_SERVER["SERVER_PORT"], $eNum, $eStr, 1);
+				if($s)
+				{
+					@fwrite($s, "GET ".$url["path"]."?multisite=1 HTTP/1.1\r\nHost: ".$url["host"]."\r\nConnection: close\r\n\r\n");
+					@fclose($s);
+				}
+				SERIA_Base::db()->query("UPDATE {sites} SET maintainDate=NOW() WHERE id=".$site["id"]);
+			}
+		}
+	}
+
+	SERIA_Hooks::listen(SERIA_MAINTAIN_HOOK, 'SERIA_Multisite_maintain');

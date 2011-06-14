@@ -21,6 +21,11 @@ $seria_options['skip_authentication'] = true;
 require_once(dirname(__FILE__)."/../main.php");
 SERIA_Base::db()->disableQueryLog();
 
+// If this is a multisite installation, do not allow it to run maintain directly on client sites.
+// Must be called from master site
+if(defined('SERIA_MULTISITE_DOMAIN') && !SERIA_Multisite::isMaster() && !isset($_GET['multisite']))
+	throw new SERIA_Exception('Maintain must be run on the master site', SERIA_Exception::ACCESS_DENIED);
+
 /**
  * Return quickly (output will not be sent to client)
  */
