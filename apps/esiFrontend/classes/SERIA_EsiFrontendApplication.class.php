@@ -120,7 +120,7 @@
 				}
 
 
-				$headersWhitelist = array("vary" => true, "content-description" => true, "content-type" => true, "content-disposition" => true, "content-transfer-encoding" => true, "content-length" => true);
+				$headersWhitelist = array("vary" => true, "content-description" => true, "content-type" => true, "content-disposition" => true, "content-transfer-encoding" => true);
 
 				foreach ($b->responseHeaders as $key => $value) {
 					if ($headersWhitelist[strtolower($key)]) {
