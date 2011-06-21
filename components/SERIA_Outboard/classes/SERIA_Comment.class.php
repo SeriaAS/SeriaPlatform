@@ -143,42 +143,63 @@
 			return $action;
 		}
 
+		public function approve()
+		{
+			$this->set('hidden', false);
+			$this->set('rejected', false);
+			$this->set('approved', true);
+			$this->set('flagged', false);
+			return SERIA_Meta::save($this);
+		}
 		public function approveAction()
 		{
 //@TODO: Check access
-			$a = new SERIA_ActionUrl('accept', $this);
+			$a = new SERIA_PostActionUrl('accept', $this);
 			if($a->invoked())
 			{
-				$this->set('hidden', false);
-				$this->set('rejected', false);
-				$this->set('approved', true);
-				$a->success = SERIA_Meta::save($this);
+				$a->success = $this->approve();
+				if (!$a->success)
+					$a->error = _t('Failed to approve the comment!');
 			}
 			return $a;
+		}
+		public function lowQualityApprove()
+		{
+			$this->set('hidden', false);
+			$this->set('approved', false);
+			$this->set('rejected', true);
+			$this->set('flagged', false);
+			return SERIA_Meta::save($this);
 		}
 		public function lowQualityApproveAction()
 		{
 //@TODO: Check access
-			$a = new SERIA_ActionUrl('lowqapprove', $this);
+			$a = new SERIA_PostActionUrl('lowqapprove', $this);
 			if($a->invoked())
 			{
-				$this->set('hidden', false);
-				$this->set('approved', false);
-				$this->set('rejected', true);
-				$a->success = SERIA_Meta::save($this);
+				$a->success = $this->lowQualityApprove();
+				if (!$a->success)
+					$a->error = _t('Failed to approve the comment!');
 			}
 			return $a;
+		}
+		public function reject()
+		{
+			$this->set('hidden', true);
+			$this->set('approved', false);
+			$this->set('rejected', false);
+			$this->set('flagged', false);
+			return SERIA_Meta::save($this);
 		}
 		public function rejectAction()
 		{
 //@TODO: Check access
-			$a = new SERIA_ActionUrl('reject', $this);
+			$a = new SERIA_PostActionUrl('reject', $this);
 			if($a->invoked())
 			{
-				$this->set('hidden', true);
-				$this->set('approved', false);
-				$this->set('rejected', false);
-				$a->success = SERIA_Meta::save($this);
+				$a->success = $this->reject();
+				if (!$a->success)
+					$a->error = _t('Failed to reject the comment!');
 			}
 			return $a;
 		}
@@ -188,24 +209,36 @@
 			return SERIA_Meta::deleteAction('delete', $this);
 		}
 
+		public function unflag()
+		{
+			$this->set('flagged', false);
+			return SERIA_Meta::save($this);
+		}
 		public function unflagAction()
 		{
-			$a = new SERIA_ActionUrl('unflag', $this);
+			$a = new SERIA_PostActionUrl('unflag', $this);
 			if($a->invoked())
 			{
-				$this->set('flagged', false);
-				$a->success = SERIA_Meta::save($this);
+				$a->success = $this->unflag();
+				if (!$a->success)
+					$a->error = _t('Failed to remove flag from the comment!');
 			}
 			return $a;
 		}
 
+		public function flag()
+		{
+			$this->set('flagged', true);
+			return SERIA_Meta::save($this);
+		}
 		public function flagAction()
 		{
-			$a = new SERIA_ActionUrl('flag', $this);
+			$a = new SERIA_PostActionUrl('flag', $this);
 			if($a->invoked())
 			{
-				$this->set('flagged', true);
-				$a->success = SERIA_Meta::save($this);
+				$a->success = $this->flag();
+				if (!$a->success)
+					$a->error = _t('Failed to flag the comment!');
 			}
 			return $a;
 		}
