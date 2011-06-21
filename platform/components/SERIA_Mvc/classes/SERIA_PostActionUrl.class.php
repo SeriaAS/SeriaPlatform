@@ -77,10 +77,12 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 	/**
 	 *
 	 * Returns an ajax-post code for the onclick attribute. (Not encoded)
-	 * @param $refresh boolean Whether the page should be refreshed after the action.
+	 * @param $refresh boolean Whether the page should be refreshed after the action. Default true.
+	 * @param $cancelBubble boolean Cancel the bubble (for usage with onclick attributes). Default true.
+	 * @param $returnFalse boolean Return false (for usage with onclick attributes). Default true.
 	 * @return string Javascript code
 	 */
-	public function onclickCode($refresh=true)
+	public function onclickCode($refresh=true, $cancelBubble=true, $returnFalse=true)
 	{
 		SERIA_ScriptLoader::loadScript('jQuery');
 		$data = array(
@@ -99,11 +101,15 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		$settings = SERIA_Lib::toJSON($settings);
 		$settings = str_replace("\r", ' ', $settings);
 		$settings = str_replace("\n", ' ', $settings);
-		$js = 'var returnmsg = jQuery.ajax('.$settings.'); if (returnmsg.status == 200) { returnmsg = returnmsg.responseText; if (returnmsg != "OK") alert(returnmsg); } else { alert("The HTTP request for this action failed!"); } ';
+		$js = '';
+		if ($cancelBubble)
+			$js .= ' var event = arguments[0] || window.event; event.cancelBubble = true; if (event.stopPropagation) event.stopPropagation();';
+		$js .= ' var returnmsg = jQuery.ajax('.$settings.'); if (returnmsg.status == 200) { returnmsg = returnmsg.responseText; if (returnmsg != "OK") alert(returnmsg); } else { alert("The HTTP request for this action failed!"); } ';
 		if ($refresh)
 			$js .= ' location.href = '.SERIA_Lib::toJSON(SERIA_Url::current()->__toString()).';';
-		$js .= ' return false;';
-		return $js;
+		if ($returnFalse)
+			$js .= ' return false;';
+		return trim($js);
 	}
 
 	/**
