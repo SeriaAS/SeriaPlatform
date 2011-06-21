@@ -1,6 +1,5 @@
 <?php
 class SERIA_GuiVisualize {
-
 	public static function barChart($keyValues, $keyLabels)
 	{
 		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
@@ -83,6 +82,35 @@ class SERIA_GuiVisualize {
 	{
 		SERIA_Template::cssInclude(SERIA_HTTP_ROOT.'/seria/platform/components/SERIA_Gui/SERIA_GuiVisualize.css');
 		$res = "<div class='SERIA_GuiVisualize box'><h2><span class='ui-icon ui-icon-".$icon."' style='float:left;'></span>".htmlspecialchars($title)."</h2><div class='contents'>$contents</div></div>";
+		return $res;
+	}
+
+	/**
+	*	Renders a jquery-ui-themeroller progressbar depending on the current jquery ui theme css file. input is either a float (0.4) or an integer (44)
+	*/ 
+	public static function progressbar($progress)
+	{
+		static $progressbarCounter;
+		if(!$progressbarCounter)
+			$progressbarCounter = 0;
+/*
+		if(is_float($progress) && $progress<1)
+			$percentComplete = $progress*100;
+		else if($progress == 1)
+			$percentComplete = 100;
+		else
+*/
+		$percentComplete = $progress*100;
+
+		$res = "<div id='progressbar_".$progressbarCounter."'></div>";
+		$res.= "<script type='text/javascript'>
+			$(document).ready(function() {
+				$('#progressbar_".$progressbarCounter."').progressbar({
+					value: ".$percentComplete."
+				});
+			});
+		</script>";
+		$progressbarCounter++;
 		return $res;
 	}
 }
