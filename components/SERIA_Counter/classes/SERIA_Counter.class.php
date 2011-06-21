@@ -30,6 +30,18 @@
 			self::$_instances++;
 		}
 
+		function emptyCounters() {
+			// Delete all buffered changes
+			foreach(self::$_batchUpdates as $name => $null)
+			{
+				if(strpos($name, $this->_namespace)===0)
+					unset(self::$_batchUpdates[$name]);
+			}
+			// Delete from memory databases
+			SERIA_Base::db()->exec("DELETE FROM {counters_memory} WHERE id LIKE ?", array($this->_namespace.':%'));
+			SERIA_Base::db()->exec("DELETE FROM {counters} WHERE id LIKE ?", array($this->_namespace.':%'));
+		}
+
 		/**
 		*	Increment any number of counters by $increment
 		*
