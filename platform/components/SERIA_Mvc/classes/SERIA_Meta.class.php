@@ -250,7 +250,7 @@
 			$spec = self::_getSpec(get_class($instance));
 			if(empty($row[$spec['primaryKey']]))
 				throw new SERIA_Exception('This object is not stored in the database, thus it can\'t be deleted.');
-			$res = SERIA_Base::db()->exec('DELETE FROM '.$spec['table'].' WHERE '.$spec['primaryKey'].'=:'.$spec['primaryKey'], $instance);
+			$res = SERIA_Base::db()->exec('DELETE FROM '.$spec['table'].' WHERE `'.$spec['primaryKey'].'`=:'.$spec['primaryKey'], $instance);
 			if($res)
 			{
 				$instance->MetaBackdoor('raise_event', self::AFTER_DELETE_EVENT);
@@ -402,7 +402,7 @@
 					{
 						if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$key]['class'])))
 						{
-							$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'));
+							$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
 							foreach($fieldclass_info as $k => $v)
 							{
 								$spec['fields'][$key][$k] = $v;
@@ -459,7 +459,7 @@
 					{
 						if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$key]['class'])))
 						{
-							$info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'));
+							$info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
 							foreach($info as $k => $v)
 							{
 								$spec['fields'][$key][$k] = $v;
@@ -477,7 +477,6 @@
 				self::_syncColumnSpec($spec);
 				$cache->set($item, $mTime);
 			}
-
 			return self::$_specCache[$item] = $spec;
 		}
 
@@ -975,7 +974,7 @@
 				{
 					throw new SERIA_Exception('Unable to sync, type not defined for "'.$columnName.'" ('.$spec['table'].')');
 				}
-				$schema[] = "$columnName ".$info['type'];
+				$schema[] = "`$columnName` ".$info['type'];
 			}
 
 			try
@@ -1038,21 +1037,21 @@
 
 				// add new columns
 				foreach($addedColumns as $columnName)
-					SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' ADD COLUMN '.$columnName.' '.$spec['fields'][$columnName]['type']);
+					SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' ADD COLUMN `'.$columnName.'` '.$spec['fields'][$columnName]['type']);
 
 				// drop deleted columns
 				foreach($removedColumns as $columnName)
-					SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' DROP COLUMN '.$columnName);
+					SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' DROP COLUMN `'.$columnName.'`');
 
 				// modify existing columns
 				foreach($alteredColumns as $columnName)
 				{
 					try {
-//						echo ('ALTER TABLE '.$spec['table'].' MODIFY COLUMN '.$columnName.' '.$spec['fields'][$columnName]['type']);
-						SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' MODIFY COLUMN '.$columnName.' '.$spec['fields'][$columnName]['type']);
+//						echo ('ALTER TABLE '.$spec['table'].' MODIFY COLUMN `'.$columnName.'` '.$spec['fields'][$columnName]['type']);
+						SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' MODIFY COLUMN `'.$columnName.'` '.$spec['fields'][$columnName]['type']);
 					} catch (PDOException $e) {
 						self::_removeForeignKeys($spec['table'], $columnName);
-						SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' MODIFY COLUMN '.$columnName.' '.$spec['fields'][$columnName]['type']);
+						SERIA_Base::db()->exec('ALTER TABLE '.$spec['table'].' MODIFY COLUMN `'.$columnName.'` '.$spec['fields'][$columnName]['type']);
 					}
 				}
 			}

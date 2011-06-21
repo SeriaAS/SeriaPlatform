@@ -241,7 +241,7 @@
 				$code = $includes.$code;
 			}
 //FRODE
-if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
+//if($_GET['frode']) {echo "<pre>";echo (htmlspecialchars($code))."</pre>";die();}
 
 			/* overrride the translation context because we do eval from another file */
 			$_t_context = _t_setContext($templateFileName);

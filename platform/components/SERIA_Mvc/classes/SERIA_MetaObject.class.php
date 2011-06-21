@@ -70,13 +70,17 @@
 			return $this->MetaBackdoor('get_key');
 		}
 
-		public static function MetaField()
+		// if $spec is provided, I will not try to fetch the spec myself
+		public static function MetaField($spec=NULL)
 		{
 			$className = get_called_class();
-			if ($className != 'SERIA_MetaObject')
-				$spec = SERIA_Meta::_getSpec($className);
-			else
-				$spec = array();
+			if($spec===$null)
+			{
+				if ($className != 'SERIA_MetaObject')
+					$spec = SERIA_Meta::_getSpec($className);
+				else
+					$spec = array();
+			}
 			if(isset($spec['caption']))
 				$caption = $spec['caption'];
 			else

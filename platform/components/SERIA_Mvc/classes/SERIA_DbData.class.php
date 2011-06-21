@@ -15,7 +15,7 @@
 		}
 		public function count()
 		{
-			$sql = $this->buildSQL('COUNT('.$this->primaryKey.')');
+			$sql = $this->buildSQL('COUNT(`'.$this->primaryKey.'`)');
 			return intval(SERIA_Base::db()->query($sql, $this->args)->fetch(PDO::FETCH_COLUMN, 0));
 		}
 
@@ -29,7 +29,7 @@
 			if($this->shardBy && !isset($values[$this->shardBy]))
 				throw new SERIA_Exception('Unable to insert this row, since you have not specified the "'.$this->shardBy.'" column - which is used for sharding.');
 
-			$sql = 'INSERT INTO '.$this->table.' (';
+			$sql = 'INSERT INTO '.$this->table.' (`';
 			$fieldNames = array_keys($values);
 			$fieldKeys = array();
 			$fieldValues = array();
@@ -38,7 +38,7 @@
 				$fieldKeys[] = ':'.$key;
 				$fieldValues[] = $value;
 			}
-			$sql .= implode(',', $fieldNames).') VALUES (';
+			$sql .= implode('`,`', $fieldNames).'`) VALUES (';
 			$sql .= implode(',', $fieldKeys).')';
 
 			return SERIA_Base::db()->exec($sql, $values);
@@ -58,9 +58,9 @@
 			$sql = 'UPDATE '.$this->table.' SET ';
 			$parts = array();
 			foreach($values as $key=>$val)
-				$parts[] = $key.'=:'.$key;
+				$parts[] = '`'.$key.'`=:'.$key;
 			$sql .= implode(',', $parts);
-			$sql .= ' WHERE '.$this->primaryKey.'=:sdbdatakey';
+			$sql .= ' WHERE `'.$this->primaryKey.'`=:sdbdatakey';
 			$values[':sdbdatakey'] = $primaryKey;
 			return SERIA_Base::db()->exec($sql, $values);
 		}
