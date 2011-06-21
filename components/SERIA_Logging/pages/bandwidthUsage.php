@@ -16,16 +16,16 @@
 	$userHasPrepaidPlan = true;
 
 	if($userHasPrepaidPlan) {
-		$max = 3000;
+		$max = 1000;
 	}
 
 	$byteToGb = 1000000000;
 	$bytesToMb = 1000000;
 	$useGB = true;
 
-	$counter = new SERIA_Counter('bandwidthusage');
+	$counter = new SERIA_Counter(SERIA_Logging::BANDWIDTH_NS);
 
-	$usedThisMonth = $counter->get(array('b-Ym:2011-04'));
+	$usedThisMonth = $counter->get(array('Ym:'.date('Ym')));
 	$usedGBThisMonth = round((array_pop($usedThisMonth) / ($byteToGb)),2);
 	if(!$_GET["q"])
 		$queryString = date('Y-m-d');
@@ -37,7 +37,7 @@
 	$i=1;
 
 	foreach($monthNames as $month) {
-		$used = $counter->get(array('b-Ym:'.$year.'-'.(strlen($i)==1?('0'.$i):$i)));
+		$used = $counter->get(array('Ym:'.$year.(strlen($i)==1?('0'.$i):$i)));
 		$usedGB = array_pop($used);
 		if($usedGB) {
 			$months[$i] = array(
@@ -62,10 +62,9 @@
 		{
 			week_statisticsGenerated = true;
 			year = typeof(year) != 'undefined' ? year : ".date('Y').";
-			namespace = typeof(namespace) != 'undefined' ? namespace : 'bandwidthusage';
 			$('#weekTitle').html('Statistics for week ' + week + ' of ' + year);
 			var maxVal = 0;
-			jQuery.getJSON(SERIA_VARS.HTTP_ROOT + '/seria/components/SERIA_Logging/pages/bandwidthUsage/api/loadStatsByWeek.php?week='+week+'&year='+year+'&namespace='+namespace, function(data) {
+			jQuery.getJSON(SERIA_VARS.HTTP_ROOT + '/seria/components/SERIA_Logging/pages/bandwidthUsage/api/loadStatsByWeek.php?week='+week+'&year='+year, function(data) {
 				var stats = [];
 				for (n in data) {
 					// Received in bytes, so convert to gigs
@@ -79,7 +78,6 @@
 		function redrawDayStatistics(date, namespace)
 		{
 			day_statisticsGenerated = true;
-			namespace = typeof(namespace) != 'undefined' ? namespace : 'bandwidthusage';
 			var maxVal = 0.5;
 			jQuery.getJSON(SERIA_VARS.HTTP_ROOT + '/seria/components/SERIA_Logging/pages/bandwidthUsage/api/loadStatsByDay.php?date='+date+'&namespace='+namespace, function(data) {
 				var stats = [];
@@ -209,7 +207,7 @@
 			$("#statistics_tab").tabs({
 				select: tab_select_function
 			});
-			$.datepicker.formatDate('yyyy-mm-dd');
+			$.datepicker.formatDate('yyyymmdd');
 			$("#datepicker").datepicker({
 				onSelect: date_chosen
 			});
@@ -217,14 +215,14 @@
 		function date_chosen(dateText, inst)
 		{
 			dateInfo = dateText.split('/');
-			redrawDayStatistics(dateInfo[2]+'-'+dateInfo[0]+'-'+dateInfo[1]);
+			redrawDayStatistics(dateInfo[2]+dateInfo[0]+dateInfo[1]);
 		}
 		function tab_select_function(tab, ui)
 		{
 			if(ui.index == 1 && !week_statisticsGenerated)
 				redrawWeekStatistics(document.getElementById('weekselect').value);
 			if(ui.index == 2 && !day_statisticsGenerated) {
-				redrawDayStatistics($("#datepicker").val());
+				redrawDayStatistics($("#datepicker").val().replace('-', '').replace('-', ''));
 			}
 		}
 	</script>

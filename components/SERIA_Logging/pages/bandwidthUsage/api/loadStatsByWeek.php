@@ -1,14 +1,13 @@
 <?php
 	require_once(dirname(__FILE__).'/../../../../../main.php');
-	$namespace = $_GET["namespace"];
 	$week = $_GET["week"];
 	$year = $_GET["year"];
 	SERIA_Template::disable();
-	$counter = new SERIA_Counter($namespace);
+	$counter = new SERIA_Counter(SERIA_Logging::BANDWIDTH_NS);
 
 	$weekdata = array();
 	for($day=1;$day<=7;$day++) {
-		$usageInfo = $counter->get(array('b-Ymd:'.date('Y-m-d', strtotime($year."W".$week.$day))));
+		$usageInfo = $counter->get(array('Ymd:'.date('Ymd', strtotime($year."W".$week.$day))));
 		$weekdata[$day] = array_pop($usageInfo);
 	}
 

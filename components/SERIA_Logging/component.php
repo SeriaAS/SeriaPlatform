@@ -32,4 +32,5 @@
 		);
 	}
 
-	SERIA_Hooks::listen(SERIA_MAINTAIN_30_MINUTES_HOOK, array('SERIA_Logging', 'processLogFiles'));
+	//SERIA_Hooks::listen(SERIA_MAINTAIN_30_MINUTES_HOOK, array('SERIA_Logging', 'processLogFiles'));
+	SERIA_Hooks::listen(SERIA_MAINTAIN_HOOK, array('SERIA_Logging', 'processLogFiles'));

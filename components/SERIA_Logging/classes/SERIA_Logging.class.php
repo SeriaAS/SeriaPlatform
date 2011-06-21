@@ -1,12 +1,43 @@
 <?php
 
 	/**
-	* nordea.seriatv.com 195.159.161.226 - - [18/Apr/2011:12:09:35 +0200] "GET /sites/n/nordea.seriatv.com/files/seriawebtv/239/alt/thumb.jpg HTTP/1.1" 200 60692 "-" "MobileSafari/6533.18.5 CFNetwork/485.12.7 Darwin/10.4.0" 267 60952 677
-	* "%site %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" %I %O"
 	*
+	*
+	* Log format: "%site %h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\" %I %O %CPUUsage"
+	* NEW Log format (As rewritten by Jon-Eirik): "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"
 	*/
 
 	class SERIA_Logging {
+
+		const HITS_NS = 'SERIA_Logging:hits';
+		const BANDWIDTH_NS = 'SERIA_Logging:bw';
+
+		/**
+		*	Warning! This may be a heavy operation. Especially if there are many years of log files that must be processed.
+		*/
+		static function resetProcessedLogFiles()
+		{
+			$counter = new SERIA_Counter(self::HITS_NS);
+			$counter->emptyCounters();
+			$counter = new SERIA_Counter(self::BANDWIDTH_NS);
+			$counter->emptyCounters();
+			$counter = null;
+			$dirs = glob(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/*', GLOB_ONLYDIR); /* Gives an array of dates */
+			foreach($dirs as $dir)
+			{
+				$files = glob($dir.'/*.gz');
+				foreach($files as $file)
+				{
+					$if = gzopen($file, 'rb');
+					$of = fopen(SERIA_PRIV_ROOT.'/SERIA_Logging/incoming/'.basename($dir).'-'.basename($file).'-'.mt_rand(0,999999999).'.log', 'wb');
+					while("" != ($data = fread($if, 65536))) fwrite($of, $data);
+					fclose($if);
+					fclose($of);
+					unlink($file);
+				}
+				@rmdir($dir);
+			}
+		}
 
 		static function processLogFiles()
 		{
@@ -26,9 +57,11 @@
 
 			$oldTz = date_default_timezone_get();
 			date_default_timezone_set("UTC");
-			//$regExpPattern = '/^(\D*)?\s?(\d*.\d*.\d*.\d*.)?\s?(\S*)?\s?(\S*)?\s?(\S*\s\S*)?\s?([^\s"]+|"[^"]*")?\s?(\d*)?\s?(\d*)?\s?(\S*)?\s?([^\s"]+|"[^"]*")?\s?(\d*)?\s?(\d*)?\s?(\d*)?$/';
-			$filesInQueue = glob(SERIA_PRIV_ROOT.'/SERIA_Logging/incoming/stream.*'); /**/
-			$counter = new SERIA_Counter('bandwidthusage');
+
+			// Initialize counters
+			$bandwidthCounter = new SERIA_Counter(self::BANDWIDTH_NS);
+			$hitCounter = new SERIA_Counter(self::HITS_NS);
+			$filesInQueue = glob(SERIA_PRIV_ROOT.'/SERIA_Logging/incoming/*'); /**/
 			foreach($filesInQueue as $fileToProcess) {
 				/**
 				* Read a logfile, structure the line and put it in an array. if the read is successful - use seria_counter
@@ -39,101 +72,70 @@
 				$fp = fopen($fileToProcess, 'r');
 				if(!file_exists(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/'.date('Y-m-d')))
 					mkdir(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/'.date('Y-m-d'), 0700, true);
+				if(!file_exists(SERIA_PRIV_ROOT.'/SERIA_Logging/invalid/'))
+					mkdir(SERIA_PRIV_ROOT.'/SERIA_Logging/invalid/', 0700, true);
 
 				$fpz = gzopen(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/'.date('Y-m-d').'/'.basename($fileToProcess).'.gz', 'w9');
+				$fp_invalid = fopen(SERIA_PRIV_ROOT.'/SERIA_Logging/invalid/'.basename($fileToProcess).'.invalid', 'a+');
 				while(!feof($fp)) {
 					$lineToRecord = fgets($fp, 4096);
-					gzwrite($fpz, $lineToRecord);
-	// HACK HACK HACK
+					gzwrite($fpz, $lineToRecord); 
 
-	$firstpart = substr($lineToRecord, strpos($lineToRecord, '/files/seriawebtv/')+18);
-
-	if(strpos($lineToRecord, 'LNX 9,0,124,2')!==false) {
-		$objectId = substr($firstpart, 0, $nextPos = strpos($firstpart, '-'));
-		$nextPart = substr($firstpart, $nextPos+1);
-		$quality = substr($firstpart, $nextPos+1, strpos($nextPart, '-'));
-	} else {
-		$objectId = substr($firstpart, 0, strpos($firstpart, '/'));
-		$quality = substr($firstpart, strpos($firstpart, 'alt/')+4, strpos($firstpart, '.mp4')-8);
-	}
-
-					$lineArray[1] = getAndRemoveFirstQuotePair($lineToRecord);
-					$lineArray[2] = getAndRemoveFirstQuotePair($lineToRecord);
-					$lineArray[3] = getAndRemoveFirstQuotePair($lineToRecord);
-					$lineArray[4] = getAndRemoveFirstQuotePair($lineToRecord);
-					$lineArray[5] = getAndRemoveFirstQuotePair($lineToRecord);
+					$lineArray[1] = getAndRemoveFirstQuotePair($lineToRecord); // REQUEST
+					$lineArray[2] = getAndRemoveFirstQuotePair($lineToRecord); // REFERER
+					$lineArray[3] = getAndRemoveFirstQuotePair($lineToRecord); // USER AGENT
 
 					$lineInfo = explode(" ", $lineToRecord);
 					$firstParam = $lineInfo[0];
-					if(trim($firstParam, "0123456789.")=="") {
-						// First param is an IP adress
-						$offset = 0;
-					} else {
-						// Something came before the IP, maybe subdomain.domain.com
-						$offset = 1;
+					if(!trim($firstParam, "0123456789.")=="") {
+						// Something came before the IP, maybe subdomain.domain.com?
+						fwrite($fp_invalid, $lineToRecord);
+						continue;
+					}
+					// Retrieve the timestamp of the line in question
+					$ts = strtotime(substr($lineInfo[3]." ".$lineInfo[4],1,-1));
+					if(!is_int($ts)) {
+						fwrite($fp_invalid, $lineToRecord);
+						continue;
 					}
 
-					//preg_match_all($regExpPattern, $lineToRecord, $logInfo);
-					$ts = strtotime(substr($lineInfo[3+$offset]." ".$lineInfo[4+$offset],1,-1));
-					if(isset($lineInfo[10+$offset]) && isset($lineInfo[11+$offset])) {
-						// APACHE
-						$usedBandwidth = intval($lineInfo[10+$offset]) + intval($lineInfo[11+$offset]);
-					} else {
-						// WOWZA LOGFILE
-						$usedBandwidth = intval($lineInfo[6+$offset]);
+					// Count the bandwidth on the bandwidthCounter
+					$usedBandwidth = intval($lineInfo[7]);
+					if(!is_int($usedBandwidth)) {
+						fwrite($fp_invalid, $lineToRecord);
+						continue;
 					}
-					if(!$ts) continue;
-					$counter->add(array(
-						'b-Y:'.date('Y', $ts),
-						'b-Ym:'.date('Y-m', $ts),
-						'b-Ymd:'.date('Y-m-d', $ts),
-						'b-YmdH:'.date('Y-m-d H', $ts),
+
+					$bandwidthCounter->add(array(
+						'Ym:'.date('Ym', $ts),
+						'Ymd:'.date('Ymd', $ts),
+						'YmdH:'.date('YmdH', $ts),
 					), $usedBandwidth);
-/*
-					$counter->add(array(
-						'c-Y:'.date('Y', $ts),
-						'c-Ym:'.date('Y-m', $ts),
-						'c-Ymd:'.date('Y-m-d', $ts),
-						'c-YmdH:'.date('Y-m-d H', $ts),
-					), intval($logInfo[12+$offset]));
-					$counter->add(array(
-						'h-Y:'.date('Y', $ts),
-						'h-Ym:'.date('Y-m', $ts),
-						'h-Ymd:'.date('Y-m-d', $ts),
-						'h-YmdH:'.date('Y-m-d H', $ts),
+
+					$path = substr($lineArray[1], 4, strpos($lineArray[1], " ", 4)-4);
+					if(($p = strpos($path, '?')) !== false) {
+						$path = substr($path, 0, $p);
+					}
+					$hitCounter->add(array(
+						'p:'.$path,
+						'Ym/p:'.date('Ym', $ts).$path,
+						'Ymd/p:'.date('Ymd', $ts).$path,
+						'YmdH/p:'.date('YmdH', $ts).$path,
 					));
-*/
-					if(!$quality || !$objectId) continue;
-					$videoCounter = new SERIA_Counter('videostatistics');
-					$videoCounter->add(array(
-						'h-'.$objectId.'-'.$quality.'-Y:'.date('Y', $ts),
-						'h-'.$objectId.'-'.$quality.'-Ym:'.date('Y-m', $ts),
-						'h-'.$objectId.'-'.$quality.'-Ymd:'.date('Y-m-d', $ts),
-						'h-'.$objectId.'-'.$quality.'-YmdH:'.date('Y-m-d H', $ts),
-					), 1);
-/*
-					$statline = array(
-						'site' => $logInfo[1][0],
-						'remote_ip' => $logInfo[2][0],
-						'remote_logname' => $logInfo[3][0],
-						'remote_user' => $logInfo[4][0],
-						'time' => strtotime(substr($logInfo[5][0],1,-1)),
-						'req_line' => $logInfo[6][0],
-						'status' => $logInfo[7][0],
-						'resp_bytes' => $logInfo[8][0],
-						'referrer' => $logInfo[9][0],
-						'useragent' => $logInfo[10][0],
-						'bytes_received' => $logInfo[11][0],
-						'bytes_sent' => $logInfo[12][0],
-						'cpu_time' => $logInfo[13][0]
-					);
-					$statistics[] = $statline;
-*/
 				}
+				if(ftell($fp_invalid)>0)
+				{
+					fclose($fp_invalid);
+				}
+				else
+				{
+					fclose($fp_invalid);
+					unlink(SERIA_PRIV_ROOT.'/SERIA_Logging/invalid/'.basename($fileToProcess).'.invalid');
+				}
+
 				fclose($fp);
 				gzclose($fpz);
 				unlink($fileToProcess);
-				// Move the file to .processed
 			}
 			date_default_timezone_set($oldTz);
 			return true;
