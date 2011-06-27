@@ -2,12 +2,7 @@
 	class SERIA_Multisite
 	{
 		public static function isMaster() {
-/*
-var_dump($_SERVER);
-echo $_SERVER['HTTP_HOST'];
-echo "<br>";
-echo SERIA_MULTISITE_DOMAIN;
-*/
+			if(!defined('SERIA_MULTISITE_DOMAIN')) return false;
 			if($_SERVER['HTTP_HOST']===NULL)
 				return false;
 			$host = $_SERVER['HTTP_HOST'];
@@ -19,11 +14,13 @@ echo SERIA_MULTISITE_DOMAIN;
 		}
 
 		public static function getAllSites() {
+			if(!defined('SERIA_MULTISITE_DOMAIN')) return false;
 			$sites = SERIA_Base::db()->query("SELECT * FROM {sites}")->fetchAll(PDO::FETCH_ASSOC);
 			return $sites;
 		}
 
 		public static function getAllSiteAliases() {
+			if(!defined('SERIA_MULTISITE_DOMAIN')) return false;
 			$aliases = SERIA_Base::db()->query("SELECT * FROM {sites_aliases}")->fetchAll(PDO::FETCH_ASSOC);
 			return $aliases;
 		}
