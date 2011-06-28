@@ -16,63 +16,22 @@
 			$this->_modules[$moduleName] = $moduleUrl;
 		}
 
-		public function getIFrameUrl($width="100%",$height="100%") {
-// DEMO STATISTICS
-/*
-$sc = new SERIA_Counter('joakim');
-$sc->add(array('totalviews', 'totalviews_2011_03_11', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_01', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_02', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_03', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_04', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_05', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_06', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_08', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_07', 'totalviews_2011_03'),rand(0,1000));
-$sc->add(array('totalviews', 'totalviews_2011_03_10', 'totalviews_2011_03'),rand(0,1000));
-*/
-			return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
+		public function getIFrameUrl($width="100%",$height="100%", $options) {
+			return SERIA_Meta::manifestUrl('videoplayer','iframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
 		}
-
-		public function output($width="100%",$height="100%") {
+		/**
+		* $options will include variables sent to the flash player or html5 video player
+		*
+		* ie $options = array(
+		*	'autoplay' => true,
+		*	'wmode' => opaque
+		*    );
+		*
+		*/
+		public function output($width="100%",$height="100%",$options) {
 			if(trim($width, "%")==$width) $width .= 'px';
 			if(trim($height, "%")==$height) $height .= 'px';
-			return "<iframe src='".$this->getIFrameUrl($width,$height)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
-//			return "<iframe src='".SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/assets/player.php?objectKey=".rawurlencode(SERIA_NamedObjects::getPublicId($this->_object))."' frameborder='0' style='border: none; width: $width"."px; height: $height"."px;'></iframe>";
-
-			//SERIA_ScriptLoader::loadScript('js/flowplayer-3.2.4.min.js');
-			$flashvars = array(
-				'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
-				'httpRoot' => urlencode(SERIA_HTTP_ROOT),
-				'objectKey' => SERIA_NamedObjects::getPublicId($this->_object),
-				'trackerCode' => GoogleAnalyticsComponent::getGoogleAnalyticsId(),
-			);
-			foreach($this->_modules as $moduleName => $moduleURL) {
-				$flashvars[$moduleName] = urlencode($moduleURL);
-			}
-
-			if(!isset($this->_modules['controlBar']))
-				$flashvars['controlBar'] = urlencode(SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/SeriaControlbar.swf');
-
-
-			return "<object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='$width' height='$height'>
-<param name='movie' value='".SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf'></param>
-<param name='allowFullscreen' value='true'></param>
-<param name='wmode' value='opaque'></param>
-<param name='allowscriptaccess' value='always'></param> 
-<param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
-<!--[if !IE]>-->
-<object type='application/x-shockwave-flash' data='".SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf' width='$width' height='$height'>
-<param name='flashvars' value='".$this->_flashVarsToString($flashvars)."'></param>
-<param name='allowscriptaccess' value='always'></param> 
-<param name='wmode' value='opaque'></param>
-<param name='allowFullscreen' value='true'></param>
-<!--<![endif]-->
-her
-<!--[if !IE]>-->
-</object>
-<!--<![endif]-->
-</object>";
+			return "<iframe src='".$this->getIFrameUrl($width,$height,$options)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
 		}
 
 		public function generateConfig()

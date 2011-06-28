@@ -32,6 +32,7 @@
 		'httpRoot' => rawurlencode(SERIA_HTTP_ROOT),
 		'objectKey' => $_GET['objectKey'],
 		'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
+		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0)
 	);
 	$newSourcesArray = array();
 
@@ -64,12 +65,29 @@
 		<title>Seria WebTV Player for embedding</title>
 		<link rel='stylesheet' href='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.css?<?php echo mt_rand();?>' type='text/css'>
 		<script type='text/javascript' language='javascript'>
+//				autoplay: <?php echo (isset($_GET["autoplay"]) ? "true" : "false"); ?>,
+
 			window.videoData = {
 				poster: <?php echo SERIA_Lib::toJSON($vd['previewImage']); ?>,
 				sources: <?php echo SERIA_Lib::toJSON($vd['sources']); ?>,
 				objectKey: <?php echo intval($_GET['objectKey']); ?>
 			};
 		</script>
+<?php
+	// ADDING AUTOPLAY FOR IOS DEVICES
+	if(isset($_GET["autoplay"]) && $_GET["autoplay"]) {
+		echo '<script type="text/javascript">
+			window.onload = function() {
+				vid = document.getElementsByTagName("video")[0];
+				if(vid) {
+					vid.load();
+					vid.play();
+				}
+			}
+		</script>';
+	}
+
+?>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/platform/js/SERIA.js' type='text/javascript'></script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/flash_detect.js' type='text/javascript' language='javascript'></script>
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
@@ -95,6 +113,8 @@ jQuery(function(){
 			v.style.height = '100%';
 			v.style.width = '100%';
 			v.controls = true;
+			if(window.videoData.autoplay)
+				v.autoplay = true;
 			if(window.videoData.poster)
 				v.poster = window.videoData.poster;
 			var i;
