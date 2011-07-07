@@ -16,7 +16,7 @@
 			$this->_modules[$moduleName] = $moduleUrl;
 		}
 
-		public function getIFrameUrl($width="100%",$height="100%", $options) {
+		public function getIFrameUrl($width="100%",$height="100%", $options = array()) {
 			return SERIA_Meta::manifestUrl('videoplayer','iframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
 		}
 		/**
@@ -28,7 +28,7 @@
 		*    );
 		*
 		*/
-		public function output($width="100%",$height="100%",$options) {
+		public function output($width="100%",$height="100%",$options = array()) {
 			if(trim($width, "%")==$width) $width .= 'px';
 			if(trim($height, "%")==$height) $height .= 'px';
 			return "<iframe src='".$this->getIFrameUrl($width,$height,$options)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
