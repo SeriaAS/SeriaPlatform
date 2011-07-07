@@ -28,11 +28,14 @@
 	$sources = $vd['sources'];
 	$source = current($sources);
 	$source = $source['src'];
+
 	$flashVars = array(
 		'httpRoot' => rawurlencode(SERIA_HTTP_ROOT),
 		'objectKey' => $_GET['objectKey'],
 		'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
-		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0)
+		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
+		'backgroundColor' => (isset($_GET["backgroundColor"]) ? $_GET["backgroundColor"] : "FFFFFF"),
+		'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
 	);
 	$newSourcesArray = array();
 
@@ -65,7 +68,6 @@
 		<title>Seria WebTV Player for embedding</title>
 		<link rel='stylesheet' href='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.css?<?php echo mt_rand();?>' type='text/css'>
 		<script type='text/javascript' language='javascript'>
-//				autoplay: <?php echo (isset($_GET["autoplay"]) ? "true" : "false"); ?>,
 
 			window.videoData = {
 				poster: <?php echo SERIA_Lib::toJSON($vd['previewImage']); ?>,
@@ -73,21 +75,6 @@
 				objectKey: <?php echo intval($_GET['objectKey']); ?>
 			};
 		</script>
-<?php
-	// ADDING AUTOPLAY FOR IOS DEVICES
-	if(isset($_GET["autoplay"]) && $_GET["autoplay"]) {
-		echo '<script type="text/javascript">
-			window.onload = function() {
-				vid = document.getElementsByTagName("video")[0];
-				if(vid) {
-					vid.load();
-					vid.play();
-				}
-			}
-		</script>';
-	}
-
-?>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/platform/js/SERIA.js' type='text/javascript'></script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/flash_detect.js' type='text/javascript' language='javascript'></script>
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
@@ -112,9 +99,10 @@ jQuery(function(){
 			jQuery('#fallback').html("<?php echo _t("Loading video player"); ?>");
 			v.style.height = '100%';
 			v.style.width = '100%';
-			v.controls = true;
-			if(window.videoData.autoplay)
-				v.autoplay = true;
+			<?php if(isset($_GET['hideControls'])) echo "v.controls = false;"; else echo "v.controls = true;\r\n"; ?>
+			<?php if(isset($_GET['autoplay'])) echo "v.autoplay = true;"; else echo "v.autoplay = false;\r\n"; ?>
+
+			v.style.backgroundColor = '#<?php echo $backgroundColor; ?>';
 			if(window.videoData.poster)
 				v.poster = window.videoData.poster;
 			var i;
