@@ -192,7 +192,15 @@
 			return NULL;
 		}
 
-		static function listen($name, $callback, $weight=0)
+		/**
+		 *
+		 * Listen on a specified hook.
+		 * @param string $name Name or identifier of the hook.
+		 * @param mixed $callback Callback
+		 * @param int $weight
+		 * @return mixed Handle of the listener. Can be used to cancel (unlisten).
+		 */
+		public static function listen($name, $callback, $weight=0)
 		{
 			if(!isset(self::$listeners[$name]))
 				self::$listeners[$name] = array();
@@ -200,5 +208,15 @@
 			if(SERIA_DEBUG) SERIA_Base::debug('SERIA_Hooks:listen('.$name.','.serialize($callback).')');
 			$package = array('callback' => $callback, 'weight' => $weight);
 			self::$listeners[$name][] = $package;
+			$keys = array_keys(self::$listeners[$name]);
+			return array($name, array_pop($keys));
+		}
+		public static function unlisten($handle)
+		{
+			if (isset(self::$listeners[$handle[0]]) &&
+			    isset(self::$listeners[$handle[0]][$handle[1]]))
+				unset(self::$listeners[$handle[0]][$handle[1]]);
+			else
+				throw new SERIA_Exception('Unable to unlisten: '.serialize($handle));
 		}
 	}
