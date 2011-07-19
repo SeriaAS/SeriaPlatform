@@ -402,7 +402,10 @@
 					{
 						if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$key]['class'])))
 						{
-							$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
+							if($spec['fields'][$key]['class'] == $item)
+								$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
+							else
+								$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'));
 							foreach($fieldclass_info as $k => $v)
 							{
 								$spec['fields'][$key][$k] = $v;
