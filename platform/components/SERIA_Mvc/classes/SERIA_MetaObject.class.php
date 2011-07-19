@@ -324,7 +324,7 @@
 				default : throw new SERIA_Exception('Unknown action "'.$action.'".');
 			}
 		}
-
+		
 		private $row = array();		// store row data as it is represented in the database
 		private $metaNew = true;	// store wether or not this is an unsaved instance
 		private $metaCache = array();	// cache prepared data for each column
@@ -395,6 +395,16 @@
 				}
 			}
 
+			return $this->row[$name];
+		}
+		/**
+		 *
+		 * Get the value of this field. Similar to get, but this does not dereference any object references or datatypes. Returns raw database contents.
+		 * @param string $name
+		 * @return string Raw database field value.
+		 */
+		public function getFieldValue($name)
+		{
 			return $this->row[$name];
 		}
 		public function offsetGet($name) { return $this->get($name); }
