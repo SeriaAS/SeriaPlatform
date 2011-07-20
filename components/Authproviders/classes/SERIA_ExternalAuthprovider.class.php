@@ -444,12 +444,8 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 			} else if (SERIA_Base::user() !== false) {
 				SERIA_Base::debug('Automatic logout discovery without cookie..');
 				if (isset($_SESSION['authproviders_external_discovery_latest'])) {
-					SERIA_Base::debug('Logging out because login cookie has been lost.');
-					/* Logged out externally: detach provider and log out local */
-					$component = SERIA_Components::getComponent('seria_authproviders');
-					$component->loggedInByProvider(null);
-					SERIA_Base::user(NULL);
-					unset($_SESSION['authproviders_external_discovery_latest']);
+					SERIA_Base::debug('Lost login cookie. Checking with the auth whether actually logged out.');
+					SERIA_PersistentExternalAuthentication::forceExternalAuthenticationRefresh($this);
 					return false;
 				}
 				$this->autoCalledWithLogin();

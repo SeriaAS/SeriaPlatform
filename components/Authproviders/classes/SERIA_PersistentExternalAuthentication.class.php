@@ -38,6 +38,12 @@ class SERIA_PersistentExternalAuthentication implements SERIA_RPCServer
 		} else
 			SERIA_Base::debug('Time is ok, no need to ping authentication provider yet..');
 	}
+	public static function forceExternalAuthenticationRefresh(SERIA_ExternalAuthprovider $provider)
+	{
+		if (isset($_SESSION['AUTHPROVIDERS_REMOTE_SID_PING']))
+			$_SESSION['AUTHPROVIDERS_REMOTE_SID_PING'] = 0;
+		self::externalAuthenticationRefresh($provider);
+	}
 
 	public static function rpc_queryAuthenticationStatus($sid)
 	{
