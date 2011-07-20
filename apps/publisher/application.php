@@ -8,7 +8,6 @@
 	*	Add local classes to the class path
 	*/
 	SERIA_Base::addClassPath(SERIA_ROOT."/seria/apps/publisher/classes/*.class.php");
-	SERIA_Base::addClassPath(SERIA_ROOT."/seria/apps/publisher/classes/sitemenu/*.class.php");
 
 	/**
 	*	Register this application
