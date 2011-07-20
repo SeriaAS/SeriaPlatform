@@ -1,7 +1,7 @@
 <?php require('common.php'); ?>
 <h1 class="legend"><?php echo _t('Edit menu'); ?></h1>
 <?php
-	$optionsMenu->addLink(_t('Create menu item'), SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php');
+	$optionsMenu->addLink(_t('Create menu item'), SERIA_HTTP_ROOT . '?route=sitemenu/additem');
 	
 	function sitemenu_publishMenuToList($menu) {
 		static $level = 0;
@@ -25,13 +25,13 @@
 		if ($menu->ispublished) {
 			$status = _t('Published');
 			if (!$menu->isRoot()) {
-				$url = SERIA_HTTP_ROOT . '/seria/sitemenu/setpublish.php?publish=0&amp;id=' . $menu->id;
+				$url = SERIA_HTTP_ROOT . '?route=sitemenu/setpublish&publish=0&amp;id=' . $menu->id;
 				$statusMenu = 'mnu="' . _t('Unpublish') . ':top.location.href=\'' . $url . '\'"';
 			}
 		} else {
 			$status = _t('Not published');
 			if (!$menu->isRoot()) {
-				$url = SERIA_HTTP_ROOT . '/seria/sitemenu/setpublish.php?publish=1&amp;id=' . $menu->id;
+				$url = SERIA_HTTP_ROOT . '?route=sitemenu/setpublish&publish=1&amp;id=' . $menu->id;
 				$statusMenu = 'mnu="' . _t('Publish') . ':top.location.href=\'' . $url . '\'"';
 			}
 		}
@@ -39,7 +39,7 @@
 		$class = '';
 		if (!$menu->isRoot()) {
 			$class = 'clickableCell';
-			$onclick = 'onclick=\'top.location.href=' . json_encode(SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?edit=' . $menu->id) . '\''; 
+			$onclick = 'onclick=\'top.location.href=' . json_encode(SERIA_HTTP_ROOT . '?route=sitemenu/additem&edit=' . $menu->id) . '\''; 
 		}
 		
 		echo '<tr class="draggableItem" id="menuItem_' . $menu->id . '">';

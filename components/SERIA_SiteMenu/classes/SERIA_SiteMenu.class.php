@@ -196,9 +196,9 @@
 			if (SERIA_Base::isAdministrator()) {
 				if (!$this->isRoot()) {
 					$tag = 'mnu="';
-					$tag .= _t('Add menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?parent_id=' . $this->id . '\'';
-					$tag .= '|' . _t('Edit menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?edit=' . $this->id . '\'';
-					$tag .= '|' . _t('Delete menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '/seria/sitemenu/deleteitem.php?id=' . $this->id . '\'';
+					$tag .= _t('Add menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '?route=sitemenu/additem&parent_id=' . $this->id . '\'';
+					$tag .= '|' . _t('Edit menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '?route=sitemenu/additem&edit=' . $this->id . '\'';
+					$tag .= '|' . _t('Delete menu item') . ':top.location.href=\'' . SERIA_HTTP_ROOT . '?route=sitemenu/deleteitem&id=' . $this->id . '\'';
 					$parent = $this->getParent();
 					$siblings = $parent->getChildren();
 					/*
@@ -221,9 +221,9 @@
 					}
 					if ($hasSiblings) {
 						if ($moveUp)
-							$tag .= '|' . _t('Move menu item up') . ':top.location.href=\''.SERIA_HTTP_ROOT.'/seria/sitemenu/move.php?move=up&id='.$this->id.'\'';
+							$tag .= '|' . _t('Move menu item up') . ':top.location.href=\''.SERIA_HTTP_ROOT.'?route=sitemenu/move&move=up&id='.$this->id.'\'';
 						if ($moveDown)
-							$tag .= '|' . _t('Move menu item down') . ':top.location.href=\''.SERIA_HTTP_ROOT.'/seria/sitemenu/move.php?move=down&id='.$this->id.'\'';
+							$tag .= '|' . _t('Move menu item down') . ':top.location.href=\''.SERIA_HTTP_ROOT.'?route=sitemenu/move&move=down&id='.$this->id.'\'';
 					}
 					$tag .= '"';
 

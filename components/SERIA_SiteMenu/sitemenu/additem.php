@@ -1,7 +1,9 @@
 <?php
 	require('common.php');
-	
-	$optionsMenu->addLink(_t('<< Cancel'), SERIA_HTTP_ROOT . '/seria/sitemenu/');
+
+	SERIA_ScriptLoader::loadScript('jQuery-ui-tabs', '1.5.3', '0', '1.6rc5');
+
+	$optionsMenu->addLink(_t('<< Cancel'), SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	
 	if ($_GET['edit']) {
 		$id = $_GET['edit'];
@@ -29,7 +31,7 @@
 				$menu->save();
 				
 				SERIA_HtmlFlash::notice(_t('The menu item was successfully attached to the requested article.'));
-				SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?edit=' . $menu->id . '&attach=article#attach');
+				SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/additem&edit=' . $menu->id . '&attach=article#attach');
 				die();
 			}
 		}
@@ -41,7 +43,7 @@
 		if ($menu->isValid()) {
 			$menu->save();
 			SERIA_HtmlFlash::notice(_t('The menu element was successfully saved.'));
-			SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+			SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 		}
 	}
 
@@ -128,7 +130,7 @@
 				if ($('#article').attr('checked')) {
 					if (enableRedirect) {
 						<?php if ($_GET['attach'] !== 'article') { ?>
-							location.href = SERIA_VARS.HTTP_ROOT + '/seria/sitemenu/additem.php?edit=<?php echo $menu->id; ?>&attach=article#attach';
+							location.href = SERIA_VARS.HTTP_ROOT + '?route=sitemenu/additem&edit=<?php echo $menu->id; ?>&attach=article#attach';
 						<?php } ?>
 					}
 					$('#articleSelect').show();
@@ -172,7 +174,7 @@
 					}
 					$menu->save();
 					SERIA_HtmlFlash::notice(_t('Menu item was successfully saved'));
-					SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+					SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 				}
 			?>
 			<?php $form = new SERIA_HtmlForm('attachToNothing'); ?>
@@ -195,7 +197,7 @@
 					$menu->relationtype = 'url';
 					$menu->save();
 					SERIA_HtmlFlash::notice(_t('Link URL was successfully saved'));
-					SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+					SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 				}
 				
 				$urlForm = new SERIA_HtmlForm($urlObject);
@@ -244,7 +246,7 @@
 							}
 							$articleRelation->save();
 							SERIA_HtmlFlash::notice(_t('Publish setting was successfully updated'));
-							SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?edit=' . $menu->id . '&attach=article&' . time() . '#attach');
+							SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/additem&edit=' . $menu->id . '&attach=article&' . time() . '#attach');
 							die();
 						}
 						$form = new SERIA_HtmlForm($articleRelation);
@@ -266,7 +268,7 @@
 			<?php
 				$widget = SERIA_Widget::getWidget('SERIA_ArticleSearch', 'sitemenu_edit');
 				$widget->setUrlTail('#attach');
-				$widget->linkResultTo = SERIA_HTTP_ROOT . '/seria/sitemenu/additem.php?edit=' . $menu->id . '&amp;attach=article&amp;attachto={ID}#attach';
+				$widget->linkResultTo = SERIA_HTTP_ROOT . '?route=sitemenu/additem&edit=' . $menu->id . '&amp;attach=article&amp;attachto={ID}#attach';
 				$widget->render();
 			?>
 			

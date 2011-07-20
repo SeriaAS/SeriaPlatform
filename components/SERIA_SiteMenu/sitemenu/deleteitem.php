@@ -7,10 +7,10 @@
 	$menuItem = SERIA_SiteMenus::find($id);
 	if (!$menuItem) {
 		SERIA_HtmlFlash::error(_t('The requested menu item was not found'));
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 	
-	$optionsMenu->addLink('<< Cancel', SERIA_HTTP_ROOT . '/seria/sitemenu/');
+	$optionsMenu->addLink('<< Cancel', SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	
 	if ($_POST['delete_item']) {
 		try {
@@ -20,7 +20,7 @@
 			SERIA_HtmlFlash::error(_t('The requested menu structure could not be deleted: %ERROR%', array('ERROR' => $exception->getMessage())));
 		}
 		
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 ?>
 <h1 class="legend"><?php echo _t('Delete menu item %TITLE%', array('TITLE' => htmlspecialchars($menuItem->title))); ?></h1>

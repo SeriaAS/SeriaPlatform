@@ -7,17 +7,17 @@
 	$menuItem = SERIA_SiteMenus::find($id);
 	if (!$menuItem) {
 		SERIA_HtmlFlash::error(_t('The requested menu item was not found'));
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 	if (!isset($_GET['move']) || ($_GET['move'] != 'down' && $_GET['move'] != 'up')) {
 		SERIA_HtmlFlash::error(_t('Invalid move operation'));
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 
 	$menuItemParent = $menuItem->getParent();
 	if (!$menuItemParent) {
 		SERIA_HtmlFlash::error(_t('The menu item is a root'));
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 	$siblings = $menuItemParent->getChildren();
 	$prevKey = null;
@@ -51,7 +51,7 @@
 	unset($item);
 	if (!$moved) {
 		SERIA_HtmlFlash::error(_t('Invalid move operation'));
-		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+		SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
 	}
 	/*
 	 * Redo ordering..
@@ -62,4 +62,4 @@
 		$item->save();
 	}
 	unset($item);
-	SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '/seria/sitemenu/');
+	SERIA_Base::redirectTo(SERIA_HTTP_ROOT . '?route=sitemenu/index');
