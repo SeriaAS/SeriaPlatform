@@ -41,9 +41,9 @@
 			$this->getCacheObject()->deleteAll();
 		}
 
-		function putCache($key, $c, &$cache) {
+		protected function putCache($key, $c, &$cache, $cachetime=90000) {
 			if ($_POST && sizeof($_POST) > 0) return false;
-			$cache->set($key, $c, 90000); // cache for 25 hours
+			$cache->set($key, $c, $cachetime);
 		}
 
 		function getCache($key, &$cache) {
@@ -76,16 +76,22 @@
 			$langs = explode(',', $langString);
 			$_SERVER['HTTP_ACCEPT_LANGUAGE'] = $langs[0];
 
-			if ($currentCache['vary']) {
+			if (isset($currentCache['vary']) && $currentCache['vary']) {
 				$ident = '';
 				foreach ($currentCache["vary"] as $vary) {
 					$ident .= $vary.'_'.strtolower($_SERVER['HTTP_'.str_replace('-','_',strtoupper($vary))]).'_';
 				}
+			} else if (isset($currentCache['_']) && $currentCache['_'])
+				$ident = '_';
+			else
+				$ident = null;
+			if ($ident !== null) {
 				$currentHeaders = $currentCache[$ident]['headers'];
 				$c = $currentCache[$ident]['content'];
-			} else {
-				$currentHeaders = $currentCache['_']['headers'];
-				$c = $currentCache["_"]['content'];
+				if (isset($currentCache[$ident]['code']) && $currentCache[$ident]['code']) {
+					header($_SERVER['SERVER_PROTOCOL'].' '.$currentCache[$ident]['code'].' '.$currentCache[$ident]['codeString']);
+					header('Status: '.$currentCache[$ident]['code'].' '.$currentCache[$ident]['codeString']);
+				}
 			}
 
 			$passthru = true;
@@ -135,6 +141,10 @@
 					}
 				}
 
+				if ($b->responseCode != 200) {
+					header($_SERVER['SERVER_PROTOCOL'].' '.$b->responseCode.' '.$b->responseString);
+					header('Status: '.$b->responseCode.' '.$b->responseString);
+				}
 
 				if (!$esiMimeTypes[current(explode(';', strtolower($b->responseHeaders['Content-Type'])))]) {
 					SERIA_Template::disable();
@@ -200,10 +210,13 @@
                                         }
                                 }
 
-                                if (!$skipCache) {
-                                        $currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache);
-                                        $this->putCache($cacheKey, $currentCache, $cache);
-                                }
+				if (!$skipCache) {
+					$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString);
+					if ($b->responseCode == 200)
+						$this->putCache($cacheKey, $currentCache, $cache);
+					else
+						$this->putCache($cacheKey, $currentCache, $cache, 60); /* Cache 1 minute on failure */
+				}
 
 			} else {
 
