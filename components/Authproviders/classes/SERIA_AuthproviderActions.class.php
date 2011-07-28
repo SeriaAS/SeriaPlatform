@@ -82,6 +82,22 @@ class SERIA_AuthproviderActions
 		return $action;
 	}
 	/**
+	 *
+	 * Get url to login as guest.
+	 * @param string $continue Optional continue url.
+	 */
+	public static function getGuestLoginUrl($continue=null)
+	{
+		if ($continue === null)
+			$continue = SERIA_Url::current()->__toString();
+		$state = new SERIA_AuthenticationState();
+		if (!$state->exists('continue'))
+			$state->set('continue', $continue);
+		if (file_exists(SERIA_ROOT.'/login.php'))
+			return $state->stampUrl(SERIA_HTTP_ROOT."/login.php?continue=".urlencode($continue));
+		return $state->stampUrl(SERIA_HTTP_ROOT."/seria/components/Authproviders/pages/guestLogin.php?continue=".urlencode($continue));
+	}
+	/**
 	 * 
 	 * Returns a login action object if the user is not logged in and has guest access. Null otherwise.
 	 * @return SERIA_ActionAuthenticationStateUrl
