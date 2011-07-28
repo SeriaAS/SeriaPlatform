@@ -21,7 +21,7 @@ class NDLA_SyncLog extends SERIA_MetaObject
 	public static function writeSyncLogEntry($description)
 	{
 		$log = new self();
-		$log->set('executedAt', new SERIA_DateTimeMetaField(time()));
+		$log->set('executedAt', date('Y-m-d H:i:s'));
 		$log->set('description', $description);
 		SERIA_Meta::save($log);
 	}
