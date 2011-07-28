@@ -468,14 +468,8 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 	{
 		if (!$this->isAvailable())
 			throw new SERIA_Exception('External auth is not available for host (RPC configuration required): '.$this->get('remote'));
-		$logoutProviderAction = $this->logoutAction(SERIA_Url::current()->__toString());
-		if ($logoutProviderAction->invoked()) {
-			/* Logged out externally: detach provider and log out local */
-			$component = SERIA_Components::getComponent('seria_authproviders');
-			$component->loggedInByProvider(null);
-			SERIA_Base::redirectTo($logoutProviderAction->getState());
-			die();
-		}
+		$state = new SERIA_AuthenticationState();
+		$state->set('continue', SERIA_Url::current()->__toString());
 		$cookieName = 'logindiscovery'.sha1($this->rpc->getHostname());
 		SERIA_Base::debug('Handling a logout with expected discovery-cookie name: '.$cookieName);
 		if (isset($_SESSION['authproviders_external_discovery_latest']))
@@ -492,7 +486,7 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 			SERIA_Base::debug('Picked up a login change from cookie, just removing my login (logout handler)');
 			return;
 		}
-		$url = SERIA_ExternalAuthenticationAgent::getLogoutUrl($this->rpc, $logoutProviderAction->__toString());
+		$url = SERIA_ExternalAuthenticationAgent::getLogoutUrl($this->rpc, $state->stampUrl(SERIA_HTTP_ROOT.'/seria/components/Authproviders/pages/handleLogout.php'));
 		SERIA_Base::redirectTo($url);
 		die();
 	}
