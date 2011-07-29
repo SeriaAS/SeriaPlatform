@@ -29,12 +29,14 @@
 	$source = current($sources);
 	$source = $source['src'];
 
+	$backgroundColor = (isset($_GET["backgroundColor"]) ? $_GET["backgroundColor"] : "000000");
+
 	$flashVars = array(
 		'httpRoot' => rawurlencode(SERIA_HTTP_ROOT),
 		'objectKey' => $_GET['objectKey'],
 		'debugMode' => ((SERIA_Base::isLoggedIn() && $_GET["debugMode"]) ? 'true' : ''),
 		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
-		'backgroundColor' => (isset($_GET["backgroundColor"]) ? $_GET["backgroundColor"] : "FFFFFF"),
+		'backgroundColor' => $backgroundColor,
 		'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
 	);
 	$newSourcesArray = array();
