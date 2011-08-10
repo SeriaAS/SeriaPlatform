@@ -113,6 +113,7 @@
 			}
 
 			$p = parse_url($url);
+			if(empty($p['path'])) $p['path'] = '/';
 			if(!isset($p['host']) || !isset($p['path']))
 				throw new SERIA_Exception('Insufficient url: '.$url);
 
