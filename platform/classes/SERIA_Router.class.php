@@ -10,6 +10,7 @@
 		protected static $_instance = NULL;
 		protected $_routes = array();
 		protected $_routeMap = array();
+		protected $_embedded = false;
 
 		public static function instance()
 		{
@@ -21,8 +22,12 @@
 		function __construct($singleton)
 		{
 			if($singleton!=='singleton') throw new Exception('Use SERIA_Router::instance() to instantiate SERIA_Router.');
+		}
 
+		function _embed() {
+			if($this->_embedded) return;
 			SERIA_Hooks::dispatch(SERIA_PlatformHooks::ROUTER_EMBED, $this);
+			$this->_embedded = true;
 		}
 
 		/**
@@ -116,6 +121,7 @@
 		*/
 		public function resolve($reqRoute)
 		{
+			$this->_embed();
 			$reqRoute = trim($reqRoute, "/\r\n\t ");
 			$depth = sizeof($reqParts = explode('/', $route=trim($reqRoute, '/')));
 			if(!isset($this->_routes[$depth]))
