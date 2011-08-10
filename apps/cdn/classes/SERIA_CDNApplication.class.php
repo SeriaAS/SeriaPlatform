@@ -50,7 +50,7 @@
 
 		function router($url)
 		{
-			$hostname = substr($_SERVER['HTTP_HOST'], 0, -strlen(SERIACDN_HOST)-1);
+			$hostname = str_replace("--",".",substr($_SERVER['HTTP_HOST'], 0, -strlen(SERIACDN_HOST)-1));
 
 			try
 			{
@@ -66,13 +66,15 @@
 				if(isset($headers['Content-Type']))
 				{
 					header('Content-Type: '.$headers['Content-Type']);
-					echo('Content-Type: '.$headers['Content-Type']);
+//					echo('Content-Type: '.$headers['Content-Type']);
 				}
 
 				if(isset($_GET['seria_ttl']))
 					$ttl = intval($_GET['seria_ttl']);
-				else
+				else {
+// try to parse ttl from $headers
 					$ttl = 60;
+				}
 
 				header('X-Powered-By: SeriaCDN/1.0');
 				header('Cache-Control: max-age='.$ttl.', must-revalidate');
