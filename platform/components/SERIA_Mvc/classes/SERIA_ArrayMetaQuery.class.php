@@ -19,17 +19,25 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 	protected $index = 0;
 	protected $limitInEffect = null;
 
-	public function __construct(array $objects)
+	public function __construct($objects)
 	{
-		$this->objects = array_values($objects);
+		$this->objects = $objects;
 		$this->keys = array_keys($objects);
+		if (!is_array($this->keys) && is_object($this->objects)) {
+			$this->keys = array();
+			$this->objects->rewind();
+			while ($this->objects->valid()) {
+				$this->keys[] = $this->objects->key();
+				$this->objects->next();
+			}
+			$this->objects->rewind();
+		}
 	}
 
 	protected function revertLimit()
 	{
 		if ($this->limitInEffect === null)
 			return;
-		$this->objects = $this->limitInEffect['objects'];
 		$this->keys = $this->limitInEffect['keys'];
 		$this->limitInEffect = null;
 	}
@@ -41,36 +49,25 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 		}
 		$this->revertLimit();
 		$this->limitInEffect = array(
-			'objects' => $this->objects,
 			'keys' => $this->keys
 		);
-		if (count($this->objects) != count($this->keys))
-			throw new SERIA_Exception('Should be equal amount of keys and objects (bad array)');
-		while (count($this->objects) > 0 && $a > 0) {
-			array_shift($this->objects);
+		while (count($this->keys) > 0 && $a > 0) {
 			array_shift($this->keys);
 			$a--;
 		}
-		if (count($this->objects) != count($this->keys))
-			throw new SERIA_Exception('Should be equal amount of keys and objects (corrupted array)');
-		if (count($this->objects) > $b) {
-			$objects = $this->objects;
+		if (count($this->keys) > $b) {
 			$keys = $this->keys;
-			$this->objects = array();
 			$this->keys = array();
 			while ($b > 0) {
-				$this->objects[] = array_shift($objects);
 				$this->keys[] = array_shift($keys);
 				$b--;
 			}
 		}
-		if (count($this->objects) != count($this->keys))
-			throw new SERIA_Exception('Should be equal amount of keys and objects (corrupted array)');
 	}
 
 	public function count()
 	{
-		return count($this->objects);
+		return count($this->keys);
 	}
 
 	public function where($where, $args = NULL, $shardByValue = NULL)
@@ -82,8 +79,8 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 	// returns the row that is being pointed to at this moment
 	function current()
 	{
-		if (isset($this->objects[$this->index]))
-			return $this->objects[$this->index];
+		if (isset($this->objects[$this->keys[$this->index]]))
+			return $this->objects[$this->keys[$this->index]];
 		else
 			return false;
 	}
@@ -91,10 +88,7 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 	// returns offset in recordset 0, 1, 2 etc
 	function key()
 	{
-		if (isset($this->keys[$this->index]))
-			return $this->keys[$this->index];
-		else
-			return false;
+		return $this->index;
 	}
 
 	function next()
@@ -133,8 +127,11 @@ class SERIA_ArrayMetaQuery extends SERIA_MetaQuery
 	 * @param string $className The class of the objects. Must be descendant of SERIA_MetaObject
 	 * @param array $objects Array of objects of the specified type.
 	 */
-	public function __construct($className, array $objects)
+	public function __construct($className, $objects)
 	{
+		if (!is_array($objects) && !is_object($objects) && !(($object instanceof ArrayAccess) && ($object instanceof Countable) && ($object instanceof Iterator))) {
+			throw new SERIA_Exception('Argument $objects is not an array!');
+		}
 		parent::__construct($className);
 		$this->_data = new SERIA_ArrayMetaQueryDataObject($objects);
 	}
