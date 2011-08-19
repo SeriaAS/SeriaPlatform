@@ -56,17 +56,28 @@
 		{
 			if ($url[0] != '/') $url = '/'.$url;
 
+			$nocache = '/nocache/';
+			$len = strlen($nocache);
+			if (strlen($url) > $len && substr($url, 0, $len) == $nocache) {
+				$nocache = true;
+				$url = substr($url, $len - 1);
+			} else
+				$nocache = false;
+
 			$class = new stdClass();
 			$class->url = $url;
+			$class->nocache = $nocache;
 			SERIA_Hooks::dispatch('esiFrontend_beforeLoading', $class);
 			$url = $class->url;
 
-			$cache = $this->getCacheObject();
-			
-			$cacheKey = md5($url);
-
-			$currentCache = $this->getCache($cacheKey, $cache);
-			if (!$currentCache) $currentCache = array();
+			if (!$nocache) {
+				$cache = $this->getCacheObject();
+				$cacheKey = md5($url);
+				$currentCache = $this->getCache($cacheKey, $cache);
+				if (!$currentCache)
+					$currentCache = array();
+			} else
+				$currentCache = array();
 
 			$sentHeaders = array();
 			$headersToCache = array();
@@ -186,38 +197,39 @@
 				}
 */
 
-				$varyString = $b->responseHeaders['Vary'];
-				if ($varyString) {
-					$varys = explode(",", $varyString);
-					$currentCache["vary"] = $varys;
-					$ident = "";
-					foreach ($varys as $vary) {
-						$vary = trim($vary);
-						$ident .= $vary."_".strtolower($sentHeaders[$vary])."_";
+				if (!$nocache) {
+					$varyString = $b->responseHeaders['Vary'];
+					if ($varyString) {
+						$varys = explode(",", $varyString);
+						$currentCache["vary"] = $varys;
+						$ident = "";
+						foreach ($varys as $vary) {
+							$vary = trim($vary);
+							$ident .= $vary."_".strtolower($sentHeaders[$vary])."_";
+						}
+					} else {
+						$ident = "_";
 					}
-				} else {
-					$ident = "_";
+	
+					$skipCache = false;
+					if (defined('ESIFRONTEND_SKIP_CACHE')) {
+						$skipUrls = explode(',', ESIFRONTEND_SKIP_CACHE);
+						foreach ($skipUrls as $skipUrl) {
+							if (strpos($url, $skipUrl) !== false) {
+								$skipCache = true;
+								break;
+							}
+						}
+					}
+	
+					if (!$skipCache) {
+						$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString);
+						if ($b->responseCode == 200)
+							$this->putCache($cacheKey, $currentCache, $cache);
+						else
+							$this->putCache($cacheKey, $currentCache, $cache, 60); /* Cache 1 minute on failure */
+					}
 				}
-
-                                $skipCache = false;
-                                if (defined('ESIFRONTEND_SKIP_CACHE')) {
-                                        $skipUrls = explode(',', ESIFRONTEND_SKIP_CACHE);
-                                        foreach ($skipUrls as $skipUrl) {
-                                                if (strpos($url, $skipUrl) !== false) {
-                                                        $skipCache = true;
-                                                        break;
-                                                }
-                                        }
-                                }
-
-				if (!$skipCache) {
-					$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString);
-					if ($b->responseCode == 200)
-						$this->putCache($cacheKey, $currentCache, $cache);
-					else
-						$this->putCache($cacheKey, $currentCache, $cache, 60); /* Cache 1 minute on failure */
-				}
-
 			} else {
 
 				foreach ($currentHeaders as $key => $value) {
