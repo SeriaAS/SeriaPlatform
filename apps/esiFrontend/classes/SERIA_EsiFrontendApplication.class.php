@@ -61,6 +61,9 @@
 			if (strlen($url) > $len && substr($url, 0, $len) == $nocache) {
 				$nocache = true;
 				$url = substr($url, $len - 1);
+				header('Pragma: nocache');
+				header('Cache-Control: no-cache no-store');
+				header('Expires: ');
 			} else
 				$nocache = false;
 
