@@ -16,6 +16,7 @@ class SERIA_Site extends SERIA_MetaObject {
 				'timezone' => array('timezone', _t("Timezone")),
 				'currency' => array('currencycode', _t("Currency")),
 				'errorMail' => array('email', _t("Error e-mail")),
+				'maintainDate' => array('datetime', _t("Last maintain run")),
 			),
 		);
 	}

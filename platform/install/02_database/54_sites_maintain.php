@@ -1,2 +1,6 @@
 <?php
-	SERIA_Base::db()->exec('ALTER TABLE {sites} ADD COLUMN maintainDate DATETIME');
+	try {
+		SERIA_Base::db()->exec('ALTER TABLE {sites} ADD COLUMN maintainDate DATETIME');
+	} catch (PDOException $e) {
+		
+	}
