@@ -489,6 +489,13 @@ $trace
 		{
 			static $user = false;
 
+			if ($setUser !== NULL) {
+				/*
+				 * This is an action. It should never be cached!
+				 */
+				SERIA_ProxyServer::noCache();
+			}
+
 			SERIA_Hooks::dispatch('SERIA_Base::user', $setUser);
 
 			if(isset($seria_options["skip_session"]))
