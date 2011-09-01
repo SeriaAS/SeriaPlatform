@@ -2,6 +2,8 @@
 
 require_once(dirname(__FILE__).'/../../../main.php');
 
+SERIA_ProxyServer::noCache();
+
 if (!isset($_GET['token']))
 	throw new SERIA_Exception('No external login token presented.');
 if (!isset($_GET['from']))

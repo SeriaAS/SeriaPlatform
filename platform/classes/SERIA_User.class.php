@@ -146,6 +146,10 @@
 					throw new SERIA_Exception('Lost state information sent through the SERIA_ActionUrl object!');
 				$continueUrl = $state['continue'];
 				$failureUrl = $state['failure'];
+
+				/* There are two possible outcomes here based on login status, so no caching please! */
+				SERIA_ProxyServer::noCache();
+
 				if (SERIA_Base::user() === false) {
 					SERIA_Base::redirectTo(self::loginUrl($continueUrl)->__toString());
 					die();
