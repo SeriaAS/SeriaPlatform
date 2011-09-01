@@ -234,6 +234,18 @@ function seria_autoload($class) {
 	return false;
 }
 spl_autoload_register('seria_autoload');
+
+
+/**
+ *	Sometimes PHP configurations use automatically quoting of all in-data. This prevents database
+ *	injection attacks. However, since this also can lead to poor progrmming style, we have decided
+ *	to always remove injection.
+ */
+if(function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
+	if(SERIA_DEBUG) SERIA_Base::debug('<strong>Fallback for GET/POST/COOKIE in effect. Please do not use magic quotes - fake security.</strong>');
+	require_once(SERIA_ROOT."/seria/platform/compatability/gpc.php");
+}
+
 /**
  *	Includes for a few things that could have been in main.php but is separated for readability.
  */
@@ -263,16 +275,6 @@ if(file_exists(SERIA_ROOT.'/seria.php'))
  */
 //ob_start();
 ob_start(array('SERIA_Template','outputHandler'));
-
-/**
- *	Sometimes PHP configurations use automatically quoting of all in-data. This prevents database
- *	injection attacks. However, since this also can lead to poor progrmming style, we have decided
- *	to always remove injection.
- */
-if(function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
-	if(SERIA_DEBUG) SERIA_Base::debug('<strong>Fallback for GET/POST/COOKIE in effect. Please do not use magic quotes - fake security.</strong>');
-	require_once(SERIA_ROOT."/seria/platform/compatability/gpc.php");
-}
 
 /**
  * Set javascript variables that may be used by libraries on the client side
