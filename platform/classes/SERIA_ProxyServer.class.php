@@ -40,7 +40,7 @@
 		public static function publicCache($ttl=60)
 		{
 			header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
-			header("Expires: " . date('r', time() + intval($ttl)));
+			header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
 			header("Pragma: public");
 
 			// if session is started later, then PHP will override the above headers with it's own headers using the following configuration
