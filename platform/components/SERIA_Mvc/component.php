@@ -142,7 +142,7 @@
 			$route = 'index';
 
 		if(trim($route, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/')!=='')
-			throw new SERIA_Exception('Invalid route');
+			return false;
 
 		if(is_dir(SERIA_TEMPLATE_ROOT.'/'.$route))
 			$route = $route.'/index';
