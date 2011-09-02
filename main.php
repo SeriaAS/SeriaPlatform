@@ -78,6 +78,7 @@ if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
         $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
 }
 
+
 /**
  *	Load the configuration file for Seria Platform
  */
@@ -389,7 +390,6 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 { // Generate this page trough the router
 	// tell all applications and components to setup their routes
 	$router = SERIA_Router::instance();
-
 	// try to resolve routes
 	try {
 		list($callback, $variables) = $router->resolve(trim($_GET['route'], "/\r\n\t ")); // keep this change
@@ -411,7 +411,7 @@ if(strtolower($seria_path) === '/index.php' && isset($_GET['route']))
 	}
 	catch (SERIA_Exception $e)
 	{
-		if($e->getCode() == SERIA_Exception::NOT_FOUND)
+		if($e->getCode() == SERIA_Exception::NOT_FOUND || $e->getCode() == SERIA_Router::INVALID_ROUTE)
 		{
 			SERIA_Hooks::dispatchToFirst(SERIA_PlatformHooks::ROUTER_FAILED, trim($_GET['route'], "/\r\n\t ")); // and keep this
 
