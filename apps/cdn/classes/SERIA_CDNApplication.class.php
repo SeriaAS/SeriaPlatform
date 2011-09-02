@@ -56,7 +56,10 @@
 			{
 				$host = SERIA_CDNHostname::createByHostname($hostname);
 				$b = new SERIA_WebBrowser();
-				$b->navigateTo('http://'.$host->get('hostname').$url);
+				$b->navigateTo('http://'.$host->get('hostname').'/'.ltrim($url,'/').(!empty($_SERVER['QUERY_STRING']) ? '?'.$_SERVER['QUERY_STRING'] : ''));
+
+
+
 				$headers = $b->fetchHeaders();
 				if($b->responseCode != 200)
 				{
@@ -79,10 +82,48 @@
 				header('X-Powered-By: SeriaCDN/1.0');
 				header('Cache-Control: max-age='.$ttl.', must-revalidate');
 				header('Age: 0');
-				
+
 //				header('Pragma: public');
 
-				SERIA_Template::override($headers['Content-Type'], file_get_contents('http://'.$host->get('hostname').$url));
+				$output = $b->fetchAll();
+
+
+/*
+				if(isset($headers['Content-Type'])) {
+
+					$ct = $headers['Content-Type'];
+					if(strpos($ct, ';')!==false) $ct = substr($ct, 0, strpos($ct, ";"));
+
+					switch($headers['Content-Type']) {
+						case 'text/html' :
+							$find = array();
+							$replace = array();
+
+							$find[] = 'http://'.$host->get('hostname').'/';
+							$replace[] = 'http://'.$_SERVER['HTTP_HOST'].'/';
+							$find[] = 'https://'.$host->get('hostname').'/';
+							$replace[] = 'https://'.$_SERVER['HTTP_HOST'].'/';
+							$find[] = 'http://'.$host->get('hostname').'/?';
+							$replace[] = 'http://'.$_SERVER['HTTP_HOST'].'/?';
+							$find[] = 'https://'.$host->get('hostname').'/?';
+							$replace[] = 'https://'.$_SERVER['HTTP_HOST'].'/?';
+							$find[] = 'http://'.$host->get('hostname').'&';
+							$replace[] = 'http://'.$_SERVER['HTTP_HOST'].'&';
+							$find[] = 'https://'.$host->get('hostname').'&';
+							$replace[] = 'https://'.$_SERVER['HTTP_HOST'].'&';
+
+							$find[] = '"http:\/\/'.$host->get('hostname').'"';
+							$replace[] = '"http:\/\/'.$_SERVER['HTTP_HOST'].'"';
+							$find[] = '\'https:\/\/'.$host->get('hostname').'\'';
+							$replace[] = '\'https:\/\/'.$_SERVER['HTTP_HOST'].'\'';
+
+							$output = str_replace($find, $replace, $output);
+							break;
+					}
+				}
+*/
+				SERIA_Template::override($headers['Content-Type'], $output);
+//				SERIA_Template::override($headers['Content-Type'], file_get_contents('http://'.$host->get('hostname').$url));
 
 				die();
 			}
