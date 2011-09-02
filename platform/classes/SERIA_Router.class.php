@@ -7,6 +7,8 @@
 	*/
 	class SERIA_Router
 	{
+		const INVALID_ROUTE = 'SERIA_Router::INVALID_ROUTE';
+
 		protected static $_instance = NULL;
 		protected $_routes = array();
 		protected $_routeMap = array();
