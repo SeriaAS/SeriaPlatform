@@ -4,7 +4,6 @@
 	*
 	*	It does not work trough the SERIA_Meta API.
 	*/
-
 	if(!defined('SERIA_MULTISITE_DOMAIN'))
 		throw new SERIA_Exception('SERIA_MULTISITE_DOMAIN not defined.');
 
@@ -78,13 +77,21 @@
 	}
 	else
 	{
-		define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['domain']);
+		if(!defined('SERIA_HTTP_ROOT'))
+			define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['domain']);
 		define('SERIA_FILES_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
 		define('SERIA_FILES_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
-		define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
-	        define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
 		define('SERIA_EMAIL_FROM', 'no-reply@'.$site['domain']);
 		define('SERIA_TIMEZONE', $site['timezone']);
 		define('SERIA_CURRENCY', $site['currency']);
 		define('SERIA_ERROR_EMAIL', $site['errorMail']);
+
+		if(file_exists(SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs')) {
+			define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
+		        define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/designs');
+		} else {
+			define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/sites/default_design');
+			define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/default_design');
+		}
+
 	}
