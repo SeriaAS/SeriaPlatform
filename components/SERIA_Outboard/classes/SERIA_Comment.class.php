@@ -18,6 +18,12 @@
 	{
 		const BEFORE_DELETE_HOOK = 'SERIA_Comment::beforeDeleteHook';
 		const AFTER_DELETE_HOOK = 'SERIA_Comment::afterDeleteHook';
+
+		/*
+		 * Hooks thrown by save:
+		 */
+		const COMMENT_SUBMIT_HOOK = 'SERIA_Comment::commentSubmitHook';
+		const COMMENT_CHANGED_HOOK = 'SERIA_Comment::commentChangedHook';
 		
 		public static function Meta($instance=NULL)
 		{
@@ -251,7 +257,7 @@
 			return $fl->current();
 		}
 
-		public function MetaBeforeDelete()
+		protected function MetaBeforeDelete()
 		{
 			SERIA_Base::db()->beginTransaction();
 			try {
@@ -283,8 +289,21 @@
 			}
 			return true;
 		}
-		public function MetaAfterDelete()
+		protected function MetaAfterDelete()
 		{
 			SERIA_Hooks::dispatch(self::AFTER_DELETE_HOOK, $this);
+		}
+		protected $metaObjectIsNew = false;
+		protected function MetaAfterCreate()
+		{
+			$this->metaObjectIsNew = true;
+		}
+		protected function MetaAfterSave()
+		{
+			if ($this->metaObjectIsNew)
+				SERIA_Hooks::dispatch(self::COMMENT_SUBMIT_HOOK, $this);
+			else
+				SERIA_Hooks::dispatch(self::COMMENT_CHANGED_HOOK, $this);
+			$this->metaObjectIsNew = false;
 		}
 	}
