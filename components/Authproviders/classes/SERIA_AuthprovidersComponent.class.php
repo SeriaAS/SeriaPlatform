@@ -111,6 +111,10 @@
 				if (class_exists('DebugLogging'))
 					DebugLogging::printBacktrace();
 			}
+
+			/* Logout logic is sometimes attached to this hook, so prevent caching! */
+			SERIA_ProxyServer::noCache();
+
 			if (($provider =& $this->loggedInByProvider())) {
 				if (method_exists($provider, 'beforeLogout'))
 					$provider->beforeLogout();
@@ -119,6 +123,10 @@
 		public function logout($user)
 		{
 			SERIA_Base::debug('Final logout event seen');
+
+			/* Logout logic is sometimes attached to this hook, so prevent caching! */
+			SERIA_ProxyServer::noCache();
+
 			/*
 			 * Publish domain logout..
 			 */
