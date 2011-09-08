@@ -489,7 +489,7 @@ $trace
 		{
 			static $user = false;
 
-			if ($setUser !== NULL) {
+			if ($setUser !== false) {
 				/*
 				 * This is an action. It should never be cached!
 				 */
