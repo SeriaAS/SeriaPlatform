@@ -33,7 +33,7 @@ class SERIA_UserAuthenticationProviders
 		else
 			return $this->getProviderRefObjectCompat($authproviderClass, $unique);
 	}
-	protected function createProviderRefObject($authproviderClass)
+	protected function createProviderRefObject($authproviderClass, $unique)
 	{
 		$obj = new SERIA_UserAuthenticationProvider();
 		$obj->set('user', $this->user);
