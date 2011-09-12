@@ -63,8 +63,12 @@ abstract class SERIA_GenericAuthprovider implements SERIA_IAuthprovider
 		foreach ($mappings['defaults'] as $name => $value)
 			$namespace[$name] = $value;
 		foreach ($mappings['load'] as $store => $load) {
-			if (isset($attributes[$load[0]]) && is_array($attributes[$load[0]]) && isset($attributes[$load[0]][$load[1]]))
-				$namespace[$store] = $attributes[$load[0]][$load[1]]; 
+			if (is_array($load) && !is_string($load)) {
+				if (isset($attributes[$load[0]]) && is_array($attributes[$load[0]]) && isset($attributes[$load[0]][$load[1]]))
+					$namespace[$store] = $attributes[$load[0]][$load[1]];
+			} else if (isset($attributes[$load])) {
+				$namespace[$store] = $attributes[$load];
+			}
 		}
 		foreach ($mappings['combinations'] as $store => $load) {
 			$value = '';
