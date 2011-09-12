@@ -133,8 +133,10 @@
 			$this->setLoginDiscoveryCookie('logout');
 			if (($provider =& $this->loggedInByProvider())) {
 				SERIA_Base::debug('Authproviders: Logout event will be sent to provider '.$provider->getName());
-				$provider->logout();
+				$action = $provider->logout();
 				$this->loggedInByProvider(null);
+				if ($action instanceof SERIA_Url)
+					SERIA_Base::redirectTo($action->__toString());
 			}
 		}
 		public function successfulLogin($user)
