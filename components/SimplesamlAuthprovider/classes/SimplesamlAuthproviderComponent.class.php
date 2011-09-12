@@ -16,7 +16,6 @@ class SimplesamlAuthproviderComponent extends SERIA_Component
 		{
 			SERIA_Authproviders::addProviderClass('FeideAuthprovider');
 			SERIA_Authproviders::addProviderClass('OpenidGoogleAuthprovider');
-			SERIA_Authproviders::addProviderClass('FacebookAuthprovider');
 			SERIA_Authproviders::addProviderClass('TwitterAuthprovider');
 		}
 
