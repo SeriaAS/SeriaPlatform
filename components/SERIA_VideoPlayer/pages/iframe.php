@@ -78,15 +78,51 @@
 			};
 		</script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/platform/js/SERIA.js' type='text/javascript'></script>
+		<script src='<?php echo SERIA_HTTP_ROOT; ?>/js/easyXDM.min.js' type='text/javascript'></script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/flash_detect.js' type='text/javascript' language='javascript'></script>
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
 		<script src='http://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
+			// VIDEO CONTROLS
+			var i = 0;
+			var playWhenReady;
+			function play()
+			{
+				if(typeof v !== "undefined") {
+					// Using HTML5 Video
+					v.load();
+					playWhenReady = function() {
+						if(i==10) {
+							i=0;
+							v.load();
+						}
+						if(v.readyState > 1) {
+							v.play();
+						} else {
+							i++;
+							setTimeout(playWhenReady, 800);
+						}
+					};
+					setTimeout(playWhenReady, 800);
+				} else {
+					// Using Flash based video
+				}
+			}
 
+			function fullscreen() {
+				if(typeof v !== "undefined") {
+					// Using HTML5
+					v.webkitEnterFullscreen();
+				} else {
+					// Using flash
+				}
+			}
+		</script>
+		<script type='text/javascript'>
 jQuery(function(){
 	if(!FlashDetect.installed) {
 		// detect if html5 video is supported
-		var v = document.createElement('video');
+		v = document.createElement('video');
 		if(!v.canPlayType)
 		{
 			jQuery('#fallback').html("<?php echo _t("Please install Adobe Flash player or upgrade to a newer browser that supports HTML 5 video"); ?>");
@@ -218,7 +254,8 @@ jQuery(function(){
 				{
 					s = document.createElement('source');
 					s.src = window.videoData.sources[i].src;
-					v.appendChild(s);
+					if(s.src.indexOf('rtmp')===-1)
+						v.appendChild(s);
 				}
 				jQuery('#fallback').replaceWith(v);
 			}
@@ -261,5 +298,17 @@ jQuery(function(){
 			<param name='allowFullscreen' value='true'></param>
 		</object>
 		<!--<![endif]-->
+<?php
+		// XDM is used to allow an embedding site to run certain javascript functions on the embedded iframe.
+		// 
+?>
+		<script type="text/javascript" language="javascript">
+			var socket = new easyXDM.Socket({
+				  onMessage: function(message, origin) {
+					window[message]();
+				}
+			});
+
+		</script>
 	</body>
 </html>

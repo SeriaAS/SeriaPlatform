@@ -35,6 +35,21 @@
 			if(trim($height, "%")==$height) $height .= 'px';
 			return "<iframe src='".$this->getIFrameUrl($width,$height,$options)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
 		}
+		public function outputXDM($width="100%", $height="100%", $options = NULL, $containerName=""){
+			return '
+				<script type="text/javascript" language="javascript">
+					var t = new easyXDM.Socket({
+					    remote: "'.$this->getIFrameUrl($width, $height, $options).'",
+					    container: document.getElementById("'.$containerName.'"),
+						props: {
+							style: {
+								width: "100%",
+								height: "100%"
+							}
+						}
+				});
+				</script>';
+		}
 
 		public function generateConfig()
 		{
