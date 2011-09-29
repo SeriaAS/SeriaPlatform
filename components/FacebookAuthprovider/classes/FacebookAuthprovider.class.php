@@ -82,7 +82,7 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 			$params['cancel'] = SERIA_HTTP_ROOT.'/seria/components/Authproviders/pages/providers.php';
 		if (!isset($params['submitCaption']))
 			$params['submitCaption'] = _t('Save');
-		if (isset($_POST['app_id']) && isset($_POST['api_key']) && isset($_POST['secret'])) {
+		if (isset($_POST['app_id']) && isset($_POST['secret'])) {
 			SERIA_Base::setParam('SimpleSAML_Facebook_app_id', $_POST['app_id']);
 			SERIA_Base::setParam('SimpleSAML_Facebook_secret', $_POST['secret']);
 			SERIA_Base::redirectTo($params['redirect']);
