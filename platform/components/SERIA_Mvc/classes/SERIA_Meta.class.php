@@ -1222,6 +1222,45 @@ DELETE THIS
 			return call_user_func(array($className, 'MetaCreatable'));
 		}
 
+		/**
+		 *
+		 * Get url to asset file.
+		 *
+		 * @param string $manifestName The name of the manifest (::NAME).
+		 * @param string $filePath Relative to the components assets/ directory.
+		 * @return SERIA_Url Url to asset.
+		 * @throws SERIA_Exception
+		 */
+		public static function assetUrl($manifestName, $filePath) {
+			$rootDir = SERIA_ROOT;
+			$manifestDir = dirname(SERIA_Manifests::getManifest($manifestName)->getFileName());
+			$rootLen = strlen($rootDir);
+			if ($rootDir[$rootLen - 1] == DIRECTORY_SEPARATOR) {
+				$rootLen--;
+				$rootDir = substr($rootDir, 0, $rootLen);
+			}
+			SERIA_Base::debug('SERIA_Meta::assetUrl: Root dir: '.$rootDir);
+			$pathFromRoot = substr($manifestDir, $rootLen);
+			SERIA_Base::debug('SERIA_Meta::assetUrl: Uncorrected path: '.$pathFromRoot);
+			if (substr($manifestDir, 0, $rootLen) != $rootDir || ($pathFromRoot && $pathFromRoot[0] != DIRECTORY_SEPARATOR)) {
+				$rootDir = realpath($rootDir);
+				$rootLen = strlen($rootDir);
+				if ($rootDir[$rootLen - 1] == DIRECTORY_SEPARATOR) {
+					$rootLen--;
+					$rootDir = substr($rootDir, 0, $rootLen);
+				}
+				SERIA_Base::debug('SERIA_Meta::assetUrl: Corrected root dir: '.$rootDir);
+				$pathFromRoot = substr($manifestDir, $rootLen);
+				SERIA_Base::debug('SERIA_Meta::assetUrl: Corrected path: '.$pathFromRoot);
+			}
+			if (substr($manifestDir, 0, $rootLen) != $rootDir || ($pathFromRoot && $pathFromRoot[0] != DIRECTORY_SEPARATOR))
+				throw new SERIA_Exception('The asset resource can not be found in the http-root because the component '.$manifestName.' is outside SERIA_ROOT.');
+			if (!$pathFromRoot || $pathFromRoot[0] != '/')
+				$pathFromRoot = '/'.$pathFromRoot;
+			$url = SERIA_HTTP_ROOT.$pathFromRoot.'/assets/'.$filePath;
+			return new SERIA_Url($url);
+		}
+		
 		public static function manifestUrl($manifestName, $page=NULL, array $params=NULL)
 		{
 			$url = new SERIA_Url(SERIA_HTTP_ROOT."/");
