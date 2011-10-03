@@ -41,4 +41,52 @@ class SERIA_UserAuthenticationProvider extends SERIA_MetaObject
 		}
 		parent::set($name, $value);
 	}
+
+	/**
+	 *
+	 * A record is orphan if the user has been deleted.
+	 * @return boolean
+	 */
+	public function isOrphan()
+	{
+		try {
+			$user = $this->get('user');
+		} catch (SERIA_NotFoundException $e) {
+			return true;
+		} catch (SERIA_Exception $e) {
+			if ($e->getCode() == SERIA_Exception::NOT_FOUND)
+				return true;
+			else
+				throw $e;
+		}
+		return false;
+	}
+
+	/**
+	 *
+	 * Query for provider by authprovider and unique user id.
+	 * @param string $authproviderClass
+	 * @param string $unique
+	 * @return SERIA_UserAuthenticationProvider
+	 */
+	public static function getProvider($authproviderClass, $unique)
+	{
+		$query = new SERIA_MetaQuery('SERIA_UserAuthenticationProvider', 'authprovider = :authprovider AND id_unique = :id_unique', array('authprovider' => $authproviderClass, 'id_unique' => $unique));
+		$obj = $query->current();
+		$orphans = array();
+		while ($obj && $obj->isOrphan()) {
+			$orphans[] = $obj;
+			$obj = $query->next();
+		}
+		foreach ($orphans as $orphan)
+			SERIA_Meta::delete($orphan);
+		if ($obj) {
+			if ($query->next()) {
+				if (defined('SERIA_DEBUG') && SERIA_DEBUG)
+					throw new SERIA_Exception('Duplicate match for unique id ('.$authproviderClass.'::'.$unique.')');
+			}
+			return $obj;
+		} else
+			return null;
+	}
 }
