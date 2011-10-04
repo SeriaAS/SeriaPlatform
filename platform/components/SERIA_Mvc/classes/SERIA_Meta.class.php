@@ -1255,6 +1255,11 @@ DELETE THIS
 			}
 			if (substr($manifestDir, 0, $rootLen) != $rootDir || ($pathFromRoot && $pathFromRoot[0] != DIRECTORY_SEPARATOR))
 				throw new SERIA_Exception('The asset resource can not be found in the http-root because the component '.$manifestName.' is outside SERIA_ROOT.');
+
+			/* Windows uses backslash for local filesystem. They have to be replaced with / for web */
+			if (DIRECTORY_SEPARATOR != '/')
+				$pathFromRoot = str_replace(DIRECTORY_SEPARATOR, '/', $pathFromRoot);
+
 			if (!$pathFromRoot || $pathFromRoot[0] != '/')
 				$pathFromRoot = '/'.$pathFromRoot;
 			$url = SERIA_HTTP_ROOT.$pathFromRoot.'/assets/'.$filePath;
