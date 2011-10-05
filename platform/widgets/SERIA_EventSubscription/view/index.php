@@ -108,8 +108,9 @@ if (!isset($_GET['event_subscribed']) || $_GET['event_subscribed'] != $this->get
 
 		$id = 'subscr_f_ids'.$myViewNumber;
 
-		$url = $this->get('redirect_url');
-		$url = http_build_url($url, array('fragment' => $id));
+		$url = new SERIA_Url($this->get('redirect_url'));
+		$url->setFragment($id);
+		$url = $url->__toString();
 		?>
 		<script type='text/javascript'>
 			<!--
