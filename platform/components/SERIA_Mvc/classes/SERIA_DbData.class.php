@@ -126,8 +126,12 @@
 		// returns the row that is being pointed to at this moment
 		function current()
 		{
-			if($this->rs===NULL || $this->offset < $this->rsOffset || $this->offset >= ($this->rsOffset + self::QUERY_ROW_LIMIT))
+			if($this->rs===NULL)
 				$this->loadData($this->offset);
+			else if ($this->start == 0 && $this->length == NULL) {
+				if ($this->offset < $this->rsOffset || $this->offset >= ($this->rsOffset + self::QUERY_ROW_LIMIT))
+					$this->loadData($this->offset);
+			}
 			if(!isset($this->rs[$this->offset - $this->rsOffset]))
 				return false;
 			return $this->rs[$this->offset - $this->rsOffset];
