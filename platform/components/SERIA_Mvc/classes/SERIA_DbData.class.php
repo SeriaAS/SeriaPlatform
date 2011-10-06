@@ -1,7 +1,15 @@
 <?php
 	class SERIA_DbData extends SERIA_Data {
-		protected $rs, $fields, $table, $primaryKey, $shardBy, $shardByValues=array();
-		protected $offset;
+		/*
+		 * Limit the max number of rows that can be retrieved in one single query.
+		 */
+		const QUERY_ROW_LIMIT = 5000;
+
+		protected $fields, $table, $primaryKey, $shardBy, $shardByValues=array();
+		protected $rs = NULL;
+		protected $rsOffset = NULL; /* The base index of the rs table */
+		protected $offset = 0;
+
 		public function __construct($table, $primaryKey, $shardBy=NULL)
 		{
 			if(empty($primaryKey)) throw new Exception('Primary key is required param number two');
@@ -71,6 +79,8 @@
 		public function where($where, $args = NULL, $shardByValue = NULL)
 		{
 			$this->rs = NULL;
+			$this->rsOffset = NULL;
+			$this->offset = 0;
 			parent::where($where, $args);
 			if($shardByValue!==NULL)
 				$this->shardByValues[] = $shardByValue;
@@ -84,31 +94,43 @@
 				$sql .= ' WHERE '.$this->where;
 			if($this->orderBy !== NULL)
 				$sql .= ' ORDER BY '.$this->orderBy;
-			if($this->start === NULL && $this->length !== NULL)
+			if($this->start == 0 && $this->length !== NULL)
 			{
 				$sql .= ' LIMIT '.$this->length;
 			}
-			else if($this->start !== NULL && $this->length !== NULL)
+			else if($this->start != 0 && $this->length !== NULL)
 			{
 				$sql .= ' LIMIT '.$this->start.",".$this->length;
 			}
 			return $sql;
 		}
-		private function refreshQuery()
+		private function loadData($loadOffset)
 		{
+			if ($this->start == 0 && $this->length === NULL) {
+				$this->start = $loadOffset;
+				$this->length = self::QUERY_ROW_LIMIT;
+				$setLimitToNull = true;
+			} else {
+				$setLimitToNull = false;
+				$loadOffset = 0;
+			}
 			$this->rs = SERIA_Base::db()->query($this->buildSQL(), $this->args)->fetchAll(PDO::FETCH_ASSOC);
-			$this->offset = 0;
+			$this->rsOffset = $loadOffset;
+			if ($setLimitToNull) {
+				$this->start = 0;
+				$this->length = NULL;
+			}
 		}
 
 		// ITERATOR
 		// returns the row that is being pointed to at this moment
 		function current()
 		{
-			if($this->rs===NULL)
-				$this->refreshQuery();
-			if(!isset($this->rs[$this->offset]))
+			if($this->rs===NULL || $this->offset < $this->rsOffset || $this->offset >= ($this->rsOffset + self::QUERY_ROW_LIMIT))
+				$this->loadData($this->offset);
+			if(!isset($this->rs[$this->offset - $this->rsOffset]))
 				return false;
-			return $this->rs[$this->offset];
+			return $this->rs[$this->offset - $this->rsOffset];
 		}
 
 		// returns offset in recordset 0, 1, 2 etc
