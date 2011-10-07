@@ -80,6 +80,27 @@ class SimplesamlSystem
 		SERIA_Base::debug('SimpleSAML: '.$type.': '.$msg);
 	}
 
+	public static function simplesamlUnhandledError($error)
+	{
+		$state = false;
+		$url = new SERIA_Url(SERIA_HTTP_ROOT.'/seria/components/SimplesamlAuthprovider/pages/loginFailed.php');
+		try {
+			$stateId = $_SERVER['X_SERIA_PLATFORM_STATE_ID'];
+			$state = new SERIA_AuthenticationState($stateId);
+			$url = $state->stampUrl($url);
+		} catch (SERIA_Exception $e) {
+		}
+		$code = $error->getErrorCode();
+		if (is_array($code))
+			$code = array_shift($code);
+		if ($code)
+			$url->setParam('errorCode', $code);
+		if (!$state && SERIA_DEBUG) {
+			throw new SERIA_Exception('Error at '.$error->getFile().':'.$error->getLine().': '.$code);
+		}
+		SERIA_Base::redirectTo($url->__toString());
+	}
+
 	public static function mainConfigurationLoaded($config)
 	{
 		SERIA_Base::debug('Main SimpleSAML configuration was loaded.');
@@ -97,8 +118,10 @@ class SimplesamlSystem
 		SERIA_Hooks::listen('simplesaml.metadata', array('SimplesamlSystem', 'getMetadata'));
 		SERIA_Hooks::listen('simplesaml_configuration_loaded', array('SimplesamlSystem', 'mainConfigurationLoaded'));
 		SERIA_Base::addFramework('simplesaml');
+		SERIA_Hooks::listen(SimplesamlLibrary::UNHANDLED_ERROR_HOOK, array('SimplesamlSystem', 'simplesamlUnhandledError'));
 		SimplesamlLibrary::setDispatchHookCallback(array('SERIA_Hooks', 'dispatch'));
 		SimplesamlLibrary::setLogMessageCallback(array('SimplesamlSystem', 'log'));
+		SimplesamlLibrary::captureUnhandledError();
 	}
 	public static function autosaveSession()
 	{
