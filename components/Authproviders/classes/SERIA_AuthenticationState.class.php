@@ -17,7 +17,7 @@
 class SERIA_AuthenticationState
 {
 	protected $id;
-	protected $abort;
+	protected $abort = false;
 	protected $data;
 	protected $created;
 
@@ -230,21 +230,36 @@ class SERIA_AuthenticationState
 	 * Creates a state tracking object (based on session and GET-parameters). Loads from
 	 * session if the parameters are found, otherwise creates a new state.
 	 */
-	public function __construct()
+	public function __construct($stateId=null)
 	{
-		if (isset($_GET['auth_id']) && isset($_GET['auth_abort'])) {
-			$this->id = $_GET['auth_id'];
-			$this->abort = $_GET['auth_abort'];
-			$this->data = self::getState($this->id);
-			if ($this->data !== null) {
-				$this->created = false;
-				return;
+		if ($stateId === null) {
+			if (isset($_GET['auth_id']) && isset($_GET['auth_abort'])) {
+				$this->id = $_GET['auth_id'];
+				$this->abort = $_GET['auth_abort'];
+				$this->data = self::getState($this->id);
+				if ($this->data !== null) {
+					$this->created = false;
+					return;
+				}
 			}
+		} else {
+			$this->id = $stateId;
+			$this->data = self::getState($this->id);
+			if ($this->data === null)
+				throw new SERIA_Exception('State was not found', SERIA_Exception::NOT_FOUND);
+			if (isset($this->data['abort']))
+				$this->abort = $this->data['abort'];
+			$this->created = false;
+			$_GET['auth_id'] = $this->id;
+			$_GET['auth_abort'] = $this->abort;
+			return;
 		}
 		$this->id = self::createState();
-		$this->abort = SERIA_HTTP_ROOT;
 		$this->data = array();
-		$this->save();
+		if (!$this->abort)
+			$this->set('abort', SERIA_HTTP_ROOT); /* Implicit save */
+		else
+			$this->set('abort', $this->abort); /* Implicit save */
 		$this->created = true;
 		/*
 		 * Cheating..
