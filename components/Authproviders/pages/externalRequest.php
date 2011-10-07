@@ -47,7 +47,7 @@ if (isset($_GET['interactive']) && $_GET['interactive'] == 'no') {
 		$state->set('continue', SERIA_Url::current()->__toString());
 		$state->set('abort', SERIA_Url::current()->setParam('failure', 'error')->__toString());
 
-		SERIA_Base::redirectTo($action->__toString());
+		SERIA_Base::redirectTo($state->stampUrl($action->__toString()));
 		die();
 	}
 }
