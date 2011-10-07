@@ -14,6 +14,14 @@ if (SERIA_Base::user() !== false)
 	SERIA_Base::user(NULL);
 
 /*
+ * If the login failed.
+ */
+if (isset($_GET['failure']) && $_GET['failure']) {
+	$state->terminate('abort');
+	die();
+}
+
+/*
  * If we have lost the state of this login.
  */
 if (!$state->exists('guestLogin')) {

@@ -8,6 +8,11 @@ if (!isset($_GET['token']))
 	throw new SERIA_Exception('No external login token presented.');
 if (!isset($_GET['from']))
 	throw new SERIA_Exception('No external login return url presented.');
+if (isset($_GET['failure']) && $_GET['failure']) {
+	$url = new SERIA_Url($_GET['from']);
+	$url->setParam('failure', $_GET['failure']);
+	SERIA_Base::redirectTo($url->__toString());
+}
 
 $component = SERIA_Components::getComponent('seria_authproviders');
 
