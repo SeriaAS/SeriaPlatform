@@ -22,8 +22,15 @@ SERIA_Template::title('Invoking Simplesaml system');
 
 $pathcomp = explode('/', substr($_SERVER['PATH_INFO'], 1));
 
-if (!$pathcomp || !($provider = array_shift($pathcomp)) || !($providerId = array_shift($pathcomp)))
-	throw new SERIA_Exception('Expected a provider-class and provider-id as part of the path.');
+$cleanGET = $_GET;
+
+if (!$pathcomp || !($provider = array_shift($pathcomp)) || !($providerId = array_shift($pathcomp)) || !($stateId = array_shift($pathcomp)))
+	throw new SERIA_Exception('Expected a provider-class, provider-id and state-id as part of the path.');
+try {
+	$state = new SERIA_AuthenticationState($stateId);
+	$_SERVER['X_SERIA_PLATFORM_STATE_ID'] = $state->get('id');
+} catch (SERIA_Exception $e) {
+}
 
 call_user_func(array($provider, 'loadProviders'));
 
@@ -78,6 +85,7 @@ $pi = pathinfo($filename);
 switch ($pi['extension']) {
 	case 'php':
 		SimplesamlSystem::autosaveSession();
+		$_GET = $cleanGET; /* Remove authentication state params */
 		require($filename);
 		break;
 	case 'css':

@@ -11,6 +11,11 @@ class OpenidGoogleAuthprovider extends SimplesamlAuthprovider
 
 	public function getParameters()
 	{
+		if (SERIA_AuthenticationState::available()) {
+			$state = new SERIA_AuthenticationState();
+			$stateId = $state->get('id');
+		} else
+			$stateId = 'null';
 		return array(
 			'authsources' => array(
 				'openid-google' => array(
@@ -24,7 +29,7 @@ class OpenidGoogleAuthprovider extends SimplesamlAuthprovider
 				),
 			),
 			'config' => array(
-				'baseurlpath' => 'seria/components/SimplesamlAuthprovider/simplesamlphp.php/OpenidGoogleAuthprovider/'.$this->getProviderId().'/'
+				'baseurlpath' => 'seria/components/SimplesamlAuthprovider/simplesamlphp.php/OpenidGoogleAuthprovider/'.$this->getProviderId().'/'.$stateId.'/'
 			),
 			'authsource' => 'openid-google',
 			'attributes' => array(
