@@ -2,6 +2,8 @@
 
 class SimplesamlLibrary
 {
+	const UNHANDLED_ERROR_HOOK = 'SimplesamlLibrary::UNHANDLED_ERROR_HOOK';
+
 	protected static $hookCallback = false;
 	protected static $debugCallback = false;
 
@@ -34,6 +36,17 @@ class SimplesamlLibrary
 			return true;
 		} else
 			return false;
+	}
+
+	/**
+	 *
+	 * If you call this method the SimpleSAML_Error_Error unhandled error will
+	 * be captured here and submitted as a Seria Platform hook
+	 * SimplesamlLibrary::UNHANDLED_ERROR_HOOK.
+	 */
+	public static function captureUnhandledError()
+	{
+		require(dirname(__FILE__).'/SimpleSAML_Error_Error.class.php');
 	}
 
 	public static function includePath()
