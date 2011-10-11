@@ -87,6 +87,15 @@ class SimplesamlSystem
 		try {
 			$stateId = $_SERVER['X_SERIA_PLATFORM_STATE_ID'];
 			$state = new SERIA_AuthenticationState($stateId);
+			if ($error instanceof Exception) {
+				/*
+				 * This will be handled normally as an unhandled exception in Seria Platform.
+				 * The trick is to create the instance of the SERIA_AuthenticationState object
+				 * first, because it will be ::available() after that.
+				 */
+				SERIA_Base::exceptionHandler($error);
+				die();
+			}
 			$url = $state->stampUrl($url);
 		} catch (SERIA_Exception $e) {
 		}
