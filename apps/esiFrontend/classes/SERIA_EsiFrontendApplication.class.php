@@ -227,9 +227,13 @@
 	
 					if (!$skipCache) {
 						$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString);
-						if ($b->responseCode == 200)
-							$this->putCache($cacheKey, $currentCache, $cache);
-						else
+						if ($b->responseCode == 200) {
+							$cacheTime = 90000;
+							if (defined('ESIFRONTEND_MAIN_CONTENT_TTL'))
+								$cacheTime = ESIFRONTEND_MAIN_CONTENT_TTL;
+							if ($cacheTime > 0)
+								$this->putCache($cacheKey, $currentCache, $cache, $cacheTime);
+						} else
 							$this->putCache($cacheKey, $currentCache, $cache, 60); /* Cache 1 minute on failure */
 					}
 				}
