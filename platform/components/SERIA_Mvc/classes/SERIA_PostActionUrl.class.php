@@ -80,10 +80,17 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 	 * @param $refresh boolean Whether the page should be refreshed after the action. Default true.
 	 * @param $cancelBubble boolean Cancel the bubble (for usage with onclick attributes). Default true.
 	 * @param $returnFalse boolean Return false (for usage with onclick attributes). Default true.
+	 * @param $errorHandler string Javascript function, default 'alert'.
+	 * @param $successHandler string Javascript function, default no handling.
 	 * @return string Javascript code
 	 */
-	public function onclickCode($refresh=true, $cancelBubble=true, $returnFalse=true)
+	public function onclickCode($refresh=true, $cancelBubble=true, $returnFalse=true, $errorHandler='alert', $successHandler=null)
 	{
+		$nullHandler = 'function () {}';
+		if (!$errorHandler)
+			$errorHandler = $nullHandler;
+		if (!$successHandler)
+			$successHandler = $nullHandler;
 		SERIA_ScriptLoader::loadScript('jQuery');
 		$data = array(
 			$this->_name => $this->_data,
@@ -104,7 +111,7 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		$js = '';
 		if ($cancelBubble)
 			$js .= ' var event = arguments[0] || window.event; event.cancelBubble = true; if (event.stopPropagation) event.stopPropagation();';
-		$js .= ' var returnmsg = jQuery.ajax('.$settings.'); if (returnmsg.status == 200) { returnmsg = returnmsg.responseText; if (returnmsg != "OK") alert(returnmsg); } else { alert("The HTTP request for this action failed!"); } ';
+		$js .= ' var returnmsg = jQuery.ajax('.$settings.'); if (returnmsg.status == 200) { returnmsg = returnmsg.responseText; if (returnmsg == "OK") { ('.$successHandler.')(); } else { ('.$errorHandler.')(returnmsg); } } else { ('.$errorHandler.')("The HTTP request for this action failed!"); } ';
 		if ($refresh)
 			$js .= ' location.href = '.SERIA_Lib::toJSON(SERIA_Url::current()->__toString()).';';
 		if ($returnFalse)
