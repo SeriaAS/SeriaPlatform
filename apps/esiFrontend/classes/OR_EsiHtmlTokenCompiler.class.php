@@ -14,6 +14,7 @@
 
 			$cacheKey = 'ESI-include->'.$params['src'];
 			if (($code = $cache->get($cacheKey))) {
+				$code = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($code);
 				return 'echo '.var_export($code, true).";\n";
 			}
 
@@ -27,7 +28,10 @@
 			$code .= 'foreach ($datas as $data) {'."\n";
 			$code .= '	if (!$data["data"])'."\n";
 			$code .= '		$data["data"] = "Could not fetch data";'."\n";
-			$code .= '	$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], 300);'."\n";
+			$code .= '	if (!sizeof($_POST)) {';
+			$code .= '		$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], 300);'."\n";
+			$code .= '	}';
+			$code .= '	$data["data"] = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data["data"]);';
 			$code .= '	$obReplace["%WEB_BROWSER_".$c."%"] = $data["data"];'."\n";
 
 
