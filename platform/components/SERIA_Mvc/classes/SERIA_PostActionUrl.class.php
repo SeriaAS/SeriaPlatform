@@ -147,6 +147,21 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		return $this->type;
 	}
 
+	/*
+	 * Works around bugs in SERIA_Template.
+	 */
+	protected static function overrideContent($contentType, $content)
+	{
+		if (!SERIA_Template::$disabled)
+			SERIA_Template::override($contentType, $content);
+		else {
+			header('Content-Type: '.$contentType);
+			while (ob_end_clean());
+			die($content);
+		}
+		die();
+	}
+
 	/**
 	 *
 	 * This function automatically redirects the user or returns the status
@@ -160,11 +175,11 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		$this->debug_actionReturn = true;
 		if ($this->type() == 'ajax') {
 			if ($this->success)
-				SERIA_Template::override('text/plain', 'OK');
+				self::overrideContent('text/plain', 'OK');
 			else if ($this->error)
-				SERIA_Template::override('text/plain', $this->error);
+				self::overrideContent('text/plain', $this->error);
 			else
-				SERIA_Template::override('text/plain', _t('The action failed with no specified reason!'));
+				self::overrideContent('text/plain', _t('The action failed with no specified reason!'));
 			die();
 		} else {
 			if ($url === null)
