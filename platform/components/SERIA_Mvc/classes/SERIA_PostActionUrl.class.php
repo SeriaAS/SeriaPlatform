@@ -76,6 +76,24 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 
 	/**
 	 *
+	 * Returns an array ( 'url' => $url, 'data' => array(post data...)).
+	 */
+	public function getAjaxCallData()
+	{
+		$data = array(
+			$this->_name => $this->_data,
+			'type' => 'ajax'
+		);
+		if ($this->_state)
+			$data[$this->_name.'-s'] = serialize($this->_state);
+		return array(
+			'url' => SERIA_Url::current()->__toString(),
+			'data' => $data
+		);
+	}
+
+	/**
+	 *
 	 * Returns an ajax-post code for the onclick attribute. (Not encoded)
 	 * @param $refresh boolean Whether the page should be refreshed after the action. Default true.
 	 * @param $cancelBubble boolean Cancel the bubble (for usage with onclick attributes). Default true.
