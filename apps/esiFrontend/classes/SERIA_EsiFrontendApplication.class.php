@@ -135,8 +135,7 @@
 
 				if ($b->responseHeaders['Location']) {
 					$redirectTo = str_replace(ESIFRONTEND_BACKEND_HTTPROOT, 'http://'.$_SERVER['HTTP_HOST'], $b->responseHeaders['Location']);
-					header("Location: ".$redirectTo);
-					die();
+					SERIA_Base::redirectTo($redirectTo);
 				}
 
 
