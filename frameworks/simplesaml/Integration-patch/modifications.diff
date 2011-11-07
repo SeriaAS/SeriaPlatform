@@ -1,24 +1,33 @@
-diff -ru -x .svn simplesamlphp-1.5.1.orig/config/authsources.php simplesamlphp-1.5.1/config/authsources.php
---- simplesamlphp-1.5.1.orig/config/authsources.php	2010-01-08 11:38:44.000000000 +0100
-+++ simplesamlphp-1.5.1/config/authsources.php	2010-04-28 13:37:50.000000000 +0200
+diff -ru ../../../../simplesamlphp-1.5.1/config/authsources.php simplesamlphp-1.5.1/config/authsources.php
+--- ../../../../simplesamlphp-1.5.1/config/authsources.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/config/authsources.php	2011-10-07 10:15:44.000000000 +0200
 @@ -226,3 +226,9 @@
  	*/
  
  );
 +
-+$additions = SERIA_Hooks::dispatch('simplesaml.authsources');
++$additions = SimplesamlLibrary::dispatchHook('simplesaml.authsources');
 +foreach ($additions as $add) {
 +	foreach ($add as $name => $params)
 +		$config[$name] = $params;
 +}
-diff -ru -x .svn simplesamlphp-1.5.1.orig/config/config.php simplesamlphp-1.5.1/config/config.php
---- simplesamlphp-1.5.1.orig/config/config.php	2010-01-08 11:38:44.000000000 +0100
-+++ simplesamlphp-1.5.1/config/config.php	2010-04-28 13:37:50.000000000 +0200
+diff -ru ../../../../simplesamlphp-1.5.1/config/config.php simplesamlphp-1.5.1/config/config.php
+--- ../../../../simplesamlphp-1.5.1/config/config.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/config/config.php	2011-10-07 10:15:44.000000000 +0200
+@@ -43,7 +43,7 @@
+ 	 * This password will give access to the installation page of simpleSAMLphp with
+ 	 * metadata listing and diagnostics pages.
+ 	 */
+-	'auth.adminpassword'		=> '123',
++	'auth.adminpassword'		=> sha1(mt_rand().mt_rand().mt_rand()).mt_rand(),
+ 	'admin.protectindexpage'	=> false,
+ 	'admin.protectmetadata'		=> false,
+ 
 @@ -459,4 +459,10 @@
  );
  
  
-+$additions = SERIA_Hooks::dispatch('simplesaml.config');
++$additions = SimplesamlLibrary::dispatchHook('simplesaml.config');
 +foreach ($additions as $add) {
 +	foreach ($add as $name => $params)
 +		$config[$name] = $params;
@@ -26,24 +35,24 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/config/config.php simplesamlphp-1.5.1/
 +
  ?>
 \ No newline at end of file
-diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php
---- simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php	2009-04-30 08:25:58.000000000 +0200
-+++ simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php	2010-04-28 13:37:50.000000000 +0200
+diff -ru ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php
+--- ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/OpenID/Consumer.php	2011-10-07 10:15:45.000000000 +0200
 @@ -322,13 +322,17 @@
          // fails in a fatal way, the stale flag will cause the manager
          // to be cleaned up next time discovery is attempted.
  
-+        SERIA_Base::debug('Tracing (Consumer)->begin');
++        SimpleSAML_Logger::debug('Tracing (Consumer)->begin');
          $m = $disco->getManager();
          $loader = new Auth_Yadis_ManagerLoader();
  
          if ($m) {
-+        	SERIA_Base::debug('Got Yadis mgr');
++        	SimpleSAML_Logger::debug('Got Yadis mgr');
              if ($m->stale) {
-+            	SERIA_Base::debug('Stale mgr');
++            	SimpleSAML_Logger::debug('Stale mgr');
                  $disco->destroyManager();
              } else {
-+            	SERIA_Base::debug('Taking mgr');
++            	SimpleSAML_Logger::debug('Taking mgr');
                  $m->stale = true;
                  $disco->session->set($disco->session_key,
                                       serialize($loader->toSession($m)));
@@ -51,46 +60,461 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/Auth/OpenID/Consumer.php simplesam
          // Reset the 'stale' attribute of the manager.
          $m =& $disco->getManager();
          if ($m) {
-+        	SERIA_Base::debug('Unsetting mgr stale');
++        	SimpleSAML_Logger::debug('Unsetting mgr stale');
              $m->stale = false;
              $disco->session->set($disco->session_key,
                                   serialize($loader->toSession($m)));
          }
  
          if ($endpoint === null) {
-+        	SERIA_Base::debug('Got no endpoint');
++        	SimpleSAML_Logger::debug('Got no endpoint');
              return null;
          } else {
-+        	SERIA_Base::debug('Got an endpoint, starting without discovery.');
++        	SimpleSAML_Logger::debug('Got an endpoint, starting without discovery.');
              return $this->beginWithoutDiscovery($endpoint,
                                                  $anonymous);
          }
-diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/Auth/Yadis/ParanoidHTTPFetcher.php simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php
---- simplesamlphp-1.5.1.orig/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2009-04-30 08:25:58.000000000 +0200
-+++ simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2010-04-28 13:37:50.000000000 +0200
-@@ -128,6 +128,9 @@
+@@ -422,13 +429,18 @@
+         }
+ 
+         $loader = new Auth_OpenID_ServiceEndpointLoader();
++        SimpleSAML_Logger::debug('Token key: '.serialize($this->_token_key));
+         $endpoint_data = $this->session->get($this->_token_key);
++        SimpleSAML_Logger::debug('Endpoint data: '.serialize($endpoint_data));
+         $endpoint =
+             $loader->fromSession($endpoint_data);
++        SimpleSAML_Logger::debug('Endpoint: '.serialize($endpoint));
+ 
+         $message = Auth_OpenID_Message::fromPostArgs($query);
++        SimpleSAML_Logger::debug('Message: '.serialize($message));
+         $response = $this->consumer->complete($message, $endpoint, 
+                                               $current_url);
++        SimpleSAML_Logger::debug('Response: '.serialize($response));
+         $this->session->del($this->_token_key);
+ 
+         if (in_array($response->status, array(Auth_OpenID_SUCCESS,
+@@ -665,8 +677,9 @@
+         $method = Auth_OpenID::arrayGet($mode_methods, $mode,
+                                         '_completeInvalid');
+ 
++        SimpleSAML_Logger::debug('OpenID consumer: Calling method: '.$method);
+         return call_user_func_array(array(&$this, $method),
+-                                    array($message, $endpoint, $return_to));
++                                    array($message, &$endpoint, $return_to));
+     }
+ 
+     /**
+@@ -728,6 +741,7 @@
+             return new Auth_OpenID_SetupNeededResponse(
+                 $endpoint, $user_setup_url);
+         } else {
++        	SimpleSAML_Logger::debug('_doIdRes('.serialize($message).', '.serialize($endpoint).', '.serialize($return_to).')');
+             return $this->_doIdRes($message, $endpoint, $return_to);
+         }
+     }
+@@ -772,32 +786,41 @@
+         }
+ 
+         // Verify discovery information:
++        SimpleSAML_Logger::debug('Verifying discovery information.');
+         $result = $this->_verifyDiscoveryResults($message, $endpoint);
+ 
+         if (Auth_OpenID::isFailure($result)) {
++        	SimpleSAML_Logger::debug('Verification failed.');
+             return $result;
+         }
+ 
+         $endpoint = $result;
+ 
++        SimpleSAML_Logger::debug('Verifying signature.');
+         $result = $this->_idResCheckSignature($message,
+                                               $endpoint->server_url);
+ 
+         if (Auth_OpenID::isFailure($result)) {
+-            return $result;
++        	SimpleSAML_Logger::debug('Verification failed.');
++        	return $result;
+         }
+ 
++        SimpleSAML_Logger::debug('Verifying nonce.');
+         $result = $this->_idResCheckNonce($message, $endpoint);
+ 
+         if (Auth_OpenID::isFailure($result)) {
+-            return $result;
++        	SimpleSAML_Logger::debug('Verification failed.');
++        	return $result;
+         }
+ 
++        SimpleSAML_Logger::debug('Checking (?).');
+         $signed_list_str = $message->getArg(Auth_OpenID_OPENID_NS, 'signed',
+                                             Auth_OpenID_NO_DEFAULT);
+         if (Auth_OpenID::isFailure($signed_list_str)) {
+-            return $signed_list_str;
++        	SimpleSAML_Logger::debug('Verification failed.');
++        	return $signed_list_str;
+         }
++        SimpleSAML_Logger::debug('Going to be successful.');
+         $signed_list = explode(',', $signed_list_str);
+ 
+         $signed_fields = Auth_OpenID::addPrefix($signed_list, "openid.");
+@@ -979,11 +1002,15 @@
+      */
+     function _verifyDiscoveryResults($message, $endpoint=null)
+     {
+-        if ($message->getOpenIDNamespace() == Auth_OpenID_OPENID2_NS) {
++    	SimpleSAML_Logger::debug('_verifyDiscoveryResults: message: '.serialize($message));
++    	SimpleSAML_Logger::debug('_verifyDiscoveryResults: endpoint: '.serialize($endpoint));
++    	if ($message->getOpenIDNamespace() == Auth_OpenID_OPENID2_NS) {
++    		SimpleSAML_Logger::debug('OpenID2 namespace..');
+             return $this->_verifyDiscoveryResultsOpenID2($message,
+                                                          $endpoint);
+         } else {
+-            return $this->_verifyDiscoveryResultsOpenID1($message,
++    		SimpleSAML_Logger::debug('OpenID1 namespace..');
++        	return $this->_verifyDiscoveryResultsOpenID1($message,
+                                                          $endpoint);
+         }
+     }
+@@ -1052,9 +1079,12 @@
+     {
+         // Every type URI that's in the to_match endpoint has to be
+         // present in the discovered endpoint.
++        SimpleSAML_Logger::debug('Verify single: endpoint: '.serialize($endpoint));
+         foreach ($to_match->type_uris as $type_uri) {
++        	SimpleSAML_Logger::debug('Checking for type uri: '.$type_uri);
+             if (!$endpoint->usesExtension($type_uri)) {
+-                return new Auth_OpenID_TypeURIMismatch($endpoint,
++        		SimpleSAML_Logger::debug('Missing type uri: '.$type_uri);
++            	return new Auth_OpenID_TypeURIMismatch($endpoint,
+                              "Required type ".$type_uri." not present");
+             }
+         }
+@@ -1066,14 +1096,16 @@
+             Auth_OpenID::urldefrag($to_match->claimed_id);
+ 
+         if ($defragged_claimed_id != $endpoint->claimed_id) {
+-            return new Auth_OpenID_FailureResponse($endpoint,
++        	SimpleSAML_Logger::debug('Defrag check failed.');
++        	return new Auth_OpenID_FailureResponse($endpoint,
+               sprintf('Claimed ID does not match (different subjects!), ' .
+                       'Expected %s, got %s', $defragged_claimed_id,
+                       $endpoint->claimed_id));
+         }
+ 
+         if ($to_match->getLocalID() != $endpoint->getLocalID()) {
+-            return new Auth_OpenID_FailureResponse($endpoint,
++        	SimpleSAML_Logger::debug('Local id check failed.');
++        	return new Auth_OpenID_FailureResponse($endpoint,
+               sprintf('local_id mismatch. Expected %s, got %s',
+                       $to_match->getLocalID(), $endpoint->getLocalID()));
+         }
+@@ -1084,16 +1116,20 @@
+         // discovered server_url is, because signature checking or
+         // check_auth should take care of that check for us.
+         if ($to_match->server_url === null) {
++        	SimpleSAML_Logger::debug('server_url is null');
+             if ($to_match->preferredNamespace() != Auth_OpenID_OPENID1_NS) {
+-                return new Auth_OpenID_FailureResponse($endpoint,
++        		SimpleSAML_Logger::debug('Namespace check failed.');
++            	return new Auth_OpenID_FailureResponse($endpoint,
+                              "Preferred namespace mismatch (bug)");
+             }
+         } else if ($to_match->server_url != $endpoint->server_url) {
+-            return new Auth_OpenID_FailureResponse($endpoint,
++        	SimpleSAML_Logger::debug('OP endpoint mismatch.');
++        	return new Auth_OpenID_FailureResponse($endpoint,
+               sprintf('OP Endpoint mismatch. Expected %s, got %s',
+                       $to_match->server_url, $endpoint->server_url));
+         }
+ 
++        SimpleSAML_Logger::debug('Verification returns null..');
+         return null;
+     }
+ 
+@@ -1106,12 +1142,15 @@
+         $to_match->type_uris = array(Auth_OpenID_TYPE_2_0);
+         $to_match->claimed_id = $message->getArg(Auth_OpenID_OPENID2_NS,
+                                                  'claimed_id');
++        SimpleSAML_Logger::debug('claimed_id: '.serialize($to_match->claimed_id));
+ 
+         $to_match->local_id = $message->getArg(Auth_OpenID_OPENID2_NS,
+                                                 'identity');
++        SimpleSAML_Logger::debug('identity: '.serialize($to_match->local_id));
+ 
+         $to_match->server_url = $message->getArg(Auth_OpenID_OPENID2_NS,
+                                                  'op_endpoint');
++        SimpleSAML_Logger::debug('op_endpoint: '.serialize($to_match->server_url));
+ 
+         if ($to_match->server_url === null) {
+             return new Auth_OpenID_FailureResponse($endpoint,
+@@ -1136,6 +1175,7 @@
+             // This is a response without identifiers, so there's
+             // really no checking that we can do, so return an
+             // endpoint that's for the specified `openid.op_endpoint'
++            SimpleSAML_Logger::debug('No identity yet..');
+             return Auth_OpenID_ServiceEndpoint::fromOPEndpointURL(
+                                                 $to_match->server_url);
+         }
+@@ -1146,6 +1186,7 @@
+             // identifier endpoints and responses that didn't match
+             // the original request.
+             // oidutil.log('No pre-discovered information supplied.')
++            SimpleSAML_Logger::debug('Claimed mismatch, redoing discovery..');
+             return $this->_discoverAndVerify($to_match->claimed_id,
+                                              array($to_match));
+         } else {
+@@ -1153,12 +1194,15 @@
+             // The claimed ID matches, so we use the endpoint that we
+             // discovered in initiation. This should be the most
+             // common case.
++            SimpleSAML_Logger::debug('Claimed match, verifying identity..');
+             $result = $this->_verifyDiscoverySingle($endpoint, $to_match);
+ 
+             if (Auth_OpenID::isFailure($result)) {
++            	SimpleSAML_Logger::debug('First was failure, trying discover and verify..');
+                 $endpoint = $this->_discoverAndVerify($to_match->claimed_id,
+                                                       array($to_match));
+                 if (Auth_OpenID::isFailure($endpoint)) {
++                	SimpleSAML_Logger::debug('Second failure, failing.. and returning endpoint');
+                     return $endpoint;
+                 }
+             }
+@@ -1170,6 +1214,7 @@
+             $endpoint->claimed_id = $to_match->claimed_id;
+         }
+ 
++        SimpleSAML_Logger::debug('Verification succeeded, returning..');
+         return $endpoint;
+     }
+ 
+@@ -1181,7 +1226,7 @@
+         // oidutil.log('Performing discovery on %s' % (claimed_id,))
+         list($unused, $services) = call_user_func($this->discoverMethod,
+                                                   $claimed_id,
+-                                                  $this->fetcher);
++                                                  &$this->fetcher);
+ 
+         if (!$services) {
+             return new Auth_OpenID_FailureResponse(null,
+diff -ru ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID/Discover.php simplesamlphp-1.5.1/lib/Auth/OpenID/Discover.php
+--- ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID/Discover.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/OpenID/Discover.php	2011-10-07 10:15:45.000000000 +0200
+@@ -179,11 +179,13 @@
+      */
+     function fromXRDS($uri, $xrds_text)
+     {
++    	SimpleSAML_Logger::debug('XRDS text: '.$xrds_text);
+         $xrds =& Auth_Yadis_XRDS::parseXRDS($xrds_text);
+ 
+         if ($xrds) {
+             $yadis_services =
+               $xrds->services(array('filter_MatchesAnyOpenIDType'));
++            SimpleSAML_Logger::debug('Returning XRDS endpoints.');
+             return Auth_OpenID_makeOpenIDEndpoints($uri, $yadis_services);
+         }
+ 
+@@ -220,6 +222,7 @@
+                                  );
+ 
+         $services = array();
++        SimpleSAML_Logger::debug('Trying to parse HTML: '.$html);
+ 
+         foreach ($discovery_types as $triple) {
+             list($type_uri, $server_rel, $delegate_rel) = $triple;
+@@ -305,12 +308,16 @@
+     return $local_id;
+ }
+ 
+-function filter_MatchesAnyOpenIDType(&$service)
++function filter_MatchesAnyOpenIDType($service)
+ {
++	SimpleSAML_Logger::debug('Filtering service: '.serialize($service));
+     $uris = $service->getTypes();
++    SimpleSAML_Logger::debug('Types: '.serialize($uris));
+ 
+     foreach ($uris as $uri) {
++    	SimpleSAML_Logger::debug('Checking URI for OpenID service: '.$uri);
+         if (in_array($uri, Auth_OpenID_getOpenIDTypeURIs())) {
++        	SimpleSAML_Logger::debug('This is an OpenID.');
+             return true;
+         }
+     }
+@@ -439,16 +446,19 @@
+     $yadis_services = array();
+ 
+     if ($response->isFailure()) {
++    	SimpleSAML_Logger::error('Yadis discovery failed.');
+         return array($uri, array());
+     }
+ 
+     $openid_services = Auth_OpenID_ServiceEndpoint::fromXRDS(
+                                          $yadis_url,
+                                          $response->response_text);
++    SimpleSAML_Logger::debug('OpenID services from XRDS: '.serialize($openid_services));
+ 
+     if (!$openid_services) {
+         if ($response->isXRDS()) {
+-            return Auth_OpenID_discoverWithoutYadis($uri,
++    		SimpleSAML_Logger::debug('OpenID services discovery without Yadis');
++        	return Auth_OpenID_discoverWithoutYadis($uri,
+                                                     $fetcher);
+         }
+ 
+@@ -457,11 +467,13 @@
+         $openid_services = Auth_OpenID_ServiceEndpoint::fromHTML(
+                                         $yadis_url,
+                                         $response->response_text);
++    	SimpleSAML_Logger::debug('OpenID services from HTML: '.serialize($openid_services));
+     }
+ 
+     $openid_services = call_user_func_array($endpoint_filter,
+                                             array(&$openid_services));
+-
++    SimpleSAML_Logger::debug('OpenID services filtered: '.serialize($openid_services));
++                                            
+     return array($yadis_url, $openid_services);
+ }
+ 
+@@ -518,13 +530,16 @@
+     // If the fetcher (i.e., PHP) doesn't support SSL, we can't do
+     // discovery on an HTTPS URL.
+     if ($fetcher->isHTTPS($uri) && !$fetcher->supportsSSL()) {
++    	SimpleSAML_Logger::error('Can\'t fetch because SSL is not supported.');
+         return array($uri, array());
+     }
+ 
+     if (Auth_Yadis_identifierScheme($uri) == 'XRI') {
+-        $result = Auth_OpenID_discoverXRI($uri, $fetcher);
++    	SimpleSAML_Logger::debug('Discovering with XRI..');
++    	$result = Auth_OpenID_discoverXRI($uri, $fetcher);
+     } else {
+-        $result = Auth_OpenID_discoverURI($uri, $fetcher);
++    	SimpleSAML_Logger::debug('Discovering with URI..');
++    	$result = Auth_OpenID_discoverURI($uri, $fetcher);
+     }
+ 
+     // If the fetcher doesn't support SSL, we can't interact with
+@@ -535,7 +550,8 @@
+ 
+         foreach ($endpoints as $e) {
+             if (!$fetcher->isHTTPS($e->server_url)) {
+-                $http_endpoints[] = $e;
++    			SimpleSAML_Logger::debug('Removing one endpoint due not supporting SSL.');
++            	$http_endpoints[] = $e;
+             }
+         }
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID.php simplesamlphp-1.5.1/lib/Auth/OpenID.php
+--- ../../../../simplesamlphp-1.5.1/lib/Auth/OpenID.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/OpenID.php	2011-10-07 10:15:45.000000000 +0200
+@@ -241,7 +241,7 @@
+      *
+      * @access private
+      */
+-    function arrayGet($arr, $key, $fallback = null)
++    static function arrayGet($arr, $key, $fallback = null)
+     {
+         if (is_array($arr)) {
+             if (array_key_exists($key, $arr)) {
+diff -ru ../../../../simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php
+--- ../../../../simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/Yadis/ParanoidHTTPFetcher.php	2011-10-07 10:15:44.000000000 +0200
+@@ -27,6 +27,13 @@
+  * @package OpenID
+  */
+ class Auth_Yadis_ParanoidHTTPFetcher extends Auth_Yadis_HTTPFetcher {
++	protected static $httpsVerifyPeer = true;
++
++	public static function setHttpsVerifyPeer($verifyPeer)
++	{
++		self::$httpsVerifyPeer = $verifyPeer;
++	}
++
+     function Auth_Yadis_ParanoidHTTPFetcher()
+     {
+         $this->reset();
+@@ -128,6 +135,9 @@
              curl_setopt($c, CURLOPT_TIMEOUT, $off);
              curl_setopt($c, CURLOPT_URL, $url);
  
-+            /* XXX - ACHTUNG! */
-+            curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
++            if (!Auth_Yadis_ParanoidHTTPFetcher::$httpsVerifyPeer)
++                curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 +
              curl_exec($c);
  
              $code = curl_getinfo($c, CURLINFO_HTTP_CODE);
-@@ -192,6 +195,9 @@
+@@ -192,6 +202,9 @@
          curl_setopt($c, CURLOPT_WRITEFUNCTION,
                      array(&$this, "_writeData"));
  
-+        /* XXX - ACHTUNG! */
-+        curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
++        if (!Auth_Yadis_ParanoidHTTPFetcher::$httpsVerifyPeer)
++            curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 +
          curl_exec($c);
  
          $code = curl_getinfo($c, CURLINFO_HTTP_CODE);
-diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php
---- simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php	2009-12-16 09:53:54.000000000 +0100
-+++ simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php	2010-04-28 13:37:50.000000000 +0200
+diff -ru ../../../../simplesamlphp-1.5.1/lib/Auth/Yadis/Yadis.php simplesamlphp-1.5.1/lib/Auth/Yadis/Yadis.php
+--- ../../../../simplesamlphp-1.5.1/lib/Auth/Yadis/Yadis.php	2009-04-30 08:25:58.000000000 +0200
++++ simplesamlphp-1.5.1/lib/Auth/Yadis/Yadis.php	2011-10-07 10:15:44.000000000 +0200
+@@ -13,22 +13,27 @@
+  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache
+  */
+ 
++/*
++ * PHP crashes when these require_once-s are being done. The autoloader should load these.
++ * Commented out by J-E P.
++ */
++
+ /**
+  * Need both fetcher types so we can use the right one based on the
+  * presence or absence of CURL.
+  */
+-require_once "Auth/Yadis/PlainHTTPFetcher.php";
+-require_once "Auth/Yadis/ParanoidHTTPFetcher.php";
++//require_once "Auth/Yadis/PlainHTTPFetcher.php";
++//require_once "Auth/Yadis/ParanoidHTTPFetcher.php";
+ 
+ /**
+  * Need this for parsing HTML (looking for META tags).
+  */
+-require_once "Auth/Yadis/ParseHTML.php";
++//require_once "Auth/Yadis/ParseHTML.php";
+ 
+ /**
+  * Need this to parse the XRDS document during Yadis discovery.
+  */
+-require_once "Auth/Yadis/XRDS.php";
++//require_once "Auth/Yadis/XRDS.php";
+ 
+ /**
+  * XRDS (yadis) content type
+@@ -241,7 +246,14 @@
+  */
+ class Auth_Yadis_Yadis {
+ 
+-    /**
++	protected static $httpsVerifyPeer = true;
++
++	public static function setHttpsVerifyPeer($verifyPeer)
++	{
++		self::$httpsVerifyPeer = $verifyPeer;
++	}
++
++	/**
+      * Returns an HTTP fetcher object.  If the CURL extension is
+      * present, an instance of {@link Auth_Yadis_ParanoidHTTPFetcher}
+      * is returned.  If not, an instance of
+@@ -255,6 +267,7 @@
+         if (Auth_Yadis_Yadis::curlPresent() &&
+             (!defined('Auth_Yadis_CURL_OVERRIDE'))) {
+             $fetcher = new Auth_Yadis_ParanoidHTTPFetcher($timeout);
++            $fetcher->setHttpsVerifyPeer(Auth_Yadis_Yadis::$httpsVerifyPeer);
+         } else {
+             $fetcher = new Auth_Yadis_PlainHTTPFetcher($timeout);
+         }
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php	2009-12-16 09:53:54.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Default.php	2011-10-07 10:15:46.000000000 +0200
 @@ -105,6 +105,7 @@
  		} else {
  			$session->setIdP(NULL);
@@ -99,21 +523,666 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/SimpleSAML/Auth/Default.php simple
  
  		/* Redirect... */
  		SimpleSAML_Utilities::redirect($returnURL);
-diff -ru -x .svn simplesamlphp-1.5.1.orig/lib/SimpleSAML/Session.php simplesamlphp-1.5.1/lib/SimpleSAML/Session.php
---- simplesamlphp-1.5.1.orig/lib/SimpleSAML/Session.php	2009-12-04 12:15:31.000000000 +0100
-+++ simplesamlphp-1.5.1/lib/SimpleSAML/Session.php	2010-04-28 13:37:50.000000000 +0200
-@@ -532,6 +532,8 @@
+@@ -131,6 +132,8 @@
+ 		$state['SimpleSAML_Auth_Default.ReturnURL'] = $returnURL;
+ 		$state['LogoutCompletedHandler'] = array(get_class(), 'logoutCompleted');
+ 
++		$session->saveSession();
++
+ 		$as = SimpleSAML_Auth_Source::getById($authId);
+ 		if ($as === NULL) {
+ 			/* The authority wasn't an authentication source... */
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Simple.php simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Simple.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Simple.php	2009-10-27 08:19:57.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Auth/Simple.php	2011-10-07 10:15:46.000000000 +0200
+@@ -80,6 +80,11 @@
+ 			$returnTo = SimpleSAML_Utilities::selfURL();
+ 		}
+ 
++		if (array_key_exists('ReturnFailureTo', $options))
++			$returnFailureTo = (string)$options['ReturnFailureTo'];
++		else
++			$returnFailureTo = NULL;
++
+ 		if ($keepPost && $_SERVER['REQUEST_METHOD'] === 'POST') {
+ 			$returnTo = SimpleSAML_Utilities::createPostRedirectLink($returnTo, $_POST);
+ 		}
+@@ -94,7 +99,7 @@
+ 			SimpleSAML_Auth_State::RESTART => $restartURL,
+ 		);
+ 
+-		SimpleSAML_Auth_Default::initLogin($this->authSource, $returnTo, NULL, $hints);
++		SimpleSAML_Auth_Default::initLogin($this->authSource, $returnTo, $returnFailureTo, $hints);
+ 	}
+ 
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/State.php simplesamlphp-1.5.1/lib/SimpleSAML/Auth/State.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Auth/State.php	2009-10-27 14:58:09.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Auth/State.php	2011-10-07 10:15:46.000000000 +0200
+@@ -91,6 +91,7 @@
+ 	 * @return string  Identifier which can be used to retrieve the state later.
+ 	 */
+ 	public static function saveState(&$state, $stage, $rawId = FALSE) {
++		SimpleSAML_Logger::debug('Saving state with ID '.(isset($state[self::ID])?$state[self::ID]:'unknown').' and stage '.$stage.'.');
+ 		assert('is_array($state)');
+ 		assert('is_string($stage)');
+ 		assert('is_bool($rawId)');
+@@ -100,6 +101,7 @@
+ 
+ 		if (!array_key_exists(self::ID, $state)) {
+ 			$state[self::ID] = SimpleSAML_Utilities::generateID();
++			SimpleSAML_Logger::debug('Generated state ID '.$state[self::ID].' (saving)');
+ 		}
+ 
+ 		$id = $state[self::ID];
+@@ -114,7 +116,7 @@
+ 
+ 		$serializedState = serialize($state);
+ 
+-		$session = SimpleSAML_Session::getInstance();
++		$session =& SimpleSAML_Session::getInstance();
+ 		$session->setData('SimpleSAML_Auth_State', $id, $serializedState, 60*60);
+ 
+ 		return $return;
+@@ -133,6 +135,8 @@
+ 	 * @return array  State information.
+ 	 */
+ 	public static function loadState($id, $stage) {
++		SimpleSAML_Logger::debug('Loading state with ID '.$id.' and stage '.$stage.'.');
++
+ 		assert('is_string($id)');
+ 		assert('is_string($stage)');
+ 
+@@ -200,7 +204,7 @@
+ 			return;
+ 		}
+ 
+-		$session = SimpleSAML_Session::getInstance();
++		$session =& SimpleSAML_Session::getInstance();
+ 		$session->deleteData('SimpleSAML_Auth_State', $state[self::ID]);
+ 	}
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Configuration.php simplesamlphp-1.5.1/lib/SimpleSAML/Configuration.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Configuration.php	2010-01-08 11:36:10.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Configuration.php	2011-10-07 10:15:46.000000000 +0200
+@@ -227,7 +227,9 @@
+ 		assert('is_string($instancename)');
+ 
+ 		if ($instancename === 'simplesaml') {
+-			return self::getConfig();
++			$config = self::getConfig();
++			SimplesamlLibrary::dispatchHookArray('simplesaml_configuration_loaded', array($config));
++			return $config;
+ 		}
+ 
+ 		if (!array_key_exists($instancename, self::$instance)) 
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Logger.php simplesamlphp-1.5.1/lib/SimpleSAML/Logger.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Logger.php	2009-08-14 14:08:17.000000000 +0200
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Logger.php	2011-10-07 10:15:46.000000000 +0200
+@@ -146,6 +146,9 @@
+ 	}	
+ 	
+ 	static function log_internal($level,$string,$statsLog = false) {
++		if (SimplesamlLibrary::logger($level,$string))
++			return;
++
+ 		if (self::$loggingHandler === NULL) {
+ 			/* Initialize logging. */
+ 			self::createLoggingHandler();
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Metadata/MetaDataStorageHandlerFlatFile.php simplesamlphp-1.5.1/lib/SimpleSAML/Metadata/MetaDataStorageHandlerFlatFile.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Metadata/MetaDataStorageHandlerFlatFile.php	2009-10-06 11:53:20.000000000 +0200
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Metadata/MetaDataStorageHandlerFlatFile.php	2011-10-07 10:15:45.000000000 +0200
+@@ -61,6 +61,8 @@
+ 		 * an absolute path).
+ 		 */
+ 		$this->directory = $globalConfig->resolvePath($this->directory) . '/';
++
++		SimpleSAML_Logger::debug('Will look for flat metadata in: '.$this->directory);
+ 	}
+ 
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Session.php simplesamlphp-1.5.1/lib/SimpleSAML/Session.php
+--- ../../../../simplesamlphp-1.5.1/lib/SimpleSAML/Session.php	2009-12-04 12:15:31.000000000 +0100
++++ simplesamlphp-1.5.1/lib/SimpleSAML/Session.php	2011-10-07 10:15:46.000000000 +0200
+@@ -8,7 +8,7 @@
+  * information about all the currently logged in SPs. This is used when the user initiate a 
+  * Single-Log-Out.
+  *
+- * @author Andreas Åkre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
++ * @author Andreas ï¿½kre Solberg, UNINETT AS. <andreas.solberg@uninett.no>
+  * @package simpleSAMLphp
+  * @version $Id: Session.php 2029 2009-12-04 11:15:31Z olavmrk $
+  */
+@@ -111,16 +111,24 @@
+ 		$this->addShutdownFunction();
+ 	}
+ 	
+-	
++	public function isDirty()
++	{
++		return $this->dirty;
++	}
+ 	/**
+ 	 * Retrieves the current session. Will create a new session if there isn't a session.
+ 	 *
+ 	 * @return The current session.
+ 	 */
+-	public static function getInstance() {
++	public static function &getInstance() {
+ 
+ 		/* Check if we already have initialized the session. */
+ 		if (isset(self::$instance)) {
++			SimpleSAML_Logger::debug('Returning cached object reference to session');
++			if (self::$instance->isDirty())
++				SimpleSAML_Logger::debug('Cached object is dirty.');
++			else
++				SimpleSAML_Logger::debug('Cached object is not dirty.');
+ 			return self::$instance;
+ 		}
+ 
+@@ -130,16 +138,18 @@
+ 		 */
+ 		self::$instance = self::loadSession();
+ 		if(self::$instance !== NULL) {
++			SimpleSAML_Logger::debug('Loaded new session object.');
+ 			return self::$instance;
+ 		}
+ 
+ 
++		SimpleSAML_Logger::debug('Creating new session object.');
+ 		/* Create a new session. */
+ 		self::$instance = new SimpleSAML_Session();
+ 
+ 		/* Save the new session with the session handler. */
+ 		$sh = SimpleSAML_SessionHandler::getSessionHandler();
+-		$sh->set('SimpleSAMLphp_SESSION', self::$instance);
++		$sh->set('SimpleSAMLphp_SESSION', serialize(self::$instance));
+ 
+ 		return self::$instance;
+ 	}
+@@ -532,6 +542,8 @@
  
  	public function setAttributes($attributes) {
  		$this->dirty = true;
 +		foreach ($attributes as $name => $value)
-+			SERIA_Base::debug('ATTR: '.$name.' = '.serialize($value));
++			SimpleSAML_Logger::debug('ATTR: '.$name.' = '.serialize($value));
  		$this->attributes = $attributes;
  	}
  	
-diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDConsumer.php simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php
---- simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2009-05-05 07:56:32.000000000 +0200
-+++ simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2010-04-28 13:37:53.000000000 +0200
+@@ -668,6 +680,7 @@
+ 				}
+ 
+ 				if($ct > $info['expires']) {
++					SimpleSAML_Logger::debug('Data with id '.$id.' has expired.');
+ 					unset($typedData[$id]);
+ 				}
+ 			}
+@@ -689,6 +702,7 @@
+ 		foreach ($this->dataStore as &$typedData) {
+ 			foreach ($typedData as $id => $info) {
+ 				if ($info['expires'] === self::DATA_TIMEOUT_LOGOUT) {
++					SimpleSAML_Logger::debug('Data with id '.$id.' has expired due to logout.');
+ 					unset($typedData[$id]);
+ 				}
+ 			}
+@@ -716,6 +730,7 @@
+ 			return;
+ 		}
+ 
++		SimpleSAML_Logger::debug('Data with id '.$id.' and type '.$type.' has been deleted.');
+ 		unset($this->dataStore[$type][$id]);
+ 		$this->dirty = TRUE;
+ 	}
+@@ -739,6 +754,8 @@
+ 		assert(is_string($id));
+ 		assert('is_int($timeout) || is_null($timeout) || $timeout === self::DATA_TIMEOUT_LOGOUT');
+ 
++		SimpleSAML_Logger::debug('(Session)->setData($type='.$type.', $id='.$id.', $data='.$data.')');
++
+ 		/* Clean out old data. */
+ 		$this->expireData();
+ 
+@@ -803,21 +820,27 @@
+ 		assert('is_string($type)');
+ 		assert('$id === NULL || is_string($id)');
+ 
++		SimpleSAML_Logger::debug('(Session)->getData($type='.$type.', $id='.$id.')');
++
+ 		if($id === NULL) {
++			SimpleSAML_Logger::debug('$id is null.');
+ 			return NULL;
+ 		}
+ 
+ 		$this->expireData();
+ 
+ 		if(!is_array($this->dataStore)) {
++			SimpleSAML_Logger::debug('No data-store.');
+ 			return NULL;
+ 		}
+ 
+ 		if(!array_key_exists($type, $this->dataStore)) {
++			SimpleSAML_Logger::debug('Type does not exist.');
+ 			return NULL;
+ 		}
+ 
+ 		if(!array_key_exists($id, $this->dataStore[$type])) {
++			SimpleSAML_Logger::debug('ID does not exist.');
+ 			return NULL;
+ 		}
+ 
+@@ -863,16 +886,20 @@
+ 	 * @return The session which is stored in the session handler, or NULL if the session wasn't found.
+ 	 */
+ 	private static function loadSession() {
++		SimpleSAML_Logger::debug('Loading session..');
+ 
+ 		$sh = SimpleSAML_SessionHandler::getSessionHandler();
+ 		$sessionData = $sh->get('SimpleSAMLphp_SESSION');
+ 		if($sessionData == NULL) {
++			SimpleSAML_Logger::debug('No session data.');
+ 			return NULL;
+ 		}
+ 
+ 		if(!is_string($sessionData)) {
++			SimpleSAML_Logger::debug('Session data is not a string.');
+ 			return NULL;
+ 		}
++		SimpleSAML_Logger::debug('Session data: '.$sessionData);
+ 
+ 		$sessionData = unserialize($sessionData);
+ 
+@@ -881,6 +908,7 @@
+ 			return NULL;
+ 		}
+ 
++		SimpleSAML_Logger::debug('Session object found.');
+ 		return $sessionData;
+ 	}
+ 
+@@ -893,15 +921,19 @@
+ 	public function saveSession() {
+ 
+ 		if(!$this->dirty) {
++			SimpleSAML_Logger::debug('saveSession: not dirty.');
+ 			/* Session hasn't changed - don't bother saving it. */
+ 			return;
+ 		}
+ 
++		SimpleSAML_Logger::debug('saveSession: going to save.');
+ 		$this->dirty = FALSE;
+ 		$sessionData = serialize($this);
++		SimpleSAML_Logger::debug('Writing session data: '.$sessionData);
+ 
+ 		$sh = SimpleSAML_SessionHandler::getSessionHandler();
+ 		$sh->set('SimpleSAMLphp_SESSION', $sessionData);
++		SimpleSAML_Logger::debug('saveSession: done.');
+ 	}
+ 
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/metadata/saml20-idp-remote.php simplesamlphp-1.5.1/metadata/saml20-idp-remote.php
+--- ../../../../simplesamlphp-1.5.1/metadata/saml20-idp-remote.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/metadata/saml20-idp-remote.php	2011-10-07 10:15:39.000000000 +0200
+@@ -42,22 +42,22 @@
+ 	'hint.cidr'                    => '158.38.0.0/16',
+ );
+ 
+-$metadata['https://idp.feide.no'] = array(
++$metadata['https://idp.feide.no'] = array (
+ 	'name' => 'Feide',
+ 	'description' => array(
+ 		'en' => 'Authenticate with your identity from a school or university in Norway.',
+ 		'no' => 'Logg inn med din identitet fra skolen eller universitetet du er tilknyttet (i Norge).',
+ 	),
+-	'send_metadata_email'          => 'moria-support@uninett.no',
+-	'SingleSignOnService'          => 'https://idp.feide.no/simplesaml/saml2/idp/SSOService.php',
+-	'SingleLogoutService'          => 'https://idp.feide.no/simplesaml/saml2/idp/SingleLogoutServiceiFrame.php',
+-	'SingleLogoutServiceResponse'  => 'https://idp.feide.no/simplesaml/saml2/idp/SingleLogoutServiceiFrameResponse.php',
+-	'certFingerprint'              => 'cde69e332fa7dd0eaa99ee0ddf06916e8942ac53',
+ 	'hint.cidr'                    => '158.38.0.0/16',
++  'metadata-set' => 'saml20-idp-remote',
++  'entityid' => 'https://idp.feide.no',
++  'SingleSignOnService' => 'https://idp.feide.no/simplesaml/saml2/idp/SSOService.php',
++  'SingleLogoutService' => 'https://idp.feide.no/simplesaml/saml2/idp/SingleLogoutService.php',
++  'certFingerprint' => 'cde69e332fa7dd0eaa99ee0ddf06916e8942ac53',
++  'NameIDFormat' => 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient',
+ );
+ 
+ 
+-
+ /*
+  * Wayf, the danish federation metadata.
+  */
+@@ -96,3 +96,21 @@
+ 	'SingleLogoutService'  => 'https://testidp.wayf.dk/saml2/idp/SingleLogoutService.php',
+ 	'certFingerprint'      => '04b3b08bce004c27458b3e85b125273e67ef062b'
+ );
++
++$emeta = SimplesamlLibrary::dispatchHook('simplesaml.metadata', 'saml20-idp-remote');
++if ($emeta) {
++	ob_start();
++	print_r($emeta);
++	$lns = ob_get_clean();
++	$lns = explode("\n", $lns);
++	foreach ($lns as $ln)
++		SimpleSAML_Logger::debug('emeta: '.$ln);
++	foreach ($emeta as $set) {
++		if ($set === null)
++			continue;
++		foreach ($set as $id => $params) {
++			SimpleSAML_Logger::debug('Adding metadata for '.$id.' (saml20-idp-remote)');
++			$metadata[$id] = $params;
++		}
++	}
++}
+diff -ru ../../../../simplesamlphp-1.5.1/metadata/saml20-sp-remote.php simplesamlphp-1.5.1/metadata/saml20-sp-remote.php
+--- ../../../../simplesamlphp-1.5.1/metadata/saml20-sp-remote.php	2010-01-08 11:38:44.000000000 +0100
++++ simplesamlphp-1.5.1/metadata/saml20-sp-remote.php	2011-10-07 10:15:39.000000000 +0200
+@@ -25,3 +25,15 @@
+ 	'simplesaml.nameidattribute' => 'uid',
+ 	'simplesaml.attributes' => FALSE,
+ );
++
++$emeta = SimplesamlLibrary::dispatchHook('simplesaml.metadata', 'saml20-sp-remote');
++if ($emeta) {
++	foreach ($emeta as $set) {
++		if ($set === null)
++			continue;
++		foreach ($set as $id => $params) {
++			SimpleSAML_Logger::debug('Adding metadata for '.$id.' (saml20-sp-remote)');
++			$metadata[$id] = $params;
++		}
++	}
++}
+Only in simplesamlphp-1.5.1/modules/authfacebook: enable
+diff -ru ../../../../simplesamlphp-1.5.1/modules/authfacebook/extlibinc/facebook.php simplesamlphp-1.5.1/modules/authfacebook/extlibinc/facebook.php
+--- ../../../../simplesamlphp-1.5.1/modules/authfacebook/extlibinc/facebook.php	2009-02-02 09:45:36.000000000 +0100
++++ simplesamlphp-1.5.1/modules/authfacebook/extlibinc/facebook.php	2011-10-07 10:15:55.000000000 +0200
+@@ -172,12 +172,12 @@
+     return 'http://' . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'] . '?poot=bar';
+   }
+ 
+-  public function require_login($next = NULL) {
++  public function require_login($next = NULL, $extParams = array()) {
+   	if ($next === NULL) $next = self::current_url();
+     if ($user = $this->get_loggedin_user()) {
+       return $user;
+     }
+-    $this->redirect($this->get_login_url($next, $this->in_frame()));
++    $this->redirect($this->get_login_url($next, $this->in_frame(), $extParams));
+   }
+ 
+   public function require_install() {
+@@ -214,10 +214,11 @@
+       ($next ? '&next=' . urlencode($next) : '');
+   }
+ 
+-  public function get_login_url($next, $canvas) {
++  public function get_login_url($next, $canvas, $extParams=array()) {
+     return self::get_facebook_url().'/login.php?v=1.0&api_key=' . $this->api_key .
+       ($next ? '&next=' . urlencode($next)  : '') .
+-      ($canvas ? '&canvas' : '');
++      ($canvas ? '&canvas' : '') .
++      ($extParams ? '&req_perms='.urlencode(implode(',', $extParams)) : '');
+   }
+ 
+   public static function generate_sig($params_array, $secret) {
+diff -ru ../../../../simplesamlphp-1.5.1/modules/authfacebook/lib/Auth/Source/Facebook.php simplesamlphp-1.5.1/modules/authfacebook/lib/Auth/Source/Facebook.php
+--- ../../../../simplesamlphp-1.5.1/modules/authfacebook/lib/Auth/Source/Facebook.php	2009-02-02 09:45:36.000000000 +0100
++++ simplesamlphp-1.5.1/modules/authfacebook/lib/Auth/Source/Facebook.php	2011-10-07 10:15:55.000000000 +0200
+@@ -23,6 +23,7 @@
+ 
+ 	private $api_key;
+ 	private $secret;
++	private $ext_params;
+ 
+ 
+ 
+@@ -49,6 +50,12 @@
+ 
+ 		$this->secret = $config['secret'];
+ 
++		if (isset($config['ext_params']) && $config['ext_params'])
++			$this->ext_params = $config['ext_params'];
++		else
++			$this->ext_params = array();
++			
++
+ 		require_once(dirname(dirname(dirname(dirname(__FILE__)))) . '/extlibinc/facebook.php');
+ 
+ 	}
+@@ -68,18 +75,23 @@
+ 		$stateID = SimpleSAML_Auth_State::saveState($state, self::STAGE_INIT);
+ 		
+ 		SimpleSAML_Logger::debug('facebook auth state id = ' . $stateID);
+-		
++
++		$redirect = sspmod_simpleurl_UrlGenerator::getRedirectUrl($state, $state[SimpleSAML_Auth_State::RESTART]);
++
++		$simplesaml_session = SimpleSAML_Session::getInstance();
++		$simplesaml_session->saveSession();
++
+ 		$facebook = new Facebook($this->api_key, $this->secret);		
+-		$u = $facebook->require_login($stateID);
++		$u = $facebook->require_login($redirect, $this->ext_params);
+ 		# http://developers.facebook.com/documentation.php?v=1.0&method=users.getInfo
+ 		/* Causes an notice / warning...
+ 		if ($facebook->api_client->error_code) {
+ 			throw new Exception('Unable to load profile from facebook');
+ 		}
+ 		*/
+-		$info = $facebook->api_client->users_getInfo($u, array('first_name', 'last_name'));
++		$info = $facebook->api_client->users_getInfo($u, array_merge(array('first_name', 'last_name'), $this->ext_params));
+ 		$fullname = $info[0]['first_name'] .' '. $info[0]['last_name'];
+-		
++
+ 		$attributes = array(
+ 			'sn' => array($info[0]['last_name']),
+ 			'givenName' => array($info[0]['first_name']),
+@@ -87,6 +99,8 @@
+ 			'uid' => array($u),
+ 			'eduPersonPrincipalName' => array('facebook:' . $u),
+ 		);
++		if (isset($info[0]['email']))
++			$attributes['email'] = array($info[0]['email']);
+ 		$state['Attributes'] = $attributes;
+ 	}
+ 	
+diff -ru ../../../../simplesamlphp-1.5.1/modules/authtwitter/lib/Auth/Source/Twitter.php simplesamlphp-1.5.1/modules/authtwitter/lib/Auth/Source/Twitter.php
+--- ../../../../simplesamlphp-1.5.1/modules/authtwitter/lib/Auth/Source/Twitter.php	2009-11-04 08:49:01.000000000 +0100
++++ simplesamlphp-1.5.1/modules/authtwitter/lib/Auth/Source/Twitter.php	2011-10-07 10:15:59.000000000 +0200
+@@ -54,7 +54,7 @@
+ 
+ 
+ 	/**
+-	 * Log-in using Facebook platform
++	 * Log-in using OAuth
+ 	 *
+ 	 * @param array &$state  Information about the current authentication.
+ 	 */
+@@ -66,12 +66,14 @@
+ 		
+ 		$stateID = SimpleSAML_Auth_State::saveState($state, self::STAGE_INIT);
+ 		
+-		// SimpleSAML_Logger::debug('facebook auth state id = ' . $stateID);
++		SimpleSAML_Logger::debug('Twitter auth state id = ' . $stateID);
+ 		
+ 		$consumer = new sspmod_oauth_Consumer($this->key, $this->secret);
+ 
+ 		// Get the request token
+-		$requestToken = $consumer->getRequestToken('http://twitter.com/oauth/request_token');
++		$base = Simplesaml_Utilities::getBaseURL();
++		$callback = $base.'/module.php/authtwitter/linkback.php';
++		$requestToken = $consumer->getRequestToken('http://twitter.com/oauth/request_token', $callback);
+ 		SimpleSAML_Logger::debug("Got a request token from the OAuth service provider [" . 
+ 			$requestToken->key . "] with the secret [" . $requestToken->secret . "]");
+ 
+@@ -82,6 +84,11 @@
+ 		$session = SimpleSAML_Session::getInstance();
+ 		$session->setData('oauth', 'oauth', $oauthState);
+ 
++		/*
++		 * Save the session explicitly in case the autosave does not trip..
++		 */
++		$session->saveSession();
++
+ 		// Authorize the request token
+ 		$consumer->getAuthorizeRequest('http://twitter.com/oauth/authenticate', $requestToken);
+ 
+@@ -95,6 +102,10 @@
+ 		
+ 		
+ 		$requestToken = unserialize($state['requestToken']);
++		if (isset($state['requestVerifier']))
++			$requestVerifier = unserialize($state['requestVerifier']);
++		else
++			$requestVerifier = NULL;
+ 		
+ 		#echo '<pre>'; print_r($requestToken); exit;
+ 		
+@@ -104,9 +115,17 @@
+ 			$requestToken->key . "] with the secret [" . $requestToken->secret . "]");
+ 
+ 		// Replace the request token with an access token
+-		$accessToken = $consumer->getAccessToken('http://twitter.com/oauth/access_token', $requestToken);
+-		SimpleSAML_Logger::debug("Got an access token from the OAuth service provider [" . 
+-			$accessToken->key . "] with the secret [" . $accessToken->secret . "]");
++		try {
++			$accessToken = $consumer->getAccessToken('http://twitter.com/oauth/access_token', $requestToken, $requestVerifier);
++			SimpleSAML_Logger::debug("Got an access token from the OAuth service provider [" . 
++				$accessToken->key . "] with the secret [" . $accessToken->secret . "]");
++		} catch (Exception $e) {
++			/*
++			 * This is usually an authentication error or user abort.
++			 */
++			$error = $e->getMessage();
++			throw new SimpleSAML_Error_Exception($error);
++		}
+ 			
+ 
+ 		
+@@ -128,8 +147,16 @@
+ 		if (array_key_exists('url', $userdata) )
+ 			$attributes['labeledURI'] = array($userdata['url']);
+ 			
+-		
++		SimpleSAML_Logger::debug('Dumping twitter attrs:');
++		foreach ($attributes as $name => $value)
++			SimpleSAML_Logger::debug($name.' => '.$value);
+ 		$state['Attributes'] = $attributes;
++
++		/*
++		 * Save the session explicitly in case the autosave does not trip..
++		 */
++		$session = SimpleSAML_Session::getInstance();
++		$session->saveSession();
+ 	}
+ 
+ }
+diff -ru ../../../../simplesamlphp-1.5.1/modules/authtwitter/www/linkback.php simplesamlphp-1.5.1/modules/authtwitter/www/linkback.php
+--- ../../../../simplesamlphp-1.5.1/modules/authtwitter/www/linkback.php	2009-11-04 08:49:01.000000000 +0100
++++ simplesamlphp-1.5.1/modules/authtwitter/www/linkback.php	2011-10-07 10:15:59.000000000 +0200
+@@ -14,12 +14,18 @@
+ if (empty($oauthState['stateid'])) throw new Exception('Could not load oauthstate:stateid');
+ 
+ $stateId = $oauthState['stateid'];
++SimpleSAML_Logger::debug('Returned to twitter auth state id = ' . $stateId);
+ 
+ // echo 'stateid is ' . $stateId;
+ 
+ $state = SimpleSAML_Auth_State::loadState($stateId, sspmod_authtwitter_Auth_Source_Twitter::STAGE_INIT);
+ $state['requestToken'] = $oauthState['requestToken'];
+ 
++if (isset($_GET['oauth_verifier'])) {
++	$state['requestVerifier'] = serialize($_GET['oauth_verifier']);
++	SERIA_Base::debug('Verifier: '.$state['requestVerifier']);
++}
++
+ 
+ 
+ /* Find authentication source. */
+@@ -31,14 +37,21 @@
+ 	throw new Exception('Could not find authentication source with id ' . $sourceId);
+ }
+ 
++try {
+ 
++	$config = SimpleSAML_Configuration::getInstance();
+ 
+-$config = SimpleSAML_Configuration::getInstance();
++	$source->finalStep($state);
+ 
+-$source->finalStep($state);
+ 
+ 
++	SimpleSAML_Auth_Source::completeAuth($state);
+ 
+-SimpleSAML_Auth_Source::completeAuth($state);
++} catch (SimpleSAML_Error_Exception $e) {
++	/*
++	 * This is probably a login failure or user cancel.
++	 */
++	SimpleSAML_Auth_State::throwException($state, $e);
++}
+ 
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/modules/oauth/lib/Consumer.php simplesamlphp-1.5.1/modules/oauth/lib/Consumer.php
+--- ../../../../simplesamlphp-1.5.1/modules/oauth/lib/Consumer.php	2009-11-04 08:49:01.000000000 +0100
++++ simplesamlphp-1.5.1/modules/oauth/lib/Consumer.php	2011-10-07 10:15:47.000000000 +0200
+@@ -22,8 +22,13 @@
+ 	// Used only to load the libextinc library early.
+ 	public static function dummy() {}
+ 	
+-	public function getRequestToken($url) {
+-		$req_req = OAuthRequest::from_consumer_and_token($this->consumer, NULL, "GET", $url, NULL);
++	public function getRequestToken($url, $callback = NULL) {
++		$params = array();
++		if ($callback !== NULL)
++			$params['oauth_callback'] = $callback;
++		if (!$params)
++			$params = NULL;
++		$req_req = OAuthRequest::from_consumer_and_token($this->consumer, NULL, "GET", $url, $params);
+ 		$req_req->sign_request($this->signer, $this->consumer, NULL);
+ 
+ 		$response_req = file_get_contents($req_req->to_url());
+@@ -56,11 +61,17 @@
+ 		return $authorizeURL;
+ 	}
+ 	
+-	public function getAccessToken($url, $requestToken) {
++	public function getAccessToken($url, $requestToken, $requestVerifier=NULL) {
+ 
+-		$acc_req = OAuthRequest::from_consumer_and_token($this->consumer, $requestToken, "GET", $url, NULL);
++		$params = array();
++		if ($requestVerifier !== NULL)
++			$params['oauth_verifier'] = $requestVerifier;
++		if (!$params)
++			$params = NULL;
++		$acc_req = OAuthRequest::from_consumer_and_token($this->consumer, $requestToken, "GET", $url, $params);
+ 		$acc_req->sign_request($this->signer, $this->consumer, $requestToken);
+-		
++
++		SimpleSAML_Logger::debug('Ok trying url: '.$acc_req->to_url());
+ 		$response_acc = file_get_contents($acc_req->to_url());
+ 		if ($response_acc === FALSE) {
+ 			throw new Exception('Error contacting request_token endpoint on the OAuth Provider');
+diff -ru ../../../../simplesamlphp-1.5.1/modules/oauth/libextinc/OAuth.php simplesamlphp-1.5.1/modules/oauth/libextinc/OAuth.php
+--- ../../../../simplesamlphp-1.5.1/modules/oauth/libextinc/OAuth.php	2009-11-04 08:49:01.000000000 +0100
++++ simplesamlphp-1.5.1/modules/oauth/libextinc/OAuth.php	2011-10-07 10:15:47.000000000 +0200
+@@ -348,7 +348,10 @@
+    */
+   public function to_url() {/*{{{*/
+     $out = $this->get_normalized_http_url() . "?";
+-    $out .= $this->to_postdata();
++    $params = $this->to_postdata();
++    SimpleSAML_Logger::debug("Normalized base url: ".$out);
++    SimpleSAML_Logger::debug('Params query string: '.$params);
++    $out .= $params;
+     return $out;
+   }/*}}}*/
+ 
+diff -ru ../../../../simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php
+--- ../../../../simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2009-05-05 07:56:32.000000000 +0200
++++ simplesamlphp-1.5.1/modules/openid/lib/Auth/Source/OpenIDConsumer.php	2011-10-07 10:15:59.000000000 +0200
 @@ -20,6 +20,21 @@
  	 */
  	private $requiredAttributes;
@@ -192,14 +1261,14 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/lib/Auth/Source/OpenIDC
  
  ?>
 \ No newline at end of file
-diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simplesamlphp-1.5.1/modules/openid/www/consumer.php
---- simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php	2009-10-16 13:04:16.000000000 +0200
-+++ simplesamlphp-1.5.1/modules/openid/www/consumer.php	2010-04-28 13:37:53.000000000 +0200
+diff -ru ../../../../simplesamlphp-1.5.1/modules/openid/www/consumer.php simplesamlphp-1.5.1/modules/openid/www/consumer.php
+--- ../../../../simplesamlphp-1.5.1/modules/openid/www/consumer.php	2009-10-16 13:04:16.000000000 +0200
++++ simplesamlphp-1.5.1/modules/openid/www/consumer.php	2011-10-07 10:15:58.000000000 +0200
 @@ -58,6 +58,8 @@
  function run_try_auth() {
      global $authSource;
  
-+    SERIA_Base::debug('Trying auth');
++    SimpleSAML_Logger::debug('Trying auth');
 +
      $openid = $_GET['openid_url'];
      $consumer = getConsumer();
@@ -247,7 +1316,7 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simple
  function run_finish_auth() {
 +    global $authSource;
 +
-+	SERIA_Base::debug('Finishing auth');
++	SimpleSAML_Logger::debug('Finishing auth');
  
  	$error = 'General error. Try again.';
  
@@ -255,30 +1324,32 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simple
  	
  		// Check the response status.
  		if ($response->status == Auth_OpenID_CANCEL) {
-+			SERIA_Base::debug('OpenID authentication cancelled');
++			SimpleSAML_Logger::debug('OpenID authentication cancelled');
  			// This means the authentication was cancelled.
- 			throw new Exception('Verification cancelled.');
+-			throw new Exception('Verification cancelled.');
++			throw new SimpleSAML_Error_Exception('Verification cancelled.');
  		} else if ($response->status == Auth_OpenID_FAILURE) {
-+			SERIA_Base::debug('OpenID authentication failed');
++			SimpleSAML_Logger::debug('OpenID authentication failed');
  			// Authentication failed; display the error message.
- 			throw new Exception("OpenID authentication failed: " . $response->message);
+-			throw new Exception("OpenID authentication failed: " . $response->message);
++			throw new SimpleSAML_Error_Exception("OpenID authentication failed: " . $response->message);
  		} else if ($response->status == Auth_OpenID_SUCCESS) {
-+			SERIA_Base::debug('OpenID authentication succeeded');
++			SimpleSAML_Logger::debug('OpenID authentication succeeded');
  			// This means the authentication succeeded; extract the
  			// identity URL and Simple Registration data (if it was
  			// returned).
  			$openid = $response->identity_url;
 -	
 +
-+			SERIA_Base::debug('OpenID identity url: '.$openid);
++			SimpleSAML_Logger::debug('OpenID identity url: '.$openid);
  			$attributes = array('openid' => array($openid));
  	
  			if ($response->endpoint->canonicalID) {
-+				SERIA_Base::debug('OpenID: openid.canonicalID = '.(is_string($response->endpoint->canonicalID) ? $response->endpoint->canonicalID : serialize($response->endpoint->canonicalID)));
++				SimpleSAML_Logger::debug('OpenID: openid.canonicalID = '.(is_string($response->endpoint->canonicalID) ? $response->endpoint->canonicalID : serialize($response->endpoint->canonicalID)));
  				$attributes['openid.canonicalID'] = array($response->endpoint->canonicalID);
  			}
  	
-@@ -150,11 +190,32 @@
+@@ -150,14 +190,43 @@
  					$attributes['openid.sreg.' . $sregkey] = array($sregvalue);
  				}
  			}
@@ -288,7 +1359,7 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simple
 +				new Auth_OpenID_AX();
 +				$obj = Auth_OpenID_AX_FetchResponse::fromSuccessResponse($response);
 +				if ($obj) {
-+					SERIA_Base::debug('AX Response: '.serialize($obj));
++					SimpleSAML_Logger::debug('AX Response: '.serialize($obj));
 +    				$axattr = array();
 +    				foreach ($axopt as $attr)
 +    					$axattr[$attr[1]] = $attr[0];
@@ -304,15 +1375,26 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simple
  
  			global $state;
  			$state['Attributes'] = $attributes;
-+			SERIA_Base::debug('Completing OpenID');
++			SimpleSAML_Logger::debug('Completing OpenID');
  			SimpleSAML_Auth_Source::completeAuth($state);
 -			
-+			SERIA_Base::debug('Completed OpenID');
++			SimpleSAML_Logger::debug('Completed OpenID');
 +
  		}
  
  	} catch (Exception $e) {
-@@ -170,6 +231,10 @@
++		if ($authSource->getDiscoveryEndpoint()) {
++			/*
++			 * Need to return the error back to requestor..
++			 */
++			global $state;
++
++			SimpleSAML_Auth_State::throwException($state, $e);
++		}
+ 		$error = $e->getMessage();
+ 	}
+ 
+@@ -170,6 +239,10 @@
  
  }
  
@@ -323,3 +1405,28 @@ diff -ru -x .svn simplesamlphp-1.5.1.orig/modules/openid/www/consumer.php simple
  if (array_key_exists('returned', $_GET)) {
  	run_finish_auth();
  } elseif (!empty($_GET['openid_url'])) {
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: accept.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: bino.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: bomb_l.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: bomb.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: bullet16_grey.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: caution.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: checkmark48.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: compass_l.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: debug.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: delete.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: favicon.ico
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: gn
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: lock.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: openid.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: pencil.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: service.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: silk
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: ssplogo-fish.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: ssplogo-fish-small.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: star.png
+Only in ../../../../simplesamlphp-1.5.1/www/resources/icons: timeout.png
+Only in simplesamlphp-1.5.1/www/resources/uitheme/images: Thumbs.db
+Only in simplesamlphp-1.5.1/www/resources/uitheme/images: _x_
+Only in ../../../../simplesamlphp-1.5.1/www/resources/uitheme/images: _x_.
+Only in simplesamlphp-1.5.1/www/resources/uitheme16/images: Thumbs.db
