@@ -193,18 +193,23 @@ else
 					var e = jQuery("#" + jQuery(o).data('autoId')+'errorbox');
 					e.animate({left: '+=50', opacity: "hide"}, 200);
 				}
-
-				jQuery('input.ui-state-error').hover(function(){
-					if(!jQuery(this).data('has-focus')) msgIn(this); 
-				}, function(){
-					if(!jQuery(this).data('has-focus')) msgOut(this); 
+				jQuery('input.ui-state-error').live({
+					mouseenter: function(){
+						if(!jQuery(this).data('has-focus')) msgIn(this); 
+					},
+					mouseleave: function(){
+						if(!jQuery(this).data('has-focus')) msgOut(this); 
+					}
 				});
-				jQuery('input.ui-state-error').focus(function(){
-					jQuery(this).data('has-focus',true); 
-					msgIn(this);
-				}).blur(function(){
-					jQuery(this).data('has-focus',false); 
-					msgOut(this);
+				jQuery('input.ui-state-error').live({
+					focus: function(){
+						jQuery(this).data('has-focus',true); 
+						msgIn(this);
+					},
+					blur: function(){
+						jQuery(this).data('has-focus',false); 
+						msgOut(this);
+					}
 				});
 			});
 		</script>
