@@ -44,8 +44,25 @@ if (isset($_GET['interactive']) && $_GET['interactive'] == 'no') {
 		 * Authentication state entry point (ASEP)
 		 */
 		$state = new SERIA_AuthenticationState();
-		$state->set('continue', SERIA_Url::current()->__toString());
-		$state->set('abort', SERIA_Url::current()->setParam('failure', 'error')->__toString());
+		$state->set('continue', $action->removeFromUrl(SERIA_Url::current())->__toString());
+		$url = new SERIA_Url($_GET['from']);
+		if ($url->getParam('auth_id'))
+			$url->setParam('auth_id', 'fault');
+		if (($abort = $url->getParam('auth_abort'))) {
+			if ($abort[0] == '/') {
+				$abort = $url->getHost().$abort;
+				$method = $url->__toString();
+				if (strpos($method, 'http://') == 0)
+					$abort = 'http://'.$abort;
+				else if (strpos($method, 'https://') == 0)
+					$abort = 'https://'.$abort;
+				else
+					throw new SERIA_Exception('Unable to determine the protocol of the requestor.');
+			}
+			$url = new SERIA_Url($abort);
+		} else
+			$url->setParam('failure', 'failure');
+		$state->set('abort', $url->__toString());
 
 		SERIA_Base::redirectTo($state->stampUrl($action->__toString()));
 		die();
