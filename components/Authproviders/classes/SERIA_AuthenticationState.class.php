@@ -364,7 +364,7 @@ class SERIA_AuthenticationState
 	{
 		SERIA_Base::debug('Set value: '.$name.' = '.serialize($value));
 		if ($name == 'abort')
-			$this->abort = $value;
+			$this->abort = self::shortenUrl($value);
 		$this->data[$name] = $value;
 		$this->save();
 	}
@@ -428,6 +428,28 @@ class SERIA_AuthenticationState
 					return false;
 				}
 		}
+	}
+
+	public static function shortenUrl($url)
+	{
+		$protocolHost = SERIA_Url::current()->__toString();
+		if (strpos($protocolHost, 'https://') === 0)
+			$protocol = 'https';
+		else if (strpos($protocolHost, 'http://') === 0)
+			$protocol = 'http';
+		else
+			return $url;
+		$host = substr($protocolHost, strlen($protocol) + 3);
+		$len = strpos($host, '/');
+		if (!$len)
+			return $url;
+		$host = substr($host, 0, $len);
+		$prefix = $protocol.'://'.$host.'/';
+		if (strpos($url, $prefix) === 0) {
+			$url = substr($url, strlen($prefix));
+			return '/'.$url;
+		}
+		return $url;
 	}
 
 	/**
