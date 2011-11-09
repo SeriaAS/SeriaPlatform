@@ -239,7 +239,7 @@
 				return NULL;
 
 			self::parse_str($parsed['query'], $parts);
-			if(!isset($parsed[$param]))
+			if(!isset($parts[$param]))
 				return NULL;
 			return $parts[$param];
 		}
