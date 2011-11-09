@@ -3,7 +3,10 @@
 <ul>
 <?php
 foreach ($providers as $provider) {
-	$url = SERIA_Authproviders::getProviderUrl($provider, isset($_GET['continue']) ? $_GET['continue'] : false, SERIA_Url::current());
+	$state = false;
+	if (SERIA_AuthenticationState::available())
+		$state = new SERIA_AuthenticationState();
+	$url = SERIA_Authproviders::getProviderUrl($provider, isset($_GET['continue']) ? $_GET['continue'] : false, SERIA_Url::current(), $state);
 	?>
 		<li><a href="<?php echo htmlspecialchars($url); ?>"><?php echo htmlspecialchars($provider->getName()); ?></a></li>
 	<?php
