@@ -12,7 +12,7 @@
 		if ($this->id !== false) {
 			$jsgen = new SERIA_AlertGenerator($obj);
 			ob_start();
-			?><script type="text/javascript">document.write(unescape("%3Cscript type=\"text/javascript\" src=\"<?php echo htmlspecialchars($jsgen->getFilename()); ?>?r=" + Math.floor((new Date()).getTime() / 60000) + "\"%3E%3C/script%3E"));</script><?php
+			?><script type="text/javascript">document.write(unescape("%3Cscript type=\"text/javascript\" src=\"<?php echo htmlspecialchars($jsgen->getFilename()); ?>?r=" + Math.floor((new Date()).getTime() / 60000) + "\" defer=\"defer\" %3E%3C/script%3E"));</script><?php
 			$code = ob_get_clean();
 			?>
 				<h2>{{'Javascript code'|_t}}</h2>
