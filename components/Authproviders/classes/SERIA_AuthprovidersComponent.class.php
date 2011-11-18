@@ -55,7 +55,7 @@
 
 			/* Block local user management if we are using remote authentication */
 			try {
-				if (SERIA_AuthprovidersConfiguration2::usingExternalAuthentication()) {
+				if ($this->isEnabled() && SERIA_AuthprovidersConfiguration2::usingExternalAuthentication()) {
 					$blockageUrl = SERIA_HTTP_ROOT.'?route=components/authproviders/usermanagement';
 					$gui->addMenuItem('controlpanel/users', _t("User management"), _t("Manage system user accounts and rights"), $blockageUrl, SERIA_HTTP_ROOT.'/seria/components/Authproviders/icon.png', 0);
 					$gui->addMenuItem('controlpanel/users/list', _t("List user accounts"), _t("Display all user accounts."), $blockageUrl, SERIA_HTTP_ROOT.'/seria/components/Authproviders/icon.png', 0);
