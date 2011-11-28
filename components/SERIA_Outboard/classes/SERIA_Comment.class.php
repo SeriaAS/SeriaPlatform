@@ -256,6 +256,7 @@
 			$success = SERIA_Meta::save($this);
 			if (!$flag)
 				$this->sendFlaggedNotice();
+			return $success;
 		}
 		public function flagAction()
 		{
