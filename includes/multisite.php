@@ -33,6 +33,7 @@
 			if($siteAlias['domainType']=='alias')
 			{
 				$site = $db->query("SELECT * FROM {sites} WHERE id=?", array($siteAlias['siteId']))->fetch(PDO::FETCH_ASSOC);
+				$site['alias'] = $siteAlias;
 				if(!$site)
 				{
 					$db->exec("DELETE FROM {sites_aliases} WHERE id=?", array($siteAlias['id']));
@@ -78,7 +79,12 @@
 	else
 	{
 		if(!defined('SERIA_HTTP_ROOT'))
-			define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['domain']);
+		{
+			if(isset($site['alias']))
+				define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['alias']['domain']);
+			else
+				define('SERIA_HTTP_ROOT', "http".((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']==='off') ? '' : 's')."://".$site['domain']);
+		}
 		define('SERIA_FILES_ROOT', SERIA_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
 		define('SERIA_FILES_HTTP_ROOT', SERIA_HTTP_ROOT.'/sites/'.$site['domain'][0].'/'.$site['domain'].'/files');
 		define('SERIA_EMAIL_FROM', 'no-reply@'.$site['domain']);
