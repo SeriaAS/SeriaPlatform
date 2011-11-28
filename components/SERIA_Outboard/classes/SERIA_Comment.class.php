@@ -18,6 +18,7 @@
 	{
 		const BEFORE_DELETE_HOOK = 'SERIA_Comment::beforeDeleteHook';
 		const AFTER_DELETE_HOOK = 'SERIA_Comment::afterDeleteHook';
+		const SEND_FLAGGED_NOTICE_HOOK = 'SERIA_Comment::sendFlaggedNotice';
 
 		/*
 		 * Hooks thrown by save:
@@ -232,10 +233,29 @@
 			return $a;
 		}
 
+		public function sendFlaggedNotice()
+		{
+			if (!SERIA_Hooks::dispatchToFirst(SERIA_Comment::SEND_FLAGGED_NOTICE_HOOK, $this) &&
+			    defined('OUTBOARD_FLAGGED_NOTICE_EMAIL') && OUTBOARD_FLAGGED_NOTICE_EMAIL) {
+				$email = new SERIA_OutboardEmailTpl();
+				$email->setTo(OUTBOARD_FLAGGED_NOTICE_EMAIL);
+				if (defined('OUTBOARD_FLAGGED_NOTICE_EMAIL_FROM') && OUTBOARD_FLAGGED_NOTICE_EMAIL_FROM)
+					$email->setFrom(OUTBOARD_FLAGGED_NOTICE_EMAIL_FROM);
+				else {
+					$host = SERIA_Url::current()->getHost();
+					$email->setFrom('"'.$host.'" <outboard@'.$host.'>');
+				}
+				$email->parse(dirname(dirname(__FILE__)).'/emailtpl/flagged.php', array('comment' => $this));
+				$email->send();
+			}
+		}
 		public function flag()
 		{
+			$flag = $this->get('flagged');
 			$this->set('flagged', true);
-			return SERIA_Meta::save($this);
+			$success = SERIA_Meta::save($this);
+			if (!$flag)
+				$this->sendFlaggedNotice();
 		}
 		public function flagAction()
 		{

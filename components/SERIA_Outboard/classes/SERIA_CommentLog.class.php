@@ -37,8 +37,11 @@
 			$log->set('comment', $comment);
 			$log->set('action', 'flag');
 			$log->set('user', SERIA_Base::user());
-			return SERIA_Meta::editAction('flag', $log, array(
+			$action = SERIA_Meta::editAction('flag', $log, array(
 				'flagSpam', 'flagPersonalAttack', 'flagRacist', 'flagPorn', 'flagCopyright', 'flagOther'
 			));
+			if ($action->success)
+				$comment->sendFlaggedNotice();
+			return $action;
 		}
 	}
