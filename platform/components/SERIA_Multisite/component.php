@@ -53,7 +53,7 @@
 				$s = fsockopen($_SERVER["SERVER_ADDR"], $_SERVER["SERVER_PORT"], $eNum, $eStr, 1);
 				if($s)
 				{
-					@fwrite($s, "GET ".$url["path"]."?multisite=1 HTTP/1.1\r\nHost: ".$url["host"]."\r\nConnection: close\r\n\r\n");
+					@fwrite($s, "GET ".$url["path"]."?quick=1&multisite=1 HTTP/1.1\r\nHost: ".$url["host"]."\r\nConnection: close\r\n\r\n");
 					@fclose($s);
 				}
 				SERIA_Base::db()->query("UPDATE {sites} SET maintainDate=NOW() WHERE id=".$site["id"]);
