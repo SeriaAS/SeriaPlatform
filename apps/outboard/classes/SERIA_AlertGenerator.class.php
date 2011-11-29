@@ -8,6 +8,12 @@ class SERIA_AlertGenerator
 	{
 		$this->channel = $channel;
 	}
+	public function getPath()
+	{
+		$url = $this->getFilename();
+		$parsed = parse_url($url);
+		return $parsed['path'];
+	}
 	public function getFilename()
 	{
 		return SERIA_DYN_HTTP_ROOT.'/outboard/alerter/channel'.$this->channel->get('id').'.js';
@@ -43,6 +49,56 @@ class SERIA_AlertGenerator
 				/*
 				 * Utility functions:
 				 */
+				var getMyScriptElement = function () {
+					var refUrl = <?php echo SERIA_Lib::toJSON($this->getFilename()); ?>;
+					var refPath = <?php echo SERIA_Lib::toJSON($this->getPath()); ?>;
+
+					var scripts = document.getElementsByTagName('script');
+					for (var i = 0; i < scripts.length; i++) {
+						if (scripts[i].src.length < refUrl.length)
+							continue;
+						var part = scripts[i].src.substr(0, refUrl.length);
+						if (part == refUrl) {
+							return scripts[i];
+						}
+					}
+					/*
+					 * fallback
+					 */
+					for (var i = 0; i < scripts.length; i++) {
+						if (scripts[i].src.indexOf(refUrl) >= 0) {
+							return scripts[i];
+						}
+					}
+					return false;
+				}
+				var $_GET = function (name) {
+					var scriptElement = getMyScriptElement();
+					var url = scriptElement.src;
+
+					var exp = '(?:\\?([^#]*))?(?=#|$)';
+					exp = new RegExp(exp);
+					var query = url.match(exp);
+					if (typeof(query[1]) == 'undefined')
+						return false;
+					query = query[1];
+
+					/*
+					 * Thanks to Josh Fraser on June 10, 2009.
+					 * This regexp and code is based on the example published by Josh.
+					 */
+					exp = '&'+name+'(?:=([^&]*))?(?=&|$)';
+					exp = new RegExp(exp,'i');
+					var m = '&' + query;
+					m = m.match(exp);
+					if (typeof(m[1]) != 'undefined') {
+						return decodeURIComponent(m[1]);
+					} else {
+						return false;
+					}
+				}
+				var externalCallbackName = $_GET('callback');
+				eval(externalCallbackName+'();');
 				var addEvent = function (obj, evType, fn){ 
 					if (obj.addEventListener){ 
 						obj.addEventListener(evType, fn, false); 
@@ -211,5 +267,11 @@ class SERIA_AlertGenerator
 			if (!in_array($filename, $files))
 				unlink(SERIA_DYN_ROOT.'/outboard/alerter/'.$filename);
 		}
+	}
+	public static function generateListenerCodeWithCallback($publishPointUrl, $jsLoadedCallback)
+	{
+		ob_start();
+		?><script type="text/javascript">document.write(unescape("%3Cscript type=\"text/javascript\" src=\"<?php echo htmlspecialchars($publishPointUrl); ?>?callback=<?php echo urlencode($jsLoadedCallback); ?>&r=" + Math.floor((new Date()).getTime() / 60000) + "\" defer=\"defer\" %3E%3C/script%3E"));</script><?php
+		return ob_get_clean();
 	}
 }

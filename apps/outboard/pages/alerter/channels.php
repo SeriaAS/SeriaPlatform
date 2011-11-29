@@ -12,11 +12,23 @@
 		if ($this->id !== false) {
 			$jsgen = new SERIA_AlertGenerator($obj);
 			ob_start();
-			?><script type="text/javascript">document.write(unescape("%3Cscript type=\"text/javascript\" src=\"<?php echo htmlspecialchars($jsgen->getFilename()); ?>?r=" + Math.floor((new Date()).getTime() / 60000) + "\" defer=\"defer\" %3E%3C/script%3E"));</script><?php
+?>
+<script type="text/javascript">
+	<!--
+		function alerterLoadedCallback()
+		{
+			/* Code that runs after the alerter script has loaded */
+		}
+	-->
+</script>
+<?php
+			echo SERIA_AlertGenerator::generateListenerCodeWithCallback($jsgen->getFilename(), 'alerterLoadedCallback');
 			$code = ob_get_clean();
 			?>
 				<h2>{{'Javascript code'|_t}}</h2>
-				<textarea cols='80' rows='3'><?php echo htmlspecialchars($code); ?></textarea>
+				<textarea cols='80' rows='12'><?php echo htmlspecialchars($code); ?></textarea>
+				<h2>{{'Javascript publish point'|_t}}</h2>
+				<p><?php echo htmlspecialchars($jsgen->getFilename()); ?></p>
 			<?php
 		}
 	?>
