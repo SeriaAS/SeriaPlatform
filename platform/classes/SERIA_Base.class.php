@@ -224,10 +224,15 @@
 				{
 					try
 					{
-						if(is_object(SERIA_Base::$requestError) && is_a(SERIA_Base::$requestError, 'Exception'))
+						if(is_object(SERIA_Base::$requestError) && is_a(SERIA_Base::$requestError, 'Exception')) {
 							$message = SERIA_Base::$requestError->getMessage();
-						else
+							$filename = SERIA_Base::$requestError->getFile();
+							$lineno = SERIA_Base::$requestError->getLine();
+						} else {
 							$message = SERIA_Base::$requestError;
+							$filename = 'unknown';
+							$lineno = 0;
+						}
 						if (SERIA_Base::$requestErrorTrace)
 							$trace = SERIA_Base::$requestErrorTrace;
 						else
@@ -243,6 +248,9 @@
 	POST-DATA: ".var_export($_POST, true)."
 	SESSION-DATA: ".var_export($_POST, true)."
 	COOKIE-DATA: ".var_export($_COOKIE, true)."
+
+	Failed at:
+$filename : $lineno
 	
 	Errormessage:
 	
