@@ -55,7 +55,7 @@ class JEP_EsiIncludedHtmlTokenCompiler extends OR_EsiHtmlTokenCompiler
 			<script type='text/javascript'>
 				<!--
 					var <?php echo $jscall; ?> = function (postData, asyncCallbacks) {
-						var params = <?php echo SERIA_Lib::toJSON($proxyParams); ?>;
+						var params = <?php echo ($proxyParams ? SERIA_Lib::toJSON($proxyParams) : '{}'); ?>;
 						for (var i in postData) {
 							params[i] = postData[i];
 						}
