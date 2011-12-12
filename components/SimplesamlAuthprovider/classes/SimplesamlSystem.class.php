@@ -87,8 +87,11 @@ class SimplesamlSystem
 		try {
 			$stateId = $_SERVER['X_SERIA_PLATFORM_STATE_ID'];
 			$state = new SERIA_AuthenticationState($stateId);
-			if (get_class($error) == 'SimpleSAML_Error_Error')
-				$error = $error->getCause();
+			if (get_class($error) == 'SimpleSAML_Error_Error') {
+				$cause = $error->getCause();
+				if ($cause && $cause instanceof Exception)
+					$error = $cause;
+			}
 			if ($error instanceof Exception) {
 				/*
 				 * This will be handled normally as an unhandled exception in Seria Platform.
@@ -101,13 +104,15 @@ class SimplesamlSystem
 			$url = $state->stampUrl($url);
 		} catch (SERIA_Exception $e) {
 		}
-		$code = $error->getErrorCode();
-		if (is_array($code))
-			$code = array_shift($code);
-		if ($code)
-			$url->setParam('errorCode', $code);
-		if (!$state && SERIA_DEBUG) {
-			throw new SERIA_Exception('Error at '.$error->getFile().':'.$error->getLine().': '.$code);
+		if (get_class($error) == 'SimpleSAML_Error_Error') {
+			$code = $error->getErrorCode();
+			if (is_array($code))
+				$code = array_shift($code);
+			if ($code)
+				$url->setParam('errorCode', $code);
+			if (!$state && SERIA_DEBUG) {
+				throw new SERIA_Exception('Error at '.$error->getFile().':'.$error->getLine().': '.$code);
+			}
 		}
 		SERIA_Base::redirectTo($url->__toString());
 	}
