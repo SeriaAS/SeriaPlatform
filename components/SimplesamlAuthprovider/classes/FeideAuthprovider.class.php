@@ -74,7 +74,13 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 			'authsources' => array(
 				'feide' => array(
 					'saml:SP',
-					'idp' => $this->idp
+					'idp' => $this->idp,
+					/*
+					 * We need to override the metadata entityID with an URL where the state path-parameter is null.
+					 * The state path must be fixed in the entityID, if it changes when an actual login is
+					 * invoked it will be rejected by the SAML server.
+					 */
+					'entityID' => SERIA_HTTP_ROOT.'seria/components/SimplesamlAuthprovider/simplesamlphp.php/FeideAuthprovider/'.$this->getProviderId().'/null/module.php/saml/sp/metadata.php/feide'
 				)
 			),
 			'config' => array(
