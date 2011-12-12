@@ -87,6 +87,8 @@ class SimplesamlSystem
 		try {
 			$stateId = $_SERVER['X_SERIA_PLATFORM_STATE_ID'];
 			$state = new SERIA_AuthenticationState($stateId);
+			if (get_class($error) == 'SimpleSAML_Error_Error')
+				$error = $error->getCause();
 			if ($error instanceof Exception) {
 				/*
 				 * This will be handled normally as an unhandled exception in Seria Platform.
