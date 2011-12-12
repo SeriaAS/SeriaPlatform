@@ -41,7 +41,7 @@ $providerObject->configSimplesaml();
 unset($providerObject);
 
 $filepath = '/seria/frameworks/simplesaml/simplesamlphp-1.5.1/www';
-$virtpath = $_SERVER['SCRIPT_NAME'].'/'.$provider.'/'.$providerId;
+$virtpath = $_SERVER['SCRIPT_NAME'].'/'.$provider.'/'.$providerId.'/'.$stateId;
 
 while ($pathcomp) {
 	$try_next = array_shift($pathcomp);
