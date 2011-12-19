@@ -91,14 +91,15 @@ class SERIA_AlertGenerator
 					exp = new RegExp(exp,'i');
 					var m = '&' + query;
 					m = m.match(exp);
-					if (typeof(m[1]) != 'undefined') {
+					if (m && typeof(m[1]) != 'undefined') {
 						return decodeURIComponent(m[1]);
 					} else {
 						return false;
 					}
 				}
 				var externalCallbackName = $_GET('callback');
-				eval(externalCallbackName+'();');
+				if (externalCallbackName)
+					eval(externalCallbackName+'();');
 				var addEvent = function (obj, evType, fn){ 
 					if (obj.addEventListener){ 
 						obj.addEventListener(evType, fn, false); 
