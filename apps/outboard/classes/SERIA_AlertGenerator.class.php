@@ -66,7 +66,7 @@ class SERIA_AlertGenerator
 					 * fallback
 					 */
 					for (var i = 0; i < scripts.length; i++) {
-						if (scripts[i].src.indexOf(refUrl) >= 0) {
+						if (scripts[i].src.indexOf(refPath) >= 0) {
 							return scripts[i];
 						}
 					}
