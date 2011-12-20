@@ -15,7 +15,7 @@ function ErrorPage_error($httpErrorCode, $title, $message, $die, $extraHTML)
 		die();
 }
 
-function ErrorPage_init()
+function ErrorPageInit()
 {
 	if (defined('ERROR_PAGE_META_TEMPLATE') && file_exists(ERROR_PAGE_META_TEMPLATE))
 		SERIA_Hooks::listen(SERIA_Base::DISPLAY_ERROR_HOOK, 'ErrorPage_error');
