@@ -58,11 +58,16 @@
 		}
 		$items = array();
 		foreach ($transPhr as $hash => &$values) {
-			$items[] = seria_bml('div')->addChildren(array(
-				seria_bml('h3')->setText($values['default']),
-				seria_bml('label', array('for' => 'id_'.$hash))->setText(_t('Translate to %LANG%: ', array('LANG' => $lang))),
-				seria_bml('input', array('id' => 'id_'.$hash, 'type' => 'text', 'name' => 'transPhr['.$hash.']', 'value' => $values[$lang]))
-			));
+			ob_start();
+			?>
+				<div>
+					<h3><?php echo htmlspecialchars($values['default']); ?></h3>
+					<label for="<?php echo htmlspecialchars('id_'.$hash); ?>"><?php echo htmlspecialchars(_t('Translate to %LANG%: ', array('LANG' => $lang))); ?></label>
+					<input type='text' name="<?php echo htmlspecialchars('transPhr['.$hash.']'); ?>" id="<?php echo htmlspecialchars('id_'.$hash); ?>" value="<?php echo htmlspecialchars($values[$lang]); ?>" />
+					<button type='button' onclick="document.getElementById(<?php echo htmlspecialchars(SERIA_Lib::toJSON('id_'.$hash)); ?>).value = <?php echo htmlspecialchars(SERIA_Lib::toJSON($values['default'])); ?>"><?php echo _t('Same'); ?></button>
+				</div>
+			<?php
+			$items[] = ob_get_clean();
 		}
 		return seria_bml('div')->addChildren(array(
 			seria_bml('h2')->setText(_t('Translate file %FILE%', array('FILE' => $path))),
