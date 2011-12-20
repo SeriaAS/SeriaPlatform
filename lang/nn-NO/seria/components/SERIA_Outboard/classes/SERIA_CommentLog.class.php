@@ -8,4 +8,5 @@
   'dd172d8d3db566c99e29c1f23386321c' => 'Kommentar',
   'a920c481c309f3dfde86bbe8dc8b365d' => 'Handling',
   '6fc217d49a21dfffce4db65a9c74f16a' => 'Varsle om denne kommentaren',
+  '8a8fb0b2957e9a5a95c28094e109c6ba' => 'Brukar',
 )); ?>

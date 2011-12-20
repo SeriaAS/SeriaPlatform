@@ -7,4 +7,5 @@
   '884b7f1ed1f5b6bf331eba8cb841a233' => 'Oversett',
   'be2fc449b981b853895e6b3c5bfd5637' => 'Oversetting av brukerkode',
   'baa88c5e78929202e4e8a36340e5ede5' => 'Oversetting av Seria Platform',
+  'eaa84c2fbaf8f3e6f393960b7ca29ef5' => 'Seria Platform oversettingsverktøy',
 )); ?>

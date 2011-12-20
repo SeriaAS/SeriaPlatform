@@ -14,4 +14,6 @@
   'eabeb1168dfd3f915ff25b1f47f0df2d' => 'Oppdater',
   '5493be742dbf7d5efa3895fbe3ede1dc' => 'Vis alle filer. (Også de som ikke trenger oversetting.)',
   'a617eaafa7ab00758ea8063622f84142' => 'Oppdater',
+  'eaa84c2fbaf8f3e6f393960b7ca29ef5' => 'Seria Platform oversettingsverktøy',
+  '8e29eba1032fe5cc00b4e79af52a3550' => 'Samme',
 )); ?>

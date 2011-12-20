@@ -16,4 +16,6 @@
   'd36243ac3c56bb5678ef1e7b4ab3c57d' => 'Brukerhåndtering',
   '22945de22b25eef3ee6b80836ef894e9' => 'Innstillinger',
   'f4a60ae1700a0857de7566aacd7b9997' => 'Seria Platform konfigurasjon',
+  'ba6c2cad9bc251ec5435cf0178fd82d3' => 'Andre',
+  '29455083f29dea96136bb2c4d8bfc640' => 'Andre konfigureringsmuligheter',
 )); ?>

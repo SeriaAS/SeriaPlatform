@@ -7,4 +7,5 @@
   'ff53a31966636cde5f8f7498d21f74ea' => 'Syn alle brukarkontoar.',
   '8d535b58445b3e270b6e72aa23c66e30' => 'Lag brukar',
   '79777145a300c92d44241688e60a7c68' => 'Lag ein brukarkonto.',
+  'ca6477f937bd4e7c2c97e49504a6c806' => 'Seria Authproviders',
 )); ?>

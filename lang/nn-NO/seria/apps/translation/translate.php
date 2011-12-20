@@ -1,0 +1,15 @@
+<?php $Giant_list_lang = array_merge($Giant_list_lang, array (
+  'f323c7c1938c387b99e70adf55def1bd' => 'Logg ut',
+  'eaa84c2fbaf8f3e6f393960b7ca29ef5' => 'Seria Platform omsettingsverktøy',
+  'ae559db2810902efd71799d12486d33e' => 'Seria Platform omsettingsverktøy gjer det mogleg å omsette _t-tekst på din nettstad.',
+  '07cd2b50f1e3250035eb9ed07c5edd77' => 'Filnavn',
+  '955c17dcaff5665e8ad78b89cd87234f' => 'Omsatte frasar',
+  '9ee0405e634ed689d515b6f4959059cc' => 'Standardfrasar',
+  '91920e1556f85f3ac258632dfb386ee0' => 'Frasar som treng omsetting',
+  '5493be742dbf7d5efa3895fbe3ede1dc' => 'Vis alle filer. (Også dei som ikkje treng omsetting.)',
+  'a617eaafa7ab00758ea8063622f84142' => 'Oppdater',
+  'bd4df032805420b4e4721d48869b0e7c' => 'Omsett til %LANG%: ',
+  '8e29eba1032fe5cc00b4e79af52a3550' => 'Same',
+  'b4e26e6ef2bfb1f1a836942d8abe19a8' => 'Omsett fil %FILE%',
+  'd7fc7481f125c6aebdccdcfc9aaff60e' => 'Send inn',
+)); ?>

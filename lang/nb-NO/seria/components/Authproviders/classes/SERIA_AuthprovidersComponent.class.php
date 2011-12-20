@@ -6,4 +6,10 @@
   '944391da97d7ea28f9ff559e82798677' => 'Ny autentiseringstjeneste',
   '95ca1a37ac3dea88dfcc8cc250bedb29' => 'Flere autentiseringstjenester kan være påslått. Lag en ny tjeneste her.',
   'ca6477f937bd4e7c2c97e49504a6c806' => 'Seria Autentiseringstjenester',
+  'd36243ac3c56bb5678ef1e7b4ab3c57d' => 'Brukerhåndtering',
+  '8122b2f91440aef04ddf790533fc2f5c' => 'Behandle systembrukere og brukerkontoer og rettigheter',
+  'be7dcdde29652af120db8996d5d2a583' => 'Vis brukerkontoer',
+  'ff53a31966636cde5f8f7498d21f74ea' => 'Vis alle brukerkontoer.',
+  '8d535b58445b3e270b6e72aa23c66e30' => 'Lag bruker',
+  '79777145a300c92d44241688e60a7c68' => 'Lag en brukerkonto.',
 )); ?>
