@@ -1,6 +1,38 @@
 <?php
 	class OR_EsiHtmlTokenCompiler extends OR_HtmlTokenCompiler {
 
+		/**
+		 *
+		 * Test if the string is a number.
+		 * @param unknown_type $str
+		 */
+		protected static function isPartialIntStr($str)
+		{
+			$allowed = array('0', '1', '2', '3', '4', '5', '6', '7', '8', '9');
+			$chars = str_split($str);
+			if (!$chars)
+				return false;
+			$count = 0;
+			foreach ($chars as $c) {
+				if (!in_array($c, $allowed)) {
+					if ($count)
+						return $count;
+					else
+						return false;
+				}
+				$count++;
+			}
+			return $count;
+		}
+
+		/**
+		 * Get the integer and remove it from the string
+		 */
+		protected static function extractInteger(&$str)
+		{
+			return $int;
+		}
+
 		function includeTag($params) {
 			static $counter = 0;
 
@@ -9,6 +41,44 @@
 
 			if (!$params["src"]) throw new SERIA_Exception("src attribute is required in ESI include tag");
 			if (strpos($params["src"], "http://") !== 0 && strpos($params["src"], "https://") !== 0) throw new SERIA_Exception("Security alert in ESI include tag");
+			if (isset($params['ttl']) && $params['ttl']) {
+				$ttl_str = ltrim($params['ttl']);
+				$ttl = 0;
+				while ($ttl_str) {
+					$factors = array(
+						'h' => 3600,
+						'm' => 60,
+						's' => 1
+					);
+					$c = self::isPartialIntStr($ttl_str);
+					if (!$c) {
+						$ttl = 0;
+						break;
+					}
+					$int = substr($ttl_str, 0, $c);
+					$number = intval($int);
+					$ttl_str = substr($ttl_str, $c);
+					if ($ttl_str) {
+						$factor = substr($ttl_str, 0, 1);
+						$ttl_str = substr($ttl_str, 1);
+						if (isset($factors[$factor]))
+							$factor = $factors[$factor];
+						else {
+							$ttl = 0;
+							break;
+						}
+					} else
+						$factor = 1;
+					$ttl += $number * $factor;
+					$ttl_str = ltrim($ttl_str);
+				}
+				if ($ttl <= 0) {
+					$ttl = 300;
+					if (SERIA_DEBUG)
+						die('Esi error: ttl format error: '.$params['ttl']);
+				}
+			} else
+				$ttl = 300;
 
 			OR_EsiHtmlTokenCompiler::parseParams($params);
 
@@ -29,7 +99,7 @@
 			$code .= '	if (!$data["data"])'."\n";
 			$code .= '		$data["data"] = "Could not fetch data";'."\n";
 			$code .= '	if (!sizeof($_POST)) {';
-			$code .= '		$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], 300);'."\n";
+			$code .= '		$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], '.var_export($ttl, true).');'."\n";
 			$code .= '	}';
 			$code .= '	$data["data"] = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data["data"]);';
 			$code .= '	$obReplace["%WEB_BROWSER_".$c."%"] = $data["data"];'."\n";
