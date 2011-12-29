@@ -41,6 +41,19 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		SERIA_Hooks::listen('SERIA_Template::outputHandler', array($this, '_debug_templateOutputHandler'));
 	}
 
+	/**
+	 *
+	 * POST these fields to the current URL to invoke directly in the webbrowser (not by ajax).
+	 */
+	public function getPostInvokeParams()
+	{
+		$data = array(
+			$this->_name => $this->_data,
+		);
+		if ($this->_state)
+			$data[$this->_name.'-s'] = serialize($this->_state);
+	}
+
 	public function invoked()
 	{
 		if((isset($_POST[$this->_name]) && $_POST[$this->_name] == $this->_data)) {
@@ -80,12 +93,8 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 	 */
 	public function getAjaxCallData()
 	{
-		$data = array(
-			$this->_name => $this->_data,
-			'type' => 'ajax'
-		);
-		if ($this->_state)
-			$data[$this->_name.'-s'] = serialize($this->_state);
+		$data = $this->getPostInvokeParams();
+		$data['type'] = 'ajax';
 		return array(
 			'url' => SERIA_Url::current()->__toString(),
 			'data' => $data
