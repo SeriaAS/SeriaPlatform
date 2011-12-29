@@ -99,7 +99,6 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 			'url' => SERIA_Url::current()->__toString(),
 			'data' => $data
 		);
-		return $data;
 	}
 
 	/**
