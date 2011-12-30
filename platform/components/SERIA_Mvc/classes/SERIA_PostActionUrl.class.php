@@ -102,6 +102,23 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		);
 	}
 
+	public function javascriptCode($errorHandler='alert', $successHandler='null')
+	{
+		$nullHandler = 'function () {}';
+		if (!$errorHandler)
+			$errorHandler = $nullHandler;
+		if (!$successHandler)
+			$successHandler = $nullHandler;
+		SERIA_ScriptLoader::loadScript('jQuery');
+		$settings = $this->getAjaxCallData();
+		$settings['async'] = false;
+		$settings['dataType'] = 'text';
+		$settings['type'] = 'POST';
+		$settings = SERIA_Lib::toJSON($settings);
+		$settings = str_replace("\r", ' ', $settings);
+		$settings = str_replace("\n", ' ', $settings);
+		return '(function () { var returnmsg = jQuery.ajax('.$settings.'); if (returnmsg.status == 200) { returnmsg = returnmsg.responseText; if (returnmsg == "OK") { ('.$successHandler.')(); } else { ('.$errorHandler.')(returnmsg); } } else { ('.$errorHandler.')("The HTTP request for this action failed!"); } })();';
+	}
 	/**
 	 *
 	 * Returns an ajax-post code for the onclick attribute. (Not encoded)
