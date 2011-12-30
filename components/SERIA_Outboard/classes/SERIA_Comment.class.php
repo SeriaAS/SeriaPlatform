@@ -150,6 +150,29 @@
 			return $action;
 		}
 
+		/**
+		 *
+		 * The approval of a comment should often be limited to the path's
+		 * approval if this is a reply to another comment. This is because
+		 * replies will often not be shown when a comment is disapproved for
+		 * display.
+		 * @return string Approval, either 'approved', 'lowQuality', 'rejected' or 'flagged' (string).
+		 */
+		public function getPathApproval()
+		{
+			$comment = $this;
+			$approval = 'approved';
+			while (($comment = $comment->get('metaObject')) && $comment instanceof SERIA_Comment) {
+				if ($comment->get('flagged'))
+					return 'flagged';
+				else if ($comment->get('hidden'))
+					return 'rejected';
+				else if ($comment->get('rejected'))
+					$approval = 'lowQuality';
+			}
+			return $approval;
+		}
+
 		public function approve()
 		{
 			$this->set('hidden', false);
