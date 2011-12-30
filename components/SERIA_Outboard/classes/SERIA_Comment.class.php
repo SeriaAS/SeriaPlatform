@@ -170,48 +170,157 @@
 			}
 			return $a;
 		}
-		public function lowQualityApprove()
+		public function lowQualityApprove($recursive=true)
 		{
+			$rollback = array(
+				'hidden' => $this->get('hidden'),
+				'approved' => $this->get('approved'),
+				'rejected' => $this->get('rejected'),
+				'flagged' => $this->get('flagged')
+			);
 			$this->set('hidden', false);
 			$this->set('approved', false);
 			$this->set('rejected', true);
 			$this->set('flagged', false);
-			return SERIA_Meta::save($this);
+			$result = SERIA_Meta::save($this);
+			if ($result && $rollback['approved'] && !$recursive) {
+				try {
+					$subquery = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($this)));
+					$stack = array();
+					while ($subquery) {
+						$comment = $subquery->current();
+						if ($comment) {
+							$subquery->next();
+							array_push($stack, $subquery);
+							$subquery = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($comment)));
+							if ($comment->get('approved') && !$comment->get('flagged'))
+								throw new SERIA_Exception('Recursive off', SERIA_Exception::NOT_READY);
+						} else
+							$subquery = array_pop($stack);
+					}
+				} catch (Exception $e) {
+					/*
+					 * Roll back
+					 */
+					foreach ($rollback as $name => $value)
+						$this->set($name, $value);
+					SERIA_Meta::save($this);
+					throw $e;
+				}
+			}
+			/*
+			 * Set lowq on all approved replies.
+			 */
+			if ($recursive && $result) {
+				$query = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($this)));
+				foreach ($query as $comment) {
+					if ($comment->get('approved') && !$comment->get('flagged'))
+						$comment->lowQualityApprove(true);
+				}
+			}
+			return $result;
 		}
-		public function lowQualityApproveAction()
+		public function lowQualityApproveAction($recursive=true)
 		{
 //@TODO: Check access
-			$a = new SERIA_PostActionUrl('lowqapprove', $this);
+			if ($recursive)
+				$a = new SERIA_PostActionUrl('lowqapprove', $this);
+			else
+				$a = new SERIA_PostActionUrl('lowqapprove', 'notrecursive:'.get_class($this).':'.$this->get('id'));
+
 			if($a->invoked())
 			{
-				$a->success = $this->lowQualityApprove();
-				if (!$a->success)
-					$a->error = _t('Failed to approve the comment!');
+				try {
+					$a->success = $this->lowQualityApprove($recursive);
+					if (!$a->success)
+						$a->error = _t('Failed to approve the comment!');
+				} catch (Exception $e) {
+					$a->success = false;
+					$a->error = $e->getMessage();
+				}
 			}
 			return $a;
 		}
-		public function reject()
+		/**
+		 *
+		 * Rejects this comment, usually hiding it to users.
+		 * @param boolean $recursive Set this to false to throw Exception if there are replies which are not rejected.
+		 */
+		public function reject($recursive=true)
 		{
+			$rollback = array(
+				'hidden' => $this->get('hidden'),
+				'approved' => $this->get('approved'),
+				'rejected' => $this->get('rejected'),
+				'flagged' => $this->get('flagged')
+			);
 			$this->set('hidden', true);
 			$this->set('approved', false);
 			$this->set('rejected', false);
 			$this->set('flagged', false);
-			return SERIA_Meta::save($this);
+			$result = SERIA_Meta::save($this);
+			if ($result && !$recursive) {
+				try {
+					$subquery = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($this)));
+					$stack = array();
+					while ($subquery) {
+						$comment = $subquery->current();
+						if ($comment) {
+							$subquery->next();
+							array_push($stack, $subquery);
+							$subquery = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($comment)));
+							if (!$comment->get('hidden'))
+								throw new SERIA_Exception('Recursive off', SERIA_Exception::NOT_READY);
+						} else
+							$subquery = array_pop($stack);
+					}
+				} catch (Exception $e) {
+					/*
+					 * Roll back
+					 */
+					foreach ($rollback as $name => $value)
+						$this->set($name, $value);
+					SERIA_Meta::save($this);
+					throw $e;
+				}
+			}
+			/*
+			 * Set reject (hidden) on all replies.
+			 */
+			if ($recursive && $result) {
+				$query = SERIA_Meta::all('SERIA_Comment')->where('metaObject=:metaObject', array('metaObject' => SERIA_Meta::getReference($this)));
+				foreach ($query as $comment)
+					$comment->reject(true);
+			}
+			return $result;
 		}
-		public function rejectAction()
+		/**
+		 *
+		 * Rejects this comment, usually hiding it to users.
+		 * @param boolean $recursive Set this to false to return with ->error='Recursive off' if there are replies.
+		 */
+		public function rejectAction($recursive=true)
 		{
 //@TODO: Check access
-			$a = new SERIA_PostActionUrl('reject', $this);
+			if ($recursive)
+				$a = new SERIA_PostActionUrl('reject', $this);
+			else
+				$a = new SERIA_PostActionUrl('reject', 'notrecursive:'.get_class($this).':'.$this->get('id'));
 			if($a->invoked())
 			{
-				$a->success = $this->reject();
-				if (!$a->success)
-					$a->error = _t('Failed to reject the comment!');
+				try {
+					$a->success = $this->reject($recursive);
+					if (!$a->success)
+						$a->error = _t('Failed to reject the comment!');
+				} catch (Exception $e) {
+					$a->success = false;
+					$a->error = $e->getMessage();
+				}
 			}
 			return $a;
 		}
 
-		public function deleteAction()
+		public function deleteAction($recursive=true)
 		{
 			return SERIA_Meta::deleteAction('delete', $this);
 		}
