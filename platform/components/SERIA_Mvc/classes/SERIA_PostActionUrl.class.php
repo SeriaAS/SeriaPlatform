@@ -52,6 +52,7 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 		);
 		if ($this->_state)
 			$data[$this->_name.'-s'] = serialize($this->_state);
+		return $data;
 	}
 
 	public function invoked()
