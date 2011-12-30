@@ -343,7 +343,7 @@
 			return $a;
 		}
 
-		public function deleteAction($recursive=true)
+		public function deleteAction()
 		{
 			return SERIA_Meta::deleteAction('delete', $this);
 		}
