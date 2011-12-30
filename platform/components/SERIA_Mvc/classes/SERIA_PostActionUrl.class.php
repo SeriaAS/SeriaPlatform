@@ -199,4 +199,19 @@ class SERIA_PostActionUrl extends SERIA_ActionUrl
 			SERIA_Base::redirectTo($url);
 		}
 	}
+
+	/**
+	 *
+	 * If the action is a form submit in a webbrowser you can in rare cases
+	 * continue processing PHP-code after this. This cancels the requirement
+	 * of calling ->actionReturn. This is not available for ajax calls.
+	 */
+	public function actionContinue()
+	{
+		if ($this->type() == 'form') {
+			$this->debug_actionReturn = true;
+			return;
+		}
+		throw new SERIA_Exception('Action continue is not available for this invoke-type ('.$this->type().')!');
+	}
 }
