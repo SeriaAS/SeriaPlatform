@@ -79,11 +79,11 @@ class JEP_EsiIncludedHtmlTokenCompiler extends OR_EsiHtmlTokenCompiler
 	}
 	public static function recursiveCompile($html)
 	{
-		$compiler = new self('esi');
-		$code = $compiler->compile($html);
-
 		/* Removing anything that cause php to activate */
 		$html = str_replace(array('<'.'?', '?'.'>'), array('[[[?', '?]]]'), $html);
+
+		$compiler = new self('esi');
+		$code = $compiler->compile($html);
 
 		ob_start();
 		eval('?>'.$code);
