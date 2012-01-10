@@ -10,6 +10,19 @@ SERIA.User = function (user_id)
 	).data;
 }
 
+SERIA.getCurrentUserId = function ()
+{
+	if (typeof(SERIA.cache) == 'undefined')
+		SERIA.cache = {};
+	if (typeof(SERIA.cache.currentUserId) == 'undefined') {
+		SERIA.cache.currentUserId = SERIA.Lib.SJSON(
+			SERIA_VARS.HTTP_ROOT + '/seria/components/SERIA_JsonUserData/api/getCurrentUserId.php',
+			{ }
+		);
+	}
+	return SERIA.cache.currentUserId;
+}
+
 SERIA.getUser = function (user_id)
 {
 	if (!SERIA.cache.users)
@@ -26,13 +39,14 @@ SERIA.User.prototype.getPropertyList = function(namespace)
 
 SERIA.User.getPropertyList = function(namespace)
 {
-	return SERIA.getUser(SERIA_VARS.USER_ID).getPropertyList(namespace);
+	return SERIA.getUser(SERIA.getCurrentUserId()).getPropertyList(namespace);
 }
 
 SERIA.User.prototype.get = function (name)
 {
-	if (!('user' in SERIA.User))
-		SERIA.User.user = new SERIA.User(SERIA_VARS.USER_ID);
+	if (!('user' in SERIA.User)) {
+		SERIA.User.user = new SERIA.User(SERIA.getCurrentUserId());
+	}
 	switch (name) {
 		case 'id':
 			return this.user_id;
@@ -46,5 +60,5 @@ SERIA.User.prototype.get = function (name)
 
 SERIA.User.get = function (name)
 {
-	return SERIA.getUser(SERIA_VARS.USER_ID).get(name);
+	return SERIA.getUser(SERIA.getCurrentUserId()).get(name);
 }

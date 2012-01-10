@@ -64,7 +64,28 @@ SERIA.UserPropertyList.prototype.set = function (name, value)
 	if (!('values' in this))
 		this._load();
 	this.values[name] = value;
-	SERIA.Lib.SJSON(
+	var postData = function (url, params) {
+		var r = jQuery.ajax({
+			"type" : 'POST',
+			"async" : false,
+			"data" : params,
+			"dataType" : "json",
+			"timeout" : 3,
+			"url" : url
+		}).responseText;
+
+		try {
+			eval("r = " + r + ";");
+		} catch (e) {
+			return false;
+		}
+
+		if(r.error)
+			throw r.error;
+
+		return r;
+	}
+	postData(
 		SERIA_VARS.HTTP_ROOT + '/seria/components/SERIA_JsonUserData/api/setProperty.php',
 		{
 			user_id: this.user.get('id'),
