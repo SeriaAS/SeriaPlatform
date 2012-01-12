@@ -36,7 +36,7 @@ class SERIA_JsonUserPropertyStorageDriver
 				continue;
 			$candidate = substr($candidate, 10);
 
-			if ($candidate && $info['value'])
+			if ($candidate !== '' && $info['value'])
 				$values[$candidate] = unserialize($info['value']);
 		}
 		return $values;
