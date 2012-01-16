@@ -355,6 +355,7 @@ class SERIA_Authproviders
 			if (!$wait) {
 				SERIA_Base::debug('Auto login (N) discovery checking for availability and login for: '.$provider->getName());
 				if ($provider->isEnabled(SERIA_IAuthprovider::LOGIN_AUTO) && $provider->isAvailable() && $provider->automaticDiscovery()) {
+					SERIA_ProxyServer::noCache();
 					SERIA_Base::debug('Auto login (N) discovery, will try to log in with: '.$provider->getName());
 					$loginState->push('continue', $loginState->stampUrl(SERIA_Url::current()->setParam('returned', $provider->getProviderId()))->__toString());
 					$loginState->set('autoDiscoveryVector', $provider->getProviderId());
@@ -376,6 +377,7 @@ class SERIA_Authproviders
 				}
 			}
 			if ($wait == $provider->getProviderId()) {
+				SERIA_ProxyServer::noCache();
 				SERIA_Base::debug('Auto login (N) discovery returned to login for: '.$provider->getName());
 				$continue = $loginState->get('continue');
 				if (!is_array($continue) || count($continue) == 1) {

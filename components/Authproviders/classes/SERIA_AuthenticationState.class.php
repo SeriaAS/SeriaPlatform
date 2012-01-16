@@ -327,6 +327,7 @@ class SERIA_AuthenticationState
 	 */
 	public function terminate($field)
 	{
+		SERIA_ProxyServer::noCache();
 		if ($field != 'abort') {
 			$url = $this->pop($field);
 			if (!$this->exists($field))
