@@ -20,18 +20,17 @@
 			if(self::$depth++ > 50) throw new Exception('SERIA_Hooks depth of 50 reached.');
 			if(SERIA_DEBUG) SERIA_Base::debug('SERIA_Hooks:dispatch('.$name.')');
 
-			if(!isset(self::$listeners[$name]) && !isset($seria_options['hooks'][$name]))
-			{
-				self::$depth--;
-				return array();
-			}
-
 			// For support of early added hooks, required when listening to hooks issued before components and applications are loaded.
 			if(isset($seria_options['hooks'][$name])) {// merge the arrays and unset $seria_options['hooks'][$name]
 				foreach ($seria_options['hooks'] as $name => $hook) {
 					self::listen($name, (isset($hook['callback']) ? $hook['callback'] : $hook), (isset($hook['callback']) && isset($hook['weight']) ? $hook['weight'] : 0));
 				}
 				unset($seria_options['hooks']);
+			}
+
+			if (!isset(self::$listeners[$name]) || !self::$listeners[$name]) {
+				self::$depth--;
+				return array();
 			}
 
 			usort(self::$listeners[$name], array('SERIA_Hooks','sortByWeight'));
@@ -110,6 +109,13 @@
 			if(!isset(self::$listeners))
 				return NULL;
 
+			/*
+			 * This is a pipelining call, therefore if there are no listeners
+			 * we return the original data.
+			 */
+			if (!isset(self::$listeners[$name]) || !self::$listeners[$name])
+				return $data;
+
 			usort(self::$listeners[$name], array('SERIA_Hooks','sortByWeight'));
 
 			foreach(self::$listeners[$name] as $listener)
@@ -135,7 +141,7 @@
 			if(SERIA_DEBUG) SERIA_Base::debug('SERIA_Hooks:dispatch('.$name.')');
 
 			if(self::$depth++ > 50) throw new Exception('SERIA_Hooks depth of 50 reached.');
-			if(!isset(self::$listeners[$name]))
+			if(!isset(self::$listeners[$name]) || !self::$listeners[$name])
 			{
 				self::$depth--;
 				return NULL;
