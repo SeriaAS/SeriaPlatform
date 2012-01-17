@@ -17,6 +17,7 @@ define('NDLA_SYNC_SCHEDULER_ENABLED', $ndlaSyncEnabled);
 
 if ($ndlaSyncEnabled) {
 	SERIA_Base::addClassPath(dirname(__FILE__).'/classes/*.class.php');
+	SERIA_Base::addClassPath(dirname(__FILE__).'/sapi/*.class.php');
 	$component = new NDLA_SyncSchedulerComponent();
 	SERIA_Components::addComponent($component);
 	$component->embed();
