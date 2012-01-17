@@ -7,6 +7,7 @@
 	*	Add local classes to the class path
 	*/
 	SERIA_Base::addClassPath(SERIA_ROOT."/seria/apps/esiFrontend/classes/*.class.php");
+	SERIA_Base::addClassPath(SERIA_ROOT."/seria/apps/esiFrontend/sapi/*.class.php");
 
 	/**
 	*	Register this application
