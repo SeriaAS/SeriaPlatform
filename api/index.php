@@ -30,7 +30,7 @@ if (SAPI::isAuthenticatedMessage($get)) {
 	foreach ($sapiTokens as $sapiToken) {
 		if (($auth = SAPI::getAuthenticatedMessage($get, $sapiToken->get('secret'))) !== false) {
 			if (sizeof($post)) {
-				if (($post = SAPI::getAuthenticatedMessage($post, $sapiToken->get('secret'))) !== false) {
+				if (($post = SAPI::getAuthenticatedMessage($post, $sapiToken->get('secret'))) === false) {
 					die(SERIA_Lib::toJSON(array('error' => 'Authentication failure')));
 				}
 			}
