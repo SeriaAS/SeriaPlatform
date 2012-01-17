@@ -490,10 +490,11 @@ $trace
 		 *	SERIA_User object: logs the user in.
 		 *	NULL: logs the user out.
 		 *	false: returns the currently logged in user.
+		 * @param $tempoary boolean To set the user tempoarily, which means not updating the session.
 		 * @return SERIA_User
 		 * @return boolean
 		 */
-		static function user($setUser=false)
+		static function user($setUser=false, $tempoary=false)
 		{
 			static $user = false;
 
@@ -511,28 +512,30 @@ $trace
 
 			if($setUser===false)
 			{ // return the currently logged in user
-				if(!session_id()) // no session started, thus no user is logged in
-				{
-					return false;
-				}
-				if($user === false && isset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX])) // fetch the user object and cache it
-				{
-					try
+				if($user === false) {
+					if(!session_id()) // no session started, thus no user is logged in
 					{
-						$user = SERIA_Fluent::load('SERIA_User', $_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
+						return false;
 					}
-					catch (SERIA_NotFoundException $e)
+					if(isset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX])) // fetch the user object and cache it
 					{
-						unset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
-					}
-					catch (PDOException $e)
-					{
-						if(isset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]))
+						try
+						{
+							$user = SERIA_Fluent::load('SERIA_User', $_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
+						}
+						catch (SERIA_NotFoundException $e)
 						{
 							unset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
-							return false;
 						}
-						throw $e;
+						catch (PDOException $e)
+						{
+							if(isset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]))
+							{
+								unset($_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
+								return false;
+							}
+							throw $e;
+						}
 					}
 				}
 				return $user;
@@ -560,13 +563,15 @@ $trace
 			}
 			else if(is_a($setUser, 'SERIA_User'))
 			{ // setting the current user
-				if(!session_id())
-					session_start();
 				SERIA_Hooks::dispatch(SERIA_Base::BEFORE_LOGIN, $setUser);
-				if ($setUser->get('guestAccount'))
-					$_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED'] = true;
+				if (!$tempoary) {
+					if(!session_id())
+						session_start();
+					if ($setUser->get('guestAccount'))
+						$_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED'] = true;
+					$_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX] = $setUser->get('id');
+				}
 				$user = $setUser;
-				$_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX] = $user->get('id');
 				SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::NOTICE, _t('%USER%@%IP%: Login.', array('USER' => $user->get('username'), 'IP' => $_SERVER['REMOTE_ADDR'])), 'security');
 				SERIA_Hooks::dispatch(SERIA_Base::LOGGED_IN, $user);
 				return true;
