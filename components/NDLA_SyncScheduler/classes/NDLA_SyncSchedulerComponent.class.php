@@ -18,7 +18,6 @@ class NDLA_SyncSchedulerComponent extends SERIA_Component
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Edit sync', array($this, 'editSync'), 'ndlasyncschedules/edit/:id');
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Show sync log', array($this, 'showLog'), 'ndlasyncschedules/log');
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Sync now', array($this, 'syncNow'), 'ndlasyncschedules/sync');
-		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Sync scheduler API', array($this, 'apiRouter'), 'ndlasyncschedules/api');
 	}
 	function getInstallationPath()
 	{
@@ -105,64 +104,6 @@ class NDLA_SyncSchedulerComponent extends SERIA_Component
 		SERIA_Base::pageRequires('admin');
 		$template = new SERIA_MetaTemplate();
 		echo $template->parse($this->getInstallationPath().'/pages/syncnow.php');
-		die();
-	}
-
-	/**
-	 *
-	 * Call NDLA_SyncScheduler api directly.
-	 * @param string $api API-path
-	 * @param array $params Array of parameters (like $_GET).
-	 * @param array $post Array of post-data (like $_POST).
-	 * @throws SERIA_Exception
-	 * @return array Result data.
-	 */
-	public function api($api, $params, $post)
-	{
-		$api = str_replace('\\', '/', $api);
-		$api = 'api/'.$api;
-		$dir = dirname(dirname(__FILE__));
-		$api = explode('/', $api);
-		while ($api) {
-			$dh = opendir($dir);
-			$nodes = array();
-			while (($node = readdir($dh)))
-				$nodes[] = $node;
-			closedir($dh);
-			$part = array_shift($api);
-			if (in_array($part, $nodes))
-				$dir .= '/'.$part;
-			else if (in_array($part.'.php', $nodes))
-				$dir .= '/'.$part.'.php';
-			else
-				throw new SERIA_Exception('Not found: '.$part, SERIA_Exception::NOT_FOUND);
-			if (!is_dir($dir))
-				break;
-		}
-		$path = implode('/', $api);
-		/*
-		 * Varaibles in current scope:
-		 * $path - The path after matched file sync.php/path/whatever.. (=path/wha...)
-		 * $params - $_GET-parameters that are available to the api-file.
-		 * $post - $_POST-data.
-		 *
-		 * DO NOT USE $_GET or $_POST in the api-files.
-		 */
-		$result = require($dir);
-		return $result;
-	}
-
-	public function apiRouter()
-	{
-		if (isset($_GET['api']) && $_GET['api']) {
-			$params = $_GET;
-			unset($params['api']);
-			if (isset($params['route']))
-				unset($params['route']);
-			$result = $this->api($_GET['api'], $params, $_POST);
-			die(SERIA_Lib::toJSON($result));
-		} else
-			throw new SERIA_Exception('API requires params: api');
 		die();
 	}
 }
