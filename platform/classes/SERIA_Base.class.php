@@ -14,6 +14,7 @@
 		const INSTALL_HOOK = 'SeriaPlatformInstallation';	// accepts one parameter which is the log array. This log must be modified by adding an array. Check /seria/include/install.php for structure.
 		const DEBUG_HOOK = 'SERIA_Base::debug';			// Dispatches a shook for each debug message. Parameters ($timestamp, $message).
 		const REDIRECT_DEBUG_HOOK = 'SERIA_Base::redirectDebug'; // Dispatches if SERIA_DEBUG and SERIA_REDIRECT_DEBUG evaluates true.
+		const REDIRECT_HOOK = 'SERIA_Base::redirectTo'; // Dispatches on all SERIA_Base::redirectTo calls. Use this if you need to handle redirects differently.
 		const DISPLAY_ERROR_HOOK = 'SERIA_Base::displayErrorPage';
 
 		/* THESE HOOKS ARE DEPRECATED! THEY DO NOT HAVE THE REQUIRED _HOOK SUFFIX. UPDATE YOUR CODE!!! */
@@ -167,6 +168,11 @@
 
 		static function redirectTo($url)
 		{
+			/*
+			 * This hook can be used to redirect in an alternative way than 302 and Location.
+			 */
+			SERIA_Hooks::dispatch(SERIA_Base::REDIRECT_HOOK, $url);
+
 			if (SERIA_DEBUG && defined('SERIA_REDIRECT_DEBUG') && SERIA_REDIRECT_DEBUG)
 				SERIA_Hooks::dispatchToFirst(SERIA_Base::REDIRECT_DEBUG_HOOK, $url);
 			if(strpos($url, "#")!==false)
