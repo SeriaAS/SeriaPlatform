@@ -22,8 +22,8 @@
 
 			// For support of early added hooks, required when listening to hooks issued before components and applications are loaded.
 			if(isset($seria_options['hooks'][$name])) {// merge the arrays and unset $seria_options['hooks'][$name]
-				foreach ($seria_options['hooks'] as $name => $hook) {
-					self::listen($name, (isset($hook['callback']) ? $hook['callback'] : $hook), (isset($hook['callback']) && isset($hook['weight']) ? $hook['weight'] : 0));
+				foreach ($seria_options['hooks'] as $h_name => $hook) {
+					self::listen($h_name, (isset($hook['callback']) ? $hook['callback'] : $hook), (isset($hook['callback']) && isset($hook['weight']) ? $hook['weight'] : 0));
 				}
 				unset($seria_options['hooks']);
 			}
