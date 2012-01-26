@@ -77,12 +77,26 @@
 			);
 		}
 
-		public static function getComments(SERIA_MetaObject $object, $subset='default')
+		public static function getComments($object, $subset='default')
 		{
-			$reference = SERIA_Meta::getReference($object);
-			return SERIA_Meta::all('SERIA_Comment')
-				->where('metaObject=:metaObject AND subset=:subset', array('metaObject' => $reference, 'subset' => $subset))
-				->order('createdDate');
+			if ($object instanceof SERIA_MetaObject) {
+				$reference = SERIA_Meta::getReference($object);
+				return SERIA_Meta::all('SERIA_Comment')
+					->where('metaObject=:metaObject AND subset=:subset', array('metaObject' => $reference, 'subset' => $subset))
+					->order('createdDate');
+			} else if (is_array($object)) {
+				$keys = array();
+				$objects = array();
+				foreach ($object as $key => $obj) {
+					$key = 'object'.$key;
+					$keys[] = ':'.$key;
+					$objects[$key] = SERIA_Meta::getReference($obj);
+				}
+				return SERIA_Meta::all('SERIA_Comment')
+					->where('metaObject IN ('.implode(', ', $keys).') AND subset = :subset', array_merge($objects, array('subset' => $subset)))
+					->order('createdDate');
+			} else
+				throw new SERIA_Exception('Pass either a SERIA_MetaObject or an array of SERIA_MetaObjects!');
 		}
 
 		public static function getAllUnmoderatedComments()
