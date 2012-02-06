@@ -4,7 +4,10 @@
 	}
 ?><s:gui title="{'Application keys for Seria Platform API subsystem'|_t}">
 	<h1 class='legend'>{{'Application keys for Seria Platform API subsystem'|_t}}</h1>
-	<?php echo SAPI::js(); ?>
+	<?php
+		$this->gui->activeMenuItem('controlpanel/other/sapi');
+		echo SAPI::js();
+	?>
 	<table class='grid'>
 		<thead>
 			<tr>

@@ -5,6 +5,7 @@
 ?><s:gui title="{'Application keys for Seria Platform API subsystem'|_t}">
 	<h1 class='legend'>{{'Application keys for Seria Platform API subsystem'|_t}}</h1>
 	<?php
+		$this->gui->activeMenuItem('controlpanel/other/sapi');
 		$appkeysUrl = SERIA_Meta::manifestUrl('SAPI', 'appkeys');
 		if ($appkeysUrl instanceof SERIA_Url)
 			$appkeysUrl = $appkeysUrl->__toString();
