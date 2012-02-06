@@ -31,8 +31,8 @@ class SAPI_SyncScheduler extends SAPI
 			$sync2 = NDLA_SyncLog::loadSync2();
 			if ($sync2 !== null) {
 				$avail = array();
-				foreach ($sync2 as $sync) {
-					$avail[$sync[1]] = $sync[0];
+				foreach ($sync2 as $key => $sync) {
+					$avail[$sync[1]] = array($key, $sync[0]);
 				}
 			} else
 				return array(
@@ -40,10 +40,13 @@ class SAPI_SyncScheduler extends SAPI
 				);
 			$syncs = explode(',', $syncTypes);
 			$notfound = array();
-			foreach ($syncs as $sync) {
-				if (!isset($avail[$sync]))
+			foreach ($syncs as &$sync) {
+				if (isset($avail[$sync]))
+					$sync = $avail[$sync][0];
+				else
 					$notfound[] = $sync;
 			}
+			unset($sync);
 			if ($notfound)
 				return array(
 					'error' => 'Sync type(s) not found: '.implode(', ', $notfound)
