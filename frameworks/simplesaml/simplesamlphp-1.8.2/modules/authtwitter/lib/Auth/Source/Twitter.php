@@ -71,7 +71,9 @@ class sspmod_authtwitter_Auth_Source_Twitter extends SimpleSAML_Auth_Source {
 		$consumer = new sspmod_oauth_Consumer($this->key, $this->secret);
 
 		// Get the request token
-		$requestToken = $consumer->getRequestToken('http://twitter.com/oauth/request_token');
+		$base = Simplesaml_Utilities::getBaseURL();
+		$callback = $base.'/module.php/authtwitter/linkback.php';
+		$requestToken = $consumer->getRequestToken('http://twitter.com/oauth/request_token', array('oauth_callback' => $callback));
 		SimpleSAML_Logger::debug("Got a request token from the OAuth service provider [" . 
 			$requestToken->key . "] with the secret [" . $requestToken->secret . "]");
 
