@@ -146,6 +146,9 @@ class SimpleSAML_Logger {
 	}	
 	
 	static function log_internal($level,$string,$statsLog = false) {
+		if (SimplesamlLibrary::logger($level,$string))
+			return;
+
 		if (self::$loggingHandler === NULL) {
 			/* Initialize logging. */
 			self::createLoggingHandler();
