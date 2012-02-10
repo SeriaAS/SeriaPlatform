@@ -20,12 +20,12 @@ class OpenidGoogleAuthprovider extends SimplesamlAuthprovider
 			'authsources' => array(
 				'openid-google' => array(
 					'openid:OpenIDConsumer',
-					'ax.required' => array(
-						array('http://axschema.org/contact/email', 'email'),
-						array('http://axschema.org/namePerson/first', 'firstname'),
-						array('http://axschema.org/namePerson/last', 'lastname')
+					'attributes.ax_required' => array(
+						'http://axschema.org/contact/email',
+						'http://axschema.org/namePerson/first',
+						'http://axschema.org/namePerson/last',
 					),
-					'discovery' => 'https://www.google.com/accounts/o8/id'
+					'target' => 'https://www.google.com/accounts/o8/id'
 				),
 			),
 			'config' => array(
@@ -42,9 +42,9 @@ class OpenidGoogleAuthprovider extends SimplesamlAuthprovider
 				),
 				'load' => array(
 					'unique' => array('openid', 0),
-					'email' => array('openid.ax.email', 0),
-					'firstName' => array('openid.ax.firstname', 0),
-					'lastName' => array('openid.ax.lastname', 0)
+					'email' => array('http://axschema.org/contact/email', 0),
+					'firstName' => array('http://axschema.org/namePerson/first', 0),
+					'lastName' => array('http://axschema.org/namePerson/last', 0)
 				),
 				'combinations' => array(
 					'displayName' => array('firstName', '_space', 'lastName')

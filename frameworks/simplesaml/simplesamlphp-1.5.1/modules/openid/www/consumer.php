@@ -55,6 +55,12 @@ function getTrustRoot() {
 	return SimpleSAML_Utilities::selfURLhost();
 }
 
+function ax_create_alias_from_uri($uri)
+{
+	$alias = explode('/', $uri);
+	return array_pop($alias);
+}
+
 function run_try_auth() {
     global $authSource;
 
@@ -84,9 +90,9 @@ function run_try_auth() {
     $axopt = $authSource->getAxOptionalAttributes();
     $axreq = $authSource->getAxRequiredAttributes();
     foreach ($axopt as $attr)
-        $attrs[] = array(0, $attr[0], $attr[1]);
+        $attrs[] = array(0, $attr, $attr);
     foreach ($axreq as $attr)
-        $attrs[] = array(1, $attr[0], $attr[1]);
+        $attrs[] = array(1, $attr, $attr);
     $req_attrs = array();
     foreach ($attrs as $attr) {
         if (isset($req_attrs[$attr[2]])) {
@@ -101,7 +107,7 @@ function run_try_auth() {
     }
     if ($req_attrs) {
     	foreach ($req_attrs as $name => &$attr)
-    	    $attr = Auth_OpenID_AX_AttrInfo::make($attr['type'], $attr['count'], $attr['required'], $name);
+    	    $attr = Auth_OpenID_AX_AttrInfo::make($attr['type'], $attr['count'], $attr['required'], ax_create_alias_from_uri($name));
         unset($attr);
         $ax_request = new Auth_OpenID_AX_FetchRequest();
         foreach ($req_attrs as $attr)
@@ -199,13 +205,13 @@ function run_finish_auth() {
 					SimpleSAML_Logger::debug('AX Response: '.serialize($obj));
     				$axattr = array();
     				foreach ($axopt as $attr)
-    					$axattr[$attr[1]] = $attr[0];
+    					$axattr[ax_create_alias_from_uri($attr)] = $attr;
     				foreach ($axreq as $attr)
-    					$axattr[$attr[1]] = $attr[0];
-    				foreach ($axattr as $name => $spec) {
-    					$attributes['openid.ax.'.$name] = $obj->get($spec);
-    					if (!$attributes['openid.ax.'.$name])
-    						unset($attributes['openid.ax.'.$name]);
+    					$axattr[ax_create_alias_from_uri($attr)] = $attr;
+    				foreach ($axattr as $spec) {
+    					$attributes[$spec] = $obj->get($spec);
+    					if (!$attributes[$spec])
+    						unset($attributes[$spec]);
     				}
 				}
 			}

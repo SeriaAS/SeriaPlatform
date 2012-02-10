@@ -40,9 +40,12 @@ class TwitterAuthprovider extends SimplesamlAuthprovider
 					'displayName' => ''
 				),
 				'load' => array(
-					'unique' => array('screen_name', 0),
-					'fullName' => array('name', 0),
-					'displayName' => array('displayName', 0)
+					'old_unique' => array('screen_name', 0),
+					'old_fullName' => array('name', 0),
+					'old_displayName' => array('displayName', 0),
+					'unique' => array('twitter.screen_name', 0),
+					'fullName' => array('twitter.name', 0),
+					'displayName' => array('twitter.name', 0)
 				),
 				'combinations' => array(
 				),
@@ -120,6 +123,22 @@ class TwitterAuthprovider extends SimplesamlAuthprovider
 
 	public function filterAttributes($attributes)
 	{
+		/*
+		 * Compat-mode, names have changed with v1.8.2 of Simplesamlphp.
+		 */
+		$compat = array(
+			'unique' => 'old_unique',
+			'fullName' => 'old_fullName',
+			'displayName' => 'old_displayName'
+		);
+		foreach ($compat as $name => $compatName) {
+			if ((!isset($attributes[$name]) || !$attributes[$name]) &&
+			    isset($attributes[$compatName]) && $attributes[$compatName])
+				$attributes[$name] = $attributes[$compatName];
+			if (isset($attributes[$compatName]))
+				unset($attributes[$compatName]);
+		}
+
 		foreach ($attributes as $name => $value)
 			SERIA_Base::debug($name.' => '.$value);
 		$firstName = '';

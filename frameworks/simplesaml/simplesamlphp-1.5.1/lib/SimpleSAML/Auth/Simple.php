@@ -80,8 +80,8 @@ class SimpleSAML_Auth_Simple {
 			$returnTo = SimpleSAML_Utilities::selfURL();
 		}
 
-		if (array_key_exists('ReturnFailureTo', $options))
-			$returnFailureTo = (string)$options['ReturnFailureTo'];
+		if (array_key_exists('ErrorURL', $options))
+			$returnFailureTo = (string)$options['ErrorURL'];
 		else
 			$returnFailureTo = NULL;
 

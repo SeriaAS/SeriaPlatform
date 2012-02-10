@@ -53,10 +53,10 @@ class sspmod_openid_Auth_Source_OpenIDConsumer extends SimpleSAML_Auth_Source {
 		$this->optionalAttributes = $cfgParse->getArray('attributes.optional', array());
 		$this->requiredAttributes = $cfgParse->getArray('attributes.required', array());
 
-		$this->axOptionalAttributes = $cfgParse->getArray('ax.optional', array());
-		$this->axRequiredAttributes = $cfgParse->getArray('ax.required', array());
+		$this->axOptionalAttributes = $cfgParse->getArray('attributes.ax_optional', array());
+		$this->axRequiredAttributes = $cfgParse->getArray('attributes.ax_required', array());
 
-		$this->discoveryEndpoint = $cfgParse->getString('discovery', false);
+		$this->discoveryEndpoint = $cfgParse->getString('target', false);
 	}
 
 

@@ -165,7 +165,7 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 		$as = new SimpleSAML_Auth_Simple($params['authsource']);
 		$as->requireAuth(array(
 			'ReturnTo' => $url,
-			'ReturnFailureTo' => $failureUrl
+			'ErrorURL' => $failureUrl
 		));
 		return $this->authenticatedExternally($params, $as->getAttributes(), $guestLogin);
 	}
