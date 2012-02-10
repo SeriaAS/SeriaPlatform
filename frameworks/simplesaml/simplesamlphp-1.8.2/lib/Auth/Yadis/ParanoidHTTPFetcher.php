@@ -27,7 +27,14 @@ require_once "Auth/OpenID.php";
  * @package OpenID
  */
 class Auth_Yadis_ParanoidHTTPFetcher extends Auth_Yadis_HTTPFetcher {
-    function Auth_Yadis_ParanoidHTTPFetcher()
+	protected static $httpsVerifyPeer = true;
+
+	public static function setHttpsVerifyPeer($verifyPeer)
+	{
+		self::$httpsVerifyPeer = $verifyPeer;
+	}
+
+	function Auth_Yadis_ParanoidHTTPFetcher()
     {
         $this->reset();
     }
@@ -132,6 +139,9 @@ class Auth_Yadis_ParanoidHTTPFetcher extends Auth_Yadis_HTTPFetcher {
                 curl_setopt($c, CURLOPT_SSL_VERIFYPEER, true);
                 curl_setopt($c, CURLOPT_SSL_VERIFYHOST, 2);
             }
+            if (!Auth_Yadis_ParanoidHTTPFetcher::$httpsVerifyPeer)
+                curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
+
             curl_exec($c);
 
             $code = curl_getinfo($c, CURLINFO_HTTP_CODE);
@@ -205,6 +215,9 @@ class Auth_Yadis_ParanoidHTTPFetcher extends Auth_Yadis_HTTPFetcher {
             curl_setopt($c, CURLOPT_SSL_VERIFYPEER, true);
             curl_setopt($c, CURLOPT_SSL_VERIFYHOST, 2);
         }
+
+		if (!Auth_Yadis_ParanoidHTTPFetcher::$httpsVerifyPeer)
+			curl_setopt($c, CURLOPT_SSL_VERIFYPEER, false);
 
         curl_exec($c);
 

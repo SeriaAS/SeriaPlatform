@@ -13,22 +13,27 @@
  * @license http://www.apache.org/licenses/LICENSE-2.0 Apache
  */
 
+/*
+ * PHP crashes when these require_once-s are being done. The autoloader should load these.
+ * Commented out by J-E P.
+ */
+
 /**
  * Need both fetcher types so we can use the right one based on the
  * presence or absence of CURL.
  */
-require_once "Auth/Yadis/PlainHTTPFetcher.php";
-require_once "Auth/Yadis/ParanoidHTTPFetcher.php";
+//require_once "Auth/Yadis/PlainHTTPFetcher.php";
+//require_once "Auth/Yadis/ParanoidHTTPFetcher.php";
 
 /**
  * Need this for parsing HTML (looking for META tags).
  */
-require_once "Auth/Yadis/ParseHTML.php";
+//require_once "Auth/Yadis/ParseHTML.php";
 
 /**
  * Need this to parse the XRDS document during Yadis discovery.
  */
-require_once "Auth/Yadis/XRDS.php";
+//require_once "Auth/Yadis/XRDS.php";
 
 /**
  * XRDS (yadis) content type
@@ -240,8 +245,14 @@ function Auth_Yadis_getServiceEndpoints($input_url, $xrds_parse_func,
  * @package OpenID
  */
 class Auth_Yadis_Yadis {
+	protected static $httpsVerifyPeer = true;
 
-    /**
+	public static function setHttpsVerifyPeer($verifyPeer)
+	{
+		self::$httpsVerifyPeer = $verifyPeer;
+	}
+
+	/**
      * Returns an HTTP fetcher object.  If the CURL extension is
      * present, an instance of {@link Auth_Yadis_ParanoidHTTPFetcher}
      * is returned.  If not, an instance of
@@ -255,6 +266,7 @@ class Auth_Yadis_Yadis {
         if (Auth_Yadis_Yadis::curlPresent() &&
             (!defined('Auth_Yadis_CURL_OVERRIDE'))) {
             $fetcher = new Auth_Yadis_ParanoidHTTPFetcher($timeout);
+            $fetcher->setHttpsVerifyPeer(Auth_Yadis_Yadis::$httpsVerifyPeer);
         } else {
             $fetcher = new Auth_Yadis_PlainHTTPFetcher($timeout);
         }
