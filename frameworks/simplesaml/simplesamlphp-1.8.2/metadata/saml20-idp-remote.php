@@ -89,3 +89,21 @@ $metadata['https://testidp.wayf.dk'] = array(
 	'SingleLogoutService'  => 'https://testidp.wayf.dk/saml2/idp/SingleLogoutService.php',
 	'certFingerprint'      => '04b3b08bce004c27458b3e85b125273e67ef062b'
 );
+
+$emeta = SimplesamlLibrary::dispatchHook('simplesaml.metadata', 'saml20-idp-remote');
+if ($emeta) {
+	ob_start();
+	print_r($emeta);
+	$lns = ob_get_clean();
+	$lns = explode("\n", $lns);
+	foreach ($lns as $ln)
+		SimpleSAML_Logger::debug('emeta: '.$ln);
+	foreach ($emeta as $set) {
+		if ($set === null)
+			continue;
+		foreach ($set as $id => $params) {
+			SimpleSAML_Logger::debug('Adding metadata for '.$id.' (saml20-idp-remote)');
+			$metadata[$id] = $params;
+		}
+	}
+}

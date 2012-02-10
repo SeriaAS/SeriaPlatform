@@ -227,7 +227,9 @@ class SimpleSAML_Configuration {
 		assert('is_string($instancename)');
 
 		if ($instancename === 'simplesaml') {
-			return self::getConfig();
+			$config = self::getConfig();
+			SimplesamlLibrary::dispatchHookArray('simplesaml_configuration_loaded', array($config));
+			return $config;
 		}
 
 		if (!array_key_exists($instancename, self::$instance)) 

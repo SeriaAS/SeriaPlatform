@@ -299,3 +299,9 @@ $config = array(
 	*/
 
 );
+
+$additions = SimplesamlLibrary::dispatchHook('simplesaml.authsources');
+foreach ($additions as $add) {
+	foreach ($add as $name => $params)
+		$config[$name] = $params;
+}

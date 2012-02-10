@@ -25,3 +25,15 @@ $metadata['google.com'] = array(
 	'simplesaml.nameidattribute' => 'uid',
 	'simplesaml.attributes' => FALSE,
 );
+
+$emeta = SimplesamlLibrary::dispatchHook('simplesaml.metadata', 'saml20-sp-remote');
+if ($emeta) {
+	foreach ($emeta as $set) {
+		if ($set === null)
+			continue;
+		foreach ($set as $id => $params) {
+			SimpleSAML_Logger::debug('Adding metadata for '.$id.' (saml20-sp-remote)');
+			$metadata[$id] = $params;
+		}
+	}
+}

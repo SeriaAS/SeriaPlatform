@@ -57,7 +57,7 @@ $config = array (
 	 * This password will give access to the installation page of simpleSAMLphp with
 	 * metadata listing and diagnostics pages.
 	 */
-	'auth.adminpassword'		=> '123',
+	'auth.adminpassword'		=> sha1(mt_rand().mt_rand().mt_rand()).mt_rand(),
 	'admin.protectindexpage'	=> false,
 	'admin.protectmetadata'		=> false,
 
@@ -562,3 +562,9 @@ $config = array (
 	'proxy' => NULL,
 
 );
+
+$additions = SimplesamlLibrary::dispatchHook('simplesaml.config');
+foreach ($additions as $add) {
+	foreach ($add as $name => $params)
+		$config[$name] = $params;
+}
