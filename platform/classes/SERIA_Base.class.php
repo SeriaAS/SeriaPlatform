@@ -348,6 +348,7 @@ $trace
 				case E_WARNING :
 				case E_USER_WARNING :
 				case E_USER_NOTICE : 
+				case E_DEPRECATED :
 					if (defined('SERIA_DEBUG') && SERIA_DEBUG) {
 						if(class_exists('SERIA_Template'))
 							SERIA_Template::debugMessage("<strong>PHP NOTICE/WARNING: ".$errstr." on line ".$errline." in ".$errfile."</strong>");
