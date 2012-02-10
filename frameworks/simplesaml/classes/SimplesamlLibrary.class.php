@@ -1,11 +1,18 @@
 <?php
 
+define('LOAD_SIMPLESAMLPHP_PATH', realpath(dirname(dirname(__FILE__))).'/simplesamlphp-'.LOAD_SIMPLESAMLPHP_VERSION);
+
 class SimplesamlLibrary
 {
 	const UNHANDLED_ERROR_HOOK = 'SimplesamlLibrary::UNHANDLED_ERROR_HOOK';
 
 	protected static $hookCallback = false;
 	protected static $debugCallback = false;
+
+	public static function getSimplesamlphpPath()
+	{
+		return LOAD_SIMPLESAMLPHP_PATH;
+	}
 
 	public static function setDispatchHookCallback($callback)
 	{
@@ -51,10 +58,10 @@ class SimplesamlLibrary
 
 	public static function includePath()
 	{
-		set_include_path(get_include_path().PATH_SEPARATOR.realpath(dirname(__FILE__).'/../simplesamlphp-1.5.1/lib'));
+		set_include_path(get_include_path().PATH_SEPARATOR.LOAD_SIMPLESAMLPHP_PATH.'/lib');
 	}
 	public static function autoloader()
 	{
-		require_once(dirname(__FILE__).'/../simplesamlphp-1.5.1/lib/_autoload.php');
+		require_once(LOAD_SIMPLESAMLPHP_PATH.'/lib/_autoload.php');
 	}
 }

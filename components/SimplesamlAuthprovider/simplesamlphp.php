@@ -40,13 +40,13 @@ if ($providerObject === null)
 $providerObject->configSimplesaml();
 unset($providerObject);
 
-$filepath = '/seria/frameworks/simplesaml/simplesamlphp-1.5.1/www';
+$filepath = LOAD_SIMPLESAMLPHP_PATH.'/www';
 $virtpath = $_SERVER['SCRIPT_NAME'].'/'.$provider.'/'.$providerId.'/'.$stateId;
 
 while ($pathcomp) {
 	$try_next = array_shift($pathcomp);
-	if (!file_exists(SERIA_ROOT.$filepath.'/'.$try_next)) {
-		SERIA_Base::debug(SERIA_ROOT.$filepath.'/'.$try_next.' does not exist, using '.SERIA_ROOT.$filepath.'.');
+	if (!file_exists($filepath.'/'.$try_next)) {
+		SERIA_Base::debug($filepath.'/'.$try_next.' does not exist, using '.$filepath.'.');
 		array_unshift($pathcomp, $try_next);
 		break;
 	}
@@ -54,7 +54,7 @@ while ($pathcomp) {
 	$virtpath .= '/'.$try_next;
 }
 
-$filename = SERIA_ROOT.$filepath;
+$filename = $filepath;
 
 $_SERVER['SCRIPT_FILENAME'] = $filename;
 $_SERVER['SCRIPT_NAME'] = $virtpath;
