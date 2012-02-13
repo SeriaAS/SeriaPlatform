@@ -51,6 +51,19 @@
 			return $cache->get($key);
 		}
 
+		public static function escapePhpTags($code)
+		{
+			$code = str_replace(array('[?', '?]'), array('[[?', '?]]'), $code);
+			$code = str_replace(array('<'.'?', '?'.'>'), array(' [?', '?] '), $code);
+			return $code;
+		}
+		public static function unescapePhpTags($code)
+		{
+			$code = str_replace(array(' [?', '?] '), array('<'.'?', '?'.'>'), $code);
+			$code = str_replace(array('[[?', '?]]'), array('[?', '?]'), $code);
+			return $code;
+		}
+
 		// hook for urls
 		function router($url)
 		{
@@ -261,12 +274,12 @@
 				$c = $d->c;
 	
 				$compiler = new OR_EsiHtmlTokenCompiler("esi");
-				$c = str_replace(array('<'.'?', '?'.'>'), array('[[[?', '?]]]'), $c);
+				$c = self::escapePhpTags($c);
 				ob_start();
 				eval('?>'.$compiler->compile($c));
 				$c = ob_get_contents();
 				ob_end_clean();
-				$c = str_replace(array('[[[?', '?]]]'), array('<'.'?', '?'.'>'), $c);
+				$c = self::unescapePhpTags($c);
 
 				echo $c;
 			}

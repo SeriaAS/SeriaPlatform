@@ -80,7 +80,7 @@ class JEP_EsiIncludedHtmlTokenCompiler extends OR_EsiHtmlTokenCompiler
 	public static function recursiveCompile($html)
 	{
 		/* Removing anything that cause php to activate */
-		$html = str_replace(array('<'.'?', '?'.'>'), array('[[[?', '?]]]'), $html);
+		$html = SERIA_EsiFrontendApplication::escapePhpTags($html);
 
 		$compiler = new self('esi');
 		$code = $compiler->compile($html);
@@ -90,7 +90,7 @@ class JEP_EsiIncludedHtmlTokenCompiler extends OR_EsiHtmlTokenCompiler
 		$output = ob_get_clean();
 		
 		/* And undoing */
-		return str_replace(array('[[[?', '?]]]'), array('<'.'?', '?'.'>'), $output);
+		return SERIA_EsiFrontendApplication::unescapePhpTags($output);
 	}
 
 	/*
