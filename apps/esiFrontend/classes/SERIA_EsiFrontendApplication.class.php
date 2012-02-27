@@ -119,6 +119,10 @@
 					header($_SERVER['SERVER_PROTOCOL'].' '.$currentCache[$ident]['code'].' '.$currentCache[$ident]['codeString']);
 					header('Status: '.$currentCache[$ident]['code'].' '.$currentCache[$ident]['codeString']);
 				}
+				if ($c && isset($currentCache[$ident]['cacheDesc'])) {
+					$cacheDesc = $currentCache[$ident]['cacheDesc'];
+					SERIA_Template::headPrepend('cache_control_info', "<!-- CONTENT CACHED:\n".$cacheDesc['debug'].' -->');
+				}
 			}
 
 			$passthru = true;
@@ -146,11 +150,79 @@
 
 				$c = $b->fetch(); // reading some data to fetch headers
 
+				$hdrs = array('Expires', 'Date', 'Cache-Control');
+				$hdrs = array_flip($hdrs);
+				foreach ($hdrs as $name => &$value)
+					$value = isset($b->responseHeaders[$name]) && $b->responseHeaders[$name];
+				unset($value);
+				$cacheControlText = '';
+				if (($hdrs['Date'] && $hdrs['Expires']) || $hdrs['Cache-Control']) {
+					if ($hdrs['Date'] && $hdrs['Expires']) {
+						$cacheControlText .= 'HTTP/1.0 Date&Expires: date="'.$b->responseHeaders['Date'].'", expires="'.$b->responseHeaders['Expires'].'"'."\n";
+						$date = new DateTime($b->responseHeaders['Date']);
+						$expires = new DateTime($b->responseHeaders['Expires']);
+						$date = $date->getTimestamp();
+						$expires = $expires->getTimestamp();
+						$now = time();
+						$cacheControlText .= 'Timestamp: now='.$now.', date='.$date.', expires='.$expires."\n";
+						if ($expires >= $date) {
+							$ttl = $expires - $now;
+							if ($ttl < 0)
+								$ttl = 0;
+							$cacheControlText .= 'HTTP/1.0 allows caching with ttl='.$ttl."\n";
+						} else {
+							$cacheControlText .= 'HTTP/1.0 disallows caching.'."\n";
+							$ttl = false;
+						}
+					}
+					if ($hdrs['Cache-Control']) {
+						$cacheControl = $b->responseHeaders['Cache-Control'];
+						$cacheControlText .= 'Backend Cache-Control (overrides HTTP/1.0): '.$cacheControl."\n";
+						$cacheControl = new SERIA_CacheControl($cacheControl);
+						if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
+							if ($cacheControl->getToken('public') !== null) {
+								$ttl = $cacheControl->getPublicMaxAge();
+								$cacheControlText .= 'HTTP/1.1 allows public caching with ttl='.$ttl."\n";
+							} else if ($cacheControl->getToken('private') !== null) {
+								$cacheControlText .= 'HTTP/1.1 disallows public caching, but allows private. Frontend can\'t cache!'."\n";
+								$ttl = false;
+							} else {
+								$cacheControlText .= 'HTTP/1.1 does not allow or deny caching!'."\n";
+								$ttl = false;
+							}
+						} else {
+							$cacheControlText .= 'HTTP/1.1 disallows caching.'."\n";
+							$ttl = false;
+						}
+					}
+				} else {
+					$cacheControlText .= "No HTTP/1.0 or HTTP/1.1 cache headers, not cacheable!\n";
+					$ttl = false;
+				}
+				$cacheable = false;
+				if ($ttl || ($ttl === 0 && defined('ESIFRONTEND_MAIN_CONTENT_TTL') && ESIFRONTEND_MAIN_CONTENT_TTL)) {
+					if (defined('ESIFRONTEND_MAIN_CONTENT_TTL') && ESIFRONTEND_MAIN_CONTENT_TTL) {
+						$cacheControlText .= 'Cache ttl override (ESIFRONTEND_MAIN_CONTENT_TTL): '.$ttl.'=>'.ESIFRONTEND_MAIN_CONTENT_TTL."\n";
+						$ttl = ESIFRONTEND_MAIN_CONTENT_TTL;
+					}
+					$cacheControlText .= 'Final frontend caching decision: YES cacheable with ttl='.$ttl."\n";
+					$cacheable = true;
+				} else if ($ttl !== false)
+					$cacheControlText .= 'Final frontend caching decision: NO not cacheable with ttl='.$ttl."\n";
+				else 
+					$cacheControlText .= "Final frontend caching decision: NO not cacheable\n";
+				SERIA_Template::headPrepend('cache_control_info', "<!-- CONTENT NOT CACHED:\n".$cacheControlText.' -->');
 				if ($b->responseHeaders['Location']) {
 					$redirectTo = str_replace(ESIFRONTEND_BACKEND_HTTPROOT, 'http://'.$_SERVER['HTTP_HOST'], $b->responseHeaders['Location']);
 					SERIA_Base::redirectTo($redirectTo);
 				}
-
+				$cacheDesc = array(
+					'cacheable' => $cacheable,
+					'ts' => time(),
+					'ttl' => $ttl,
+					'debug' => $cacheControlText
+				);
+				
 
 				$headersWhitelist = array("vary" => true, "content-description" => true, "content-type" => true, "content-disposition" => true, "content-transfer-encoding" => true);
 
@@ -226,7 +298,7 @@
 						$ident = "_";
 					}
 	
-					$skipCache = false;
+					$skipCache = !$cacheDesc['cacheable'];
 					if (defined('ESIFRONTEND_SKIP_CACHE')) {
 						$skipUrls = explode(',', ESIFRONTEND_SKIP_CACHE);
 						foreach ($skipUrls as $skipUrl) {
@@ -238,9 +310,9 @@
 					}
 	
 					if (!$skipCache) {
-						$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString);
+						$currentCache[$ident] = array('content' => $c, 'headers' => $headersToCache, 'code' => $b->responseCode, 'codeString' => $b->responseString, 'cacheDesc' => $cacheDesc);
 						if ($b->responseCode == 200) {
-							$cacheTime = 90000;
+							$cacheTime = $cacheDesc['ttl'];
 							if (defined('ESIFRONTEND_MAIN_CONTENT_TTL'))
 								$cacheTime = ESIFRONTEND_MAIN_CONTENT_TTL;
 							if ($cacheTime > 0)
