@@ -3,6 +3,13 @@
 
 		/**
 		 *
+		 * Se the compileLoopEndHandler function.
+		 * @var array
+		 */
+		protected $nodes = array();
+
+		/**
+		 *
 		 * Test if the string is a number.
 		 * @param unknown_type $str
 		 */
@@ -33,14 +40,16 @@
 			return $int;
 		}
 
-		function includeTag($params) {
-			static $counter = 0;
-
-			$cns = 'OR_EsiHtmlTokenCompiler';
-			$cache = new SERIA_Cache($cns);
-
-			if (!$params["src"]) throw new SERIA_Exception("src attribute is required in ESI include tag");
-			if (strpos($params["src"], "http://") !== 0 && strpos($params["src"], "https://") !== 0) throw new SERIA_Exception("Security alert in ESI include tag");
+		protected function textNode($text)
+		{
+			$this->nodes[] = array('text', $text);
+		}
+		protected function includeTag($params)
+		{
+			if (!$params["src"])
+				throw new SERIA_Exception("src attribute is required in ESI include tag");
+			if (strpos($params["src"], "http://") !== 0 && strpos($params["src"], "https://") !== 0)
+				throw new SERIA_Exception("Security alert in ESI include tag");
 			if (isset($params['ttl']) && $params['ttl']) {
 				$ttl_str = ltrim($params['ttl']);
 				$ttl = 0;
@@ -73,7 +82,7 @@
 					$ttl_str = ltrim($ttl_str);
 				}
 				if ($ttl <= 0) {
-					$ttl = 300;
+					$ttl = 0;
 					if (SERIA_DEBUG)
 						die('Esi error: ttl format error: '.$params['ttl']);
 				}
@@ -82,43 +91,7 @@
 
 			OR_EsiHtmlTokenCompiler::parseParams($params);
 
-			$cacheKey = 'ESI-include->'.$params['src'];
-			if (($code = $cache->get($cacheKey))) {
-				$code = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($code);
-				return 'echo '.var_export($code, true).";\n";
-			}
-
-			$code = '$browsers = new SERIA_WebBrowsers();'."\n";
-			$code .= '$browsers->setTimeout(5);'."\n";
-			$code .= '$esiDataCache = new SERIA_Cache('.var_export($cns, true).');';
-			$this->addPreCode("include", $code);
-
-			$code = '$datas = $browsers->fetchAll(true);'."\n";
-			$code .= '$c = 0;'."\n";
-			$code .= 'foreach ($datas as $data) {'."\n";
-			$code .= '	if (!$data["data"])'."\n";
-			$code .= '		$data["data"] = "Could not fetch data";'."\n";
-			$code .= '	if (!sizeof($_POST)) {';
-			$code .= '		$esiDataCache->set('.var_export($cacheKey, true).', $data["data"], '.var_export($ttl, true).');'."\n";
-			$code .= '	}';
-			$code .= '	$data["data"] = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data["data"]);';
-			$code .= '	$obReplace["%WEB_BROWSER_".$c."%"] = $data["data"];'."\n";
-
-
-			$code .= '	$c++;'."\n";
-			$code .= '}'."\n";
-			$this->addPostCode("include", $code);
-
-			$code = '$wb'.$counter.' = new SERIA_WebBrowser();'."\n";
-			$code .= '$wb'.$counter.'->navigateTo("'.$params["src"].'");'."\n";
-			$code .= '$browsers->addWebBrowser($wb'.$counter.');'."\n";
-			$code .= 'echo "%WEB_BROWSER_'.$counter.'%";'."\n";
-
-//			$code .= 'echo "<div style=\"border: 1px wave red;\">'.$params["src"].'</div>";'."\n";
-
-			$counter++;
-
-			return $code;
+			$this->nodes[] = array('include', array('ttl' => $ttl, 'params' => $params));
 		}
 
 		
@@ -297,6 +270,73 @@
 			return $params;
 		 }
 
+		protected function compileLoopEndHandler()
+		{
+			$cache = new SERIA_Cache('OR_EsiHtmlTokenCompiler');
+			$browsers = new SERIA_WebBrowsers();
+			$browsers->setTimeout(5);
+			$browserCount = 0;
+			foreach ($this->nodes as &$node) {
+				if ($node[0] == 'include') {
+					$params = $node[1]['params'];
+					$cacheKey = 'ESI-include-data->'.$params['src'];
+					if (($data = $cache->get($cacheKey))) {
+						$ttl = $data['ttl'];
+						$age = time() - $data['ts'];
+						$node = array('text', '<!-- ESI from cache (ttl='.$ttl.', age='.$age.') : -->'.JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data['content']));
+					} else {
+						$browser = new SERIA_WebBrowser();
+						$browser->navigateTo($params['src']);
+						$browsers->addWebBrowser($browser);
+						unset($browser);
+						$node[1]['browser'] = $browserCount;
+						$browserCount++;
+					}
+				}
+			}
+			unset($node);
+			if ($browserCount) {
+				$datas = $browsers->fetchAll(false);
+				$c = 0;
+				foreach ($datas as $data) {
+					while ($this->nodes) {
+						$node = array_shift($this->nodes);
+						if ($node[0] == 'text')
+							$this->addOutput($node[1]);
+						else if ($node[0] == 'include') {
+							$ttl = $node[1]['ttl'];
+							$params = $node[1]['params'];
+							if ($node[1]['browser'] != $c)
+								throw new SERIA_Exception('Broser table desync! ('.$node[1]['browser'].' != '.$c.')');
+							break;
+						} else
+							throw new SERIA_Exception('Content chunk type not known: '.$node[0]);
+					}
+					$cacheKey = 'ESI-include-data->'.$params['src'];
+					if ($data["data"]) {
+					} else {
+						$data["data"] = "Could not fetch data";
+						$ttl = 60;
+					}
+					if (!sizeof($_POST)) {
+						$cacheData = array(
+							'ts' => time(),
+							'ttl' => $ttl,
+							'content' => $data['data']
+						);
+						$cache->set($cacheKey, $cacheData, $ttl);
+					}
+					$data["data"] = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data["data"]);
+					$this->addOutput('<!-- ESI content fetched ttl='.$ttl.' -->'.$data['data']);
+					$c++;
+				}
+			}
+			foreach ($this->nodes as $node) {
+				if ($node[0] != 'text')
+					throw new SERIA_Exception('Content chunk type not known: '.$node[0]);
+				$this->addOutput($node[1]);
+			}
+		}
 	}
 
 

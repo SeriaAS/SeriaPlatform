@@ -75,22 +75,12 @@ class JEP_EsiIncludedHtmlTokenCompiler extends OR_EsiHtmlTokenCompiler
 			</script>
 		<?php
 		$code = ob_get_clean();
-		return 'echo '.var_export($code, true).';';
+		$this->addOutput($code);
 	}
 	public static function recursiveCompile($html)
 	{
-		/* Removing anything that cause php to activate */
-		$html = SERIA_EsiFrontendApplication::escapePhpTags($html);
-
-		$compiler = new self('esi');
-		$code = $compiler->compile($html);
-
-		ob_start();
-		eval('?>'.$code);
-		$output = ob_get_clean();
-		
-		/* And undoing */
-		return SERIA_EsiFrontendApplication::unescapePhpTags($output);
+		$compiler = new self($html, 'esi');
+		return $compiler->__toString();
 	}
 
 	/*

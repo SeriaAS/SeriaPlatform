@@ -51,19 +51,6 @@
 			return $cache->get($key);
 		}
 
-		public static function escapePhpTags($code)
-		{
-			$code = str_replace(array('[?', '?]'), array('[[?', '?]]'), $code);
-			$code = str_replace(array('<'.'?', '?'.'>'), array(' [?', '?] '), $code);
-			return $code;
-		}
-		public static function unescapePhpTags($code)
-		{
-			$code = str_replace(array(' [?', '?] '), array('<'.'?', '?'.'>'), $code);
-			$code = str_replace(array('[[?', '?]]'), array('[?', '?]'), $code);
-			return $code;
-		}
-
 		// hook for urls
 		function router($url)
 		{
@@ -345,15 +332,8 @@
 				$result = SERIA_Hooks::dispatch('esiFrontend_contentLoaded', $d);
 				$c = $d->c;
 	
-				$compiler = new OR_EsiHtmlTokenCompiler("esi");
-				$c = self::escapePhpTags($c);
-				ob_start();
-				eval('?>'.$compiler->compile($c));
-				$c = ob_get_contents();
-				ob_end_clean();
-				$c = self::unescapePhpTags($c);
-
-				echo $c;
+				$compiler = new OR_EsiHtmlTokenCompiler($c, "esi");
+				echo $compiler->__toString();
 			}
 			die();
 		}

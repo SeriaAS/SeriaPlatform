@@ -2,15 +2,35 @@
 	class OR_HtmlTokenCompiler {
 
 		var $xmlNameSpace = "";
-		private $preCode = array();
-		private $postCode = array();
 
-		function addPreCode($id, $code) {
-			$this->preCode[$id] = $code;
+		protected $output = '';
+		protected $compiled = false;
+
+		protected function addOutput($output)
+		{
+			$this->output .= $output;
 		}
-
-		function addPostCode($id, $code) {
-			$this->postCode[$id] = $code;
+		/**
+		 *
+		 * Hook into this by override to handle a text node.
+		 * @param unknown_type $text
+		 */
+		protected function textNode($text)
+		{
+			$this->addOutput($text);
+		}
+		/**
+		 *
+		 * Hook into this by override to handle the EOF.
+		 */
+		protected function compileLoopEndHandler()
+		{
+		}
+		public function __toString()
+		{
+			if (!$this->compiled)
+				$this->compile();
+			return $this->output;
 		}
 
 		static function explodeParams($s) {
@@ -74,50 +94,56 @@
 			throw new SERIA_Exception("Cant find end of tag");
 		}
 
-		function compile($html) {
-			return OR_HtmlTokenCompiler::compileHTML($this, $html);
-		}
-
-		function __construct($xmlNameSpace = "") {
-			$this->xmlNameSpace = $xmlNameSpace;
-		}
-
-		static function compileHtml($c, $html) {
-			$ns = $c->getXmlNs();
+		function compile()
+		{
+			$html = $this->html;
+			$ns = $this->getXmlNs();
 			$nsLength = strlen($ns) + 2;
 
-			if (!$ns) throw new SERIA_Exception("No support for parsing without a namespace");
+			if (!$ns)
+				throw new SERIA_Exception("No support for parsing without a namespace");
 
 			$p = 0;
 			$continue = true;
 			$compiled = false;
-$debug = false;
+			$debug = false;
 
-			while ($continue) {
-	
+			$parsed = array();
+			while ($html) {
 				$template = "";
 
-	                        $ps = strpos($html, '<'.$ns.':', $p);
-				$pe = strpos($html, '</'.$ns.':', $p);
+				$ps = strpos($html, '<'.$ns.':');
+				$pe = strpos($html, '</'.$ns.':');
 
-				if (($ps < $pe && $ps !== false) || ($pe === false && $ps !== false)) $step = "startOfTag";
-				else if ($pe !== false) $step = "endOfTag";
-				else $step = "noTag";
+				if ($ps === 0)
+					$step = "startOfTag";
+				else if ($pe === 0)
+					$step = "endOfTag";
+				else {
+					$step = "text";
+					$len = $ps;
+					if ($len === false || ($pe !== false && $len > $pe))
+						$len = $pe;
+					if ($len === false)
+						$len = strlen($html);
+				}
 
-				if ($step == "startOfTag") {
-					$compiled = true;
-					$p = $ps;
-					$startPos = $p;
-					$p += $nsLength;
-	                                $p2 = strpos($html, " ", $p);
-					$p3 = strpos($html, ">", $p);
+				if ($step == 'text') {
+					$text = substr($html, 0, $len);
+					$html = substr($html, $len);
+					$parsed[] = array('text', $text);
+				} else if ($step == "startOfTag") {
+					$startPos = 0;
+					$p = $nsLength;
+					$p2 = strpos($html, " ", $nsLength);
+					$p3 = strpos($html, ">", $nsLength);
 					$hasAttributes = ($p2 < $p3);
 
 					if (!$hasAttributes) $p2 = $p3;
 
-					$template .= '<'."?php\n";
-                                        $command = strtolower(substr($html, $p, $p2 - $p));
-if ($debug) echo "Start of tag: ".$command."<br>";
+					$command = strtolower(substr($html, $nsLength, $p2 - $nsLength));
+					if ($debug)
+						echo "Start of tag: ".$command."<br>";
 
 					if ($hasAttributes) {
 						$p = $p2 + 1;
@@ -131,39 +157,46 @@ if ($debug) echo "Start of tag: ".$command."<br>";
 							$s = substr($html, $p, $p2 - $p);
 						}
 						$params = OR_HtmlTokenCompiler::explodeParams($s);
-
 					} else {
-						$p2 = OR_HtmlTokenCompiler::endOfTag($html, $p);
+						$p2 = OR_HtmlTokenCompiler::endOfTag($html, $nsLength);
+						$closedTag = (substr($html, $p2 - 1, 2) == "/>");
 						$endPos = $p2;
 						$params = array();
 					}
-
-					$template .= call_user_func(array($c, $command."Tag"), $params);
-
-					$template .= '?>';
-
+					$parsed[] = array('startTag', array(
+						'command' => $command,
+						'params' => $params,
+						'closed' => $closedTag
+					));
+					$html = substr($html, $endPos + 1);
 				} else if ($step == "endOfTag") {
+					/*
+					 * Actually does nothing except handle it:
+					 */
 					$startPos = $pe;
 					$p = $pe + 1;
 					$endPos = OR_HtmlTokenCompiler::endOfTag($html, $p);
-				} else {
-					$continue = false;
-				}
-
-				if ($continue) {
-					$html = substr($html, 0, $startPos).$template.substr($html, $endPos + 1);
-					$template = "";
-					$p = 0;
+					$html = substr($html, $endPos);
 				}
 			}
+			foreach ($parsed as $p) {
+				if ($p[0] == 'text')
+					$this->textNode($p[1]);
+				else if ($p[0] == 'startTag') {
+					call_user_func(array($this, $p[1]['command'].'Tag'), $p[1]['params']);
+				} else
+					throw new SERIA_Exception('Not implemented: '.$p[0]);
+			}
+			$this->compileLoopEndHandler();
+			$this->compiled = true;
 
-			if ($compiled) {
+/*			if ($compiled) {
 				$code = '<'.'?php'."\n";
 				$code .= 'ob_start();'."\n";
 				$code .= '$obReplace = array();'."\n";
 
-				if ($c->preCode) {
-					foreach ($c->preCode as $preCode) {
+				if ($this->preCode) {
+					foreach ($this->preCode as $preCode) {
 						$code .= $preCode."\n";
 					}
 				}
@@ -174,8 +207,8 @@ if ($debug) echo "Start of tag: ".$command."<br>";
 				$code = '<'.'?php'."\n";
 				$code .= '$contents = ob_get_contents();'."\n";
 				$code .= 'ob_end_clean();'."\n";
-				if ($c->postCode) {
-					foreach ($c->postCode as $postCode) {
+				if ($this->postCode) {
+					foreach ($this->postCode as $postCode) {
 						$code .= $postCode."\n";
 					}
 				}	
@@ -183,12 +216,15 @@ if ($debug) echo "Start of tag: ".$command."<br>";
 				$code .= 'echo str_replace(array_keys($obReplace), array_values($obReplace), $contents);'."\n";
 				$code .= '?>';
 				$html .= $code;
-
-
 			}
-
-
 			return $html;
+*/
+		}
+
+		function __construct($html, $xmlNameSpace = "")
+		{
+			$this->html = $html;
+			$this->xmlNameSpace = $xmlNameSpace;
 		}
 
 		function getXmlNs() {
