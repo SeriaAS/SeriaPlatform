@@ -43,7 +43,7 @@
 		}
 		else
 		{ // no caching
-			seria_headers_nocache();
+			seria_headers_privatecache(null);
 		}
 		session_start();
 	}
