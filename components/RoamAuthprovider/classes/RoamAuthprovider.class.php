@@ -91,6 +91,10 @@ class RoamAuthprovider implements SERIA_IAuthprovider
 					return false;
 				}
 				/*
+				 * Limit cacheability..
+				 */
+				SERIA_ProxyServer::privateCache(600); /* 10 minutes private cache */
+				/*
 				 * Create a session if we don't have one already.
 				 */
 				if (isset($_GET['PHPSESSID']) && $_GET['PHPSESSID'])
