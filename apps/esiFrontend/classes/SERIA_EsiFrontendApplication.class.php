@@ -169,7 +169,7 @@
 						$cacheControlText .= 'Backend Cache-Control (overrides HTTP/1.0): '.$cacheControl."\n";
 						$cacheControl = new SERIA_CacheControl($cacheControl);
 						if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
-							if ($cacheControl->getToken('public') !== null) {
+							if ($cacheControl->isPublic()) {
 								$ttl = $cacheControl->getPublicMaxAge();
 								if ($ttl === null) {
 									if ($expires_ttl)
@@ -178,7 +178,7 @@
 										$ttl = 86400;
 								}
 								$cacheControlText .= 'HTTP/1.1 allows public caching with ttl='.$ttl."\n";
-							} else if ($cacheControl->getToken('private') !== null) {
+							} else if ($cacheControl->isPrivate()) {
 								$cacheControlText .= 'HTTP/1.1 disallows public caching, but allows private. Frontend can\'t cache!'."\n";
 								$ttl = false;
 							} else {

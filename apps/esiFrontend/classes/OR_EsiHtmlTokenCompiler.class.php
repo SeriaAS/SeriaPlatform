@@ -319,7 +319,8 @@
 						 */
 						$debug = array();
 						$webbrowser = $data['webbrowser'];
-						$debug[] = 'Cache headers for: '.$params['src'];
+						if (defined('ESIFRONTEND_DUMP_ESI_URL') && ESIFRONTEND_DUMP_ESI_URL)
+							$debug[] = 'Cache headers for: '.$params['src'];
 						if ($ttl === false) {
 							if (isset($webbrowser->responseHeaders['Date']))
 								$debug[] = 'Header HTTP/1.0: Date: '.$webbrowser->responseHeaders['Date'];
@@ -349,7 +350,7 @@
 							if (isset($webbrowser->responseHeaders['Cache-Control']) && $webbrowser->responseHeaders['Cache-Control']) {
 								$cacheControl = new SERIA_CacheControl($webbrowser->responseHeaders['Cache-Control']);
 								if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
-									if ($cacheControl->getToken('public') !== null) {
+									if ($cacheControl->isPublic()) {
 										$ttl = $cacheControl->getPublicMaxAge();
 										if ($ttl === null && $expires_ttl !== null) {
 											$ttl = $expires_ttl;
@@ -362,7 +363,7 @@
 											else
 												SERIA_ProxyServer::noCache();
 										}
-									} else if ($cacheControl->getToken('private') !== null) {
+									} else if ($cacheControl->isPrivate()) {
 										$ttl = $cacheControl->getPrivateMaxAge();
 										if ($ttl === null && $expires_ttl !== null) {
 											$ttl = $expires_ttl;
