@@ -87,7 +87,7 @@
 						die('Esi error: ttl format error: '.$params['ttl']);
 				}
 			} else
-				$ttl = 300;
+				$ttl = false;
 
 			OR_EsiHtmlTokenCompiler::parseParams($params);
 
@@ -314,11 +314,81 @@
 					}
 					$cacheKey = 'ESI-include-data->'.$params['src'];
 					if ($data["data"]) {
+						/*
+						 * Get the cache headers..
+						 */
+						$debug = array();
+						$webbrowser = $data['webbrowser'];
+						$debug[] = 'Cache headers for: '.$params['src'];
+						if ($ttl === false) {
+							if (isset($webbrowser->responseHeaders['Date']))
+								$debug[] = 'Header HTTP/1.0: Date: '.$webbrowser->responseHeaders['Date'];
+							if (isset($webbrowser->responseHeaders['Expires']))
+								$debug[] = 'Header HTTP/1.0: Expires: '.$webbrowser->responseHeaders['Expires'];
+							if (isset($webbrowser->responseHeaders['Cache-Control']))
+								$debug[] = 'Header HTTP/1.1: Cache-Control: '.$webbrowser->responseHeaders['Cache-Control'];
+							if (isset($webbrowser->responseHeaders['Date']) && $webbrowser->responseHeaders['Date'] &&
+							    isset($webbrowser->responseHeaders['Expires']) && $webbrowser->responseHeaders['Expires']) {
+								$date = new DateTime($webbrowser->responseHeaders['Date']);
+								$expires = new DateTime($webbrowser->responseHeaders['Expires']);
+								$date = $date->getTimestamp();
+								$expires = $expires->getTimestamp();
+								$now = time();
+								if ($expires >= $date) {
+									$ttl = $expires - $now;
+									if ($ttl < 0)
+										$ttl = 0;
+									$debug[] = 'Esi:include: HTTP/1.0 specifies public ttl='.$ttl;
+								} else {
+									$ttl = false;
+									$debug[] = 'Esi:include: HTTP/1.0 specifies nocache';
+								}
+							}
+							if (isset($webbrowser->responseHeaders['Cache-Control']) && $webbrowser->responseHeaders['Cache-Control']) {
+								$cacheControl = new SERIA_CacheControl($webbrowser->responseHeaders['Cache-Control']);
+								if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
+									if ($cacheControl->getToken('public') !== null) {
+										$ttl = $cacheControl->getPublicMaxAge();
+										$debug[] = 'Esi:include: HTTP/1.1 specifies public ttl='.($ttl !== null ? $ttl : 'unlimited');
+										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+											SERIA_ProxyServer::publicCache($ttl);
+									} else if ($cacheControl->getToken('private') !== null) {
+										$ttl = $cacheControl->getPrivateMaxAge();
+										$debug[] = 'Esi:include: HTTP/1.1 specifies private ttl='.($ttl !== null ? $ttl : 'unlimited');
+										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+											SERIA_ProxyServer::privateCache($ttl);
+									} else {
+										$ttl = false;
+										$debug[] = 'Esi:include: HTTP/1.1 specifies nocache (no caching directives)';
+										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+											SERIA_ProxyServer::noCache();
+									}
+								} else {
+									$ttl = false;
+									$debug[] = 'Esi:include: HTTP/1.1 specifies nocache';
+									if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+										SERIA_ProxyServer::noCache();
+								}
+							} else if ($ttl !== false) {
+								if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+									SERIA_ProxyServer::publicCache($ttl);
+							} else {
+								if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+									SERIA_ProxyServer::noCache();
+							}
+							$this->addOutput("<!-- Esi:include debug\n".implode("\n", $debug)."\n-->\n");
+						} else {
+							/*
+							 * ttl-attribute on the esi:include overrides.
+							 */
+							if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
+								SERIA_ProxyServer::publicCache($ttl);
+						}
 					} else {
 						$data["data"] = "Could not fetch data";
 						$ttl = 60;
 					}
-					if (!sizeof($_POST)) {
+					if (!sizeof($_POST) && $ttl) {
 						$cacheData = array(
 							'ts' => time(),
 							'ttl' => $ttl,
