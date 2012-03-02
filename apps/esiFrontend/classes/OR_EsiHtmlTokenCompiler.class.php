@@ -327,6 +327,7 @@
 								$debug[] = 'Header HTTP/1.0: Expires: '.$webbrowser->responseHeaders['Expires'];
 							if (isset($webbrowser->responseHeaders['Cache-Control']))
 								$debug[] = 'Header HTTP/1.1: Cache-Control: '.$webbrowser->responseHeaders['Cache-Control'];
+							$expires_ttl = null;
 							if (isset($webbrowser->responseHeaders['Date']) && $webbrowser->responseHeaders['Date'] &&
 							    isset($webbrowser->responseHeaders['Expires']) && $webbrowser->responseHeaders['Expires']) {
 								$date = new DateTime($webbrowser->responseHeaders['Date']);
@@ -336,6 +337,7 @@
 								$now = time();
 								if ($expires >= $date) {
 									$ttl = $expires - $now;
+									$expires_ttl = $ttl;
 									if ($ttl < 0)
 										$ttl = 0;
 									$debug[] = 'Esi:include: HTTP/1.0 specifies public ttl='.$ttl;
@@ -349,12 +351,24 @@
 								if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
 									if ($cacheControl->getToken('public') !== null) {
 										$ttl = $cacheControl->getPublicMaxAge();
-										$debug[] = 'Esi:include: HTTP/1.1 specifies public ttl='.($ttl !== null ? $ttl : 'unlimited');
-										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
-											SERIA_ProxyServer::publicCache($ttl);
+										if ($ttl === null && $expires_ttl !== null) {
+											$ttl = $expires_ttl;
+											$debug[] = 'Esi:include: HTTP/1.1 public unspec ttl, using HTTP/1.0 '.($ttl !== false ? $ttl : 'nocache');
+										} else
+											$debug[] = 'Esi:include: HTTP/1.1 specifies public ttl='.($ttl !== null ? $ttl : 'unlimited');
+										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS) {
+											if ($ttl !== false)
+												SERIA_ProxyServer::publicCache($ttl);
+											else
+												SERIA_ProxyServer::noCache();
+										}
 									} else if ($cacheControl->getToken('private') !== null) {
 										$ttl = $cacheControl->getPrivateMaxAge();
-										$debug[] = 'Esi:include: HTTP/1.1 specifies private ttl='.($ttl !== null ? $ttl : 'unlimited');
+										if ($ttl === null && $expires_ttl !== null) {
+											$ttl = $expires_ttl;
+											$debug[] = 'Esi:include: HTTP/1.1 private unspec ttl, using HTTP/1.0 '.($ttl !== false ? $ttl : 'nocache');
+										} else
+											$debug[] = 'Esi:include: HTTP/1.1 specifies private ttl='.($ttl !== null ? $ttl : 'unlimited');
 										if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
 											SERIA_ProxyServer::privateCache($ttl);
 									} else {

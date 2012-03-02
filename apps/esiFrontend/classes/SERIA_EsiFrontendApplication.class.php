@@ -144,6 +144,7 @@
 				unset($value);
 				$cacheControlText = '';
 				if (($hdrs['Date'] && $hdrs['Expires']) || $hdrs['Cache-Control']) {
+					$expires_ttl = false;
 					if ($hdrs['Date'] && $hdrs['Expires']) {
 						$cacheControlText .= 'HTTP/1.0 Date&Expires: date="'.$b->responseHeaders['Date'].'", expires="'.$b->responseHeaders['Expires'].'"'."\n";
 						$date = new DateTime($b->responseHeaders['Date']);
@@ -156,6 +157,7 @@
 							$ttl = $expires - $now;
 							if ($ttl < 0)
 								$ttl = 0;
+							$expires_ttl = $ttl;
 							$cacheControlText .= 'HTTP/1.0 allows caching with ttl='.$ttl."\n";
 						} else {
 							$cacheControlText .= 'HTTP/1.0 disallows caching.'."\n";
@@ -169,6 +171,12 @@
 						if (!$cacheControl->noCache() && !$cacheControl->noStore()) {
 							if ($cacheControl->getToken('public') !== null) {
 								$ttl = $cacheControl->getPublicMaxAge();
+								if ($ttl === null) {
+									if ($expires_ttl)
+										$ttl = $expires_ttl;
+									else
+										$ttl = 86400;
+								}
 								$cacheControlText .= 'HTTP/1.1 allows public caching with ttl='.$ttl."\n";
 							} else if ($cacheControl->getToken('private') !== null) {
 								$cacheControlText .= 'HTTP/1.1 disallows public caching, but allows private. Frontend can\'t cache!'."\n";
