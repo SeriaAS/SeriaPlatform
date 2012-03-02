@@ -313,6 +313,19 @@ class SERIA_Authproviders
 		if ((isset($seria_options['skip_authentication']) && $seria_options['skip_authentication']) ||
 		    (isset($seria_options['skip_session']) && $seria_options['skip_session']))
 			return;
+		$preCheck = 0;
+		foreach (self::$loadProviders as $load) {
+			if (call_user_func(array($load, 'automaticDiscoveryPreCheck'))) {
+				SERIA_Base::debug('Loading providers for auto: '.$load);
+				self::loadProviders($load);
+				$preCheck++;
+			}
+		}
+		if (!$preCheck) {
+			if ($loginState)
+				$loginState->terminate('abort');
+			return;
+		}
 		if (!SERIA_AuthenticationState::available()) {
 			if (isset($_SESSION['disableAutoLogin']) && $_SESSION['disableAutoLogin'] >= time())
 				return; /* quarantined */
@@ -337,20 +350,6 @@ class SERIA_Authproviders
 			$wait = false;
 		if (!$loginState->exists('continue'))
 			$loginState->set('continue', SERIA_Url::current()->__toString());
-		$preCheck = 0;
-		foreach (self::$loadProviders as $load) {
-			if (call_user_func(array($load, 'automaticDiscoveryPreCheck'))) {
-				SERIA_Base::debug('Loading providers for auto: '.$load);
-				self::loadProviders($load);
-				$preCheck++;
-			}
-		}
-		if (!$preCheck) {
-			if (!$created)
-				$loginState->terminate('abort');
-			$loginState->forget();
-			return;
-		}
 		foreach (self::$providers as &$provider) {
 			if (!$wait) {
 				SERIA_Base::debug('Auto login (N) discovery checking for availability and login for: '.$provider->getName());
