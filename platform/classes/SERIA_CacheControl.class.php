@@ -173,6 +173,26 @@ class SERIA_CacheControl
 	}
 	/**
 	 *
+	 * Returns true if public caching is allowed.
+	 */
+	public function isPublic()
+	{
+		if ($this->noCache() || $this->isPrivate())
+			return false;
+		return (isset($this->cacheControl['public']) || isset($this->cacheControl['s-maxage']) || isset($this->cacheControl['max-age']));
+	}
+	/**
+	 *
+	 * Returns true if caching must be kept private. (Browser-cache only)
+	 */
+	public function isPrivate()
+	{
+		if ($this->noCache())
+			return false;
+		return isset($this->cacheControl['private']);
+	}
+	/**
+	 *
 	 * Get the max lifetime of the public cache (0 means no caching).
 	 */
 	public function getPublicMaxAge()
@@ -186,6 +206,13 @@ class SERIA_CacheControl
 				return intval($this->cacheControl['max-age'], 10);
 			} else
 				return null;
+		} else if (!$this->isPrivate()) {
+			if (isset($this->cacheControl['s-maxage'])) {
+				return intval($this->cacheControl['s-maxage'], 10);
+			} else if (isset($this->cacheControl['max-age'])) {
+				return intval($this->cacheControl['max-age'], 10);
+			} else
+				return 0;
 		}
 		return 0;
 	}
@@ -205,4 +232,5 @@ class SERIA_CacheControl
 		}
 		return 0;
 	}
+	
 }
