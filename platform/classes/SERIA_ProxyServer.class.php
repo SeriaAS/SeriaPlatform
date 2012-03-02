@@ -7,6 +7,20 @@
 		protected static $expireTime = null;
 
 		/**
+		 *
+		 * Called to set the caching to the default of 60 seconds and reset the
+		 * cache headers to default (public 60).
+		 */
+		public static function init()
+		{
+			$ttl = 60;
+			header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
+			header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
+			self::$cacheLim = 'public';
+			self::$expireTime = null;
+		}
+
+		/**
 		 * Sends headers that informs the proxy server to never cache this page.
 		 */
 		public static function noCache() {
@@ -70,7 +84,7 @@
 				else
 					$shorterTtl = true;
 			} else
-				$shorterTtl = ($ttl !== null);
+				$shorterTtl = true; /* shorter or equal, no problem to say true */
 			if ((self::$cacheLim && self::$cacheLim != 'public') ||
 			    (self::$cacheLim == 'public' && !$shorterTtl)) {
 				/*

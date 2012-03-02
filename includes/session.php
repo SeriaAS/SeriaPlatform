@@ -21,6 +21,11 @@
 		return SERIA_ProxyServer::publicCache($ttl);
 	}
 
+	function seria_headers_publiccache_init()
+	{
+		return SERIA_ProxyServer::init();
+	}
+
 	/**
 	*	Below code essentially does this:
 	*	1. If there are signs of a session existing (cookie or get-param), and $seria_options['skip_session'] is not set
@@ -56,7 +61,7 @@
 		if($seria_options["cache_expire"]>0)
 			seria_headers_publiccache($seria_options["cache_expire"]);
 		else
-			seria_headers_publiccache();
+			seria_headers_publiccache_init();
 	}
 
 	// PHP 5.3 destroys objects before closing the session. This will be a problem for most custom session handlers written in Seria Platform as we normally use objects.
