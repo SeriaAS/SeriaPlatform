@@ -283,7 +283,11 @@
 					if (($data = $cache->get($cacheKey))) {
 						$ttl = $data['ttl'];
 						$age = time() - $data['ts'];
-						$node = array('text', '<!-- ESI from cache (ttl='.$ttl.', age='.$age.') : -->'.JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data['content']));
+						if (defined('ESIFRONTEND_DUMP_ESI_URL') && ESIFRONTEND_DUMP_ESI_URL)
+							$urldump = 'url='.$params['src'].', ';
+						else
+							$urldump = '';
+						$node = array('text', '<!-- ESI from cache ('.$urldump.'ttl='.($ttl !== null ? $ttl : 'unlimited').', age='.$age.') : -->'.JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data['content']));
 					} else {
 						$browser = new SERIA_WebBrowser();
 						$browser->navigateTo($params['src']);
@@ -403,13 +407,16 @@
 						$data["data"] = "Could not fetch data";
 						$ttl = 60;
 					}
-					if (!sizeof($_POST) && $ttl) {
+					if (!sizeof($_POST) && ($ttl || $ttl === null)) {
 						$cacheData = array(
 							'ts' => time(),
 							'ttl' => $ttl,
 							'content' => $data['data']
 						);
-						$cache->set($cacheKey, $cacheData, $ttl);
+						if ($ttl !== null)
+							$cache->set($cacheKey, $cacheData, $ttl);
+						else /* unlimited */
+							$cache->set($cacheKey, $cacheData, 1209600);
 					}
 					$data["data"] = JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data["data"]);
 					$this->addOutput('<!-- ESI content fetched ttl='.$ttl.' -->'.$data['data']);
