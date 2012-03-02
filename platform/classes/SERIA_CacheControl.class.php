@@ -185,7 +185,7 @@ class SERIA_CacheControl
 			} else if (isset($this->cacheControl['max-age'])) {
 				return intval($this->cacheControl['max-age'], 10);
 			} else
-				return 0;
+				return null;
 		}
 		return 0;
 	}
@@ -201,7 +201,7 @@ class SERIA_CacheControl
 			if (isset($this->cacheControl['max-age']))
 				return intval($this->cacheControl['max-age'], 10);
 			else
-				return 0;
+				return null;
 		}
 		return 0;
 	}
