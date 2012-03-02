@@ -220,6 +220,8 @@ class SERIA_AuthenticationState
 	protected static function saveState($id, $data)
 	{
 		if (!self::$fileBasedStorage) {
+			if (!session_id())
+				session_start();
 			$_SESSION[$id] = $data;
 		} else
 			self::writeStateFile($id, $data);
@@ -292,8 +294,6 @@ class SERIA_AuthenticationState
 	 */
 	public static function available()
 	{
-		if (!self::$fileBasedStorage && !self::$sessionStarted && !session_id())
-			session_start();
 		return (isset($_GET['auth_id']) && isset($_GET['auth_abort']) && self::getState($_GET['auth_id']) !== null);
 	}
 	/**
