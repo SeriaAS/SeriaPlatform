@@ -56,8 +56,10 @@
 				$ttl = self::$expireTime;
 			if ($ttl !== null)
 				header("Cache-Control: private, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".(intval($ttl)/2).", pre-check=".(intval($ttl)));
-			else
-				header('Cache-Control: private');
+			else {
+				$unspec_ttl = 86400;
+				header('Cache-Control: private, max-age='.intval($unspec_ttl).", s-maxage=".$unspec_ttl.", post-check=".($unspec_ttl/2).", pre-check=".($unspec_ttl));
+			}
 			header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 			header('Pragma: private');
 
@@ -65,6 +67,8 @@
 			session_cache_limiter('private');
 			if ($ttl !== null)
 				session_cache_expire(intval($ttl / 60));
+			else
+				session_cache_expire($unspec_ttl / 60);
 
 			self::$cacheLim = 'private';
 			self::$expireTime = $ttl;
@@ -101,8 +105,12 @@
 				header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
 				header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
 			} else {
-				header('Cache-Control: public');
-				header('Expires: ');
+				/*
+				 * Unlimited cache translates to max-age=24 hours.
+				 */
+				$unspec_ttl = 86400;
+				header('Cache-Control: public, max-age='.intval($unspec_ttl).", s-maxage=".intval($unspec_ttl).", post-check=".intval($unspec_ttl).", pre-check=".(intval($unspec_ttl)*2));
+				header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($unspec_ttl)));
 			}
 			header("Pragma: public");
 
@@ -110,6 +118,8 @@
 			session_cache_limiter('private');
 			if ($ttl !== null)
 				session_cache_expire(intval($ttl / 60));
+			else
+				session_cache_expire($unspec_ttl / 60);
 
 			self::$cacheLim = 'public';
 			self::$expireTime = $ttl;
