@@ -61,9 +61,7 @@
 			if (strlen($url) > $len && substr($url, 0, $len) == $nocache) {
 				$nocache = true;
 				$url = substr($url, $len - 1);
-				header('Pragma: nocache');
-				header('Cache-Control: no-cache no-store');
-				header('Expires: ');
+				SERIA_ProxyServer::noCache();
 			} else
 				$nocache = false;
 
@@ -108,8 +106,10 @@
 				}
 				if ($c && isset($currentCache[$ident]['cacheDesc'])) {
 					$cacheDesc = $currentCache[$ident]['cacheDesc'];
-					SERIA_Template::headPrepend('cache_control_info', "<!-- CONTENT CACHED:\n".$cacheDesc['debug'].' -->');
-				}
+					$cacheAge = time() - $cacheDesc['ts'];
+					SERIA_Template::headPrepend('cache_control_info', "<!-- CONTENT CACHED (age=".$cacheAge."):\n".$cacheDesc['debug'].' -->');
+				} else
+					$cacheDesc = null;
 			}
 
 			$passthru = true;
@@ -209,6 +209,7 @@
 					'ttl' => $ttl,
 					'debug' => $cacheControlText
 				);
+				$cacheAge = 0;
 				
 
 				$headersWhitelist = array("vary" => true, "content-description" => true, "content-type" => true, "content-disposition" => true, "content-transfer-encoding" => true);
@@ -312,6 +313,8 @@
 
 				foreach ($currentHeaders as $key => $value) {
 					if (strtolower($key) == 'content-type' && strpos($value, 'text/html') !== false) $passthru = false;
+					if (strtolower($key) == 'cache-control' || strtolower($key) == 'expires')
+						continue;
 					if (is_array($value)) {
 						foreach ($value as $subKey => $subValue) {
 							header($key.": ".$subValue, false);
@@ -327,6 +330,18 @@
 				SERIA_Template::disable();
 				die($c);
 			} else {
+				if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS) {
+					if ($cacheDesc !== null) {
+						if ($cacheDesc['cacheable']) {
+							$ttl = $cacheDesc['ttl'] - $cacheAge;
+							if ($ttl < 0)
+								$ttl = 0;
+							SERIA_ProxyServer::publicCache($ttl);
+						} else
+							SERIA_ProxyServer::noCache();
+					}
+				}
+
 				$d = new stdClass();
 				$d->c = $c;
 				$result = SERIA_Hooks::dispatch('esiFrontend_contentLoaded', $d);
