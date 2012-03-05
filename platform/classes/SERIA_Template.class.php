@@ -203,7 +203,10 @@
 
 			if (!$lang_map_loaded) {
 				$lang_map_loaded = true;
-				require(SERIA_ROOT.'/seria/lang/lang_map.php');
+				if (file_exists(SERIA_ROOT.'/seria_lang/lang_map.php'))
+					require(SERIA_ROOT.'/seria_lang/lang_map.php');
+				else
+					require(SERIA_ROOT.'/seria/lang/lang_map.php');
 			}
 			self::$language = $lang;
 			/*
@@ -219,7 +222,10 @@
 
 			if (!$lang_map_loaded) {
 				$lang_map_loaded = true;
-				require(SERIA_ROOT.'/seria/lang/lang_map.php');
+				if (file_exists(SERIA_ROOT.'/seria_lang/lang_map.php'))
+					require(SERIA_ROOT.'/seria_lang/lang_map.php');
+				else
+					require(SERIA_ROOT.'/seria/lang/lang_map.php');
 			}
 			if (self::$language === null) {
 				$requri = $_SERVER['REQUEST_URI'];
