@@ -36,6 +36,10 @@
 		$langTree =& $langs[$_GET['translateTo']];
 	else
 		$langTree = array();
+	$allTree = array();
+	foreach ($langs as $lang) {
+		$allTree = array_merge_recursive($allTree, $lang);
+	}
 
 	/**
 	 * Generate a set of translation items..
@@ -45,26 +49,49 @@
 	 * @param $langPhr
 	 * @return SERIA_BMLElement
 	 */
-	function getTranslateFormItems(&$path, &$lang, &$defaultPhr, &$langPhr)
+	function getTranslateFormItems(&$path, &$lang, &$defaultPhr, &$allPhr, &$langPhr, &$langs)
 	{
-		$candPhr = array_keys($defaultPhr);
+		$candPhr = array_keys($allPhr);
 		$transPhr = array();
 		foreach ($candPhr as $cand) {
-			if (!isset($langPhr[$cand]) || (isset($_GET['edit']) && $_GET['edit']))
+			if (!isset($langPhr[$cand]) || (isset($_GET['edit']) && $_GET['edit'])) {
 				$transPhr[$cand] = array(
-					'default' => $defaultPhr[$cand],
-					$lang => isset($langPhr[$cand]) ? $langPhr[$cand] : ''
+					$lang => ''
 				);
+				foreach ($langs as $l => $data) {
+					if (isset($data[$path][$cand])) {
+						if (!isset($transPhr[$cand]['defaultText']))
+							$transPhr[$cand]['defaultText'] = 'Not loaded: '.$data[$path][$cand];
+						$transPhr[$cand][$l] = $data[$path][$cand];
+					}
+				}
+				if (isset($transPhr[$cand]['default']))
+					$transPhr[$cand]['defaultText'] = $transPhr[$cand]['default'];
+			}
 		}
 		$items = array();
 		foreach ($transPhr as $hash => &$values) {
 			ob_start();
 			?>
 				<div>
-					<h3><?php echo htmlspecialchars($values['default']); ?></h3>
+					<h3><?php echo htmlspecialchars($values['defaultText']); ?></h3>
+					<?php
+						$altTrans = $values;
+						unset($altTrans['defaultText']);
+						unset($altTrans[$lang]);
+						if ($altTrans) {
+							foreach ($altTrans as $l => $text) {
+								?>
+									<p>
+										<?php echo $l; ?>: <?php echo $text; ?>
+										<button type='button' onclick="document.getElementById(<?php echo htmlspecialchars(SERIA_Lib::toJSON('id_'.$hash)); ?>).value = <?php echo htmlspecialchars(SERIA_Lib::toJSON($altTrans[$l])); ?>"><?php echo _t('Same'); ?></button>
+									</p>
+								<?php
+							}
+						}
+					?>
 					<label for="<?php echo htmlspecialchars('id_'.$hash); ?>"><?php echo htmlspecialchars(_t('Translate to %LANG%: ', array('LANG' => $lang))); ?></label>
 					<input type='text' name="<?php echo htmlspecialchars('transPhr['.$hash.']'); ?>" id="<?php echo htmlspecialchars('id_'.$hash); ?>" value="<?php echo htmlspecialchars($values[$lang]); ?>" />
-					<button type='button' onclick="document.getElementById(<?php echo htmlspecialchars(SERIA_Lib::toJSON('id_'.$hash)); ?>).value = <?php echo htmlspecialchars(SERIA_Lib::toJSON($values['default'])); ?>"><?php echo _t('Same'); ?></button>
 				</div>
 			<?php
 			$items[] = ob_get_clean();
@@ -113,11 +140,11 @@
 		 * Translate form mode..
 		 */
 
-		if (!isset($defaultTree[$_GET['filename']]) && !isset($langTree[$_GET['filename']])) {
+		if (!isset($allTree[$_GET['filename']])) {
 			$failingScript = new SERIA_BMLScript(
 '
 	$(document).ready(function () {
-		alert("File not found: '.htmlspecialchars($_GET['filename']).'");
+		alert("File not found: " + '.SERIA_Lib::toJSON($_GET['filename']).');
 		location.href = \''.SERIA_HTTP_ROOT.'/seria/apps/translation/translate.php?translateTo='.htmlspecialchars(urlencode($_GET['translateTo'])).'\';
 	});
 ', 'text/javascript'
@@ -132,6 +159,10 @@
 				$langPhr =& $langTree[$_GET['filename']];
 			else
 				$langPhr = array();
+			if (isset($allTree[$_GET['filename']]))
+				$allPhr =& $allTree[$_GET['filename']];
+			else
+				$allPhr = array();
 
 			if (sizeof($_POST)) {
 				/* Add phrases to translation */
@@ -149,7 +180,7 @@
 			 * Generate form...
 			 */
 			$tree = seria_bml('form', array('method' => 'post'))->addChildren(array(
-				getTranslateFormItems($_GET['filename'], $_GET['translateTo'], $defaultPhr, $langPhr),
+				getTranslateFormItems($_GET['filename'], $_GET['translateTo'], $defaultPhr, $allPhr, $langPhr, $langs),
 				seria_bml('div')->addChild(
 					seria_bml('button', array('type' => 'submit'))->setText(_t('Submit'))
 				)
@@ -178,17 +209,25 @@
 			)
 		));
 
-		$files = array_keys(array_merge($defaultTree, $langTree));
+		$files = array();
+		foreach ($langs as $mf)
+			$files = array_merge($files, $mf);
+		$files = array_keys($files);
 		foreach ($files as $path) {
 			if (isset($defaultTree[$path]))
-				$defaultPhr =& $defaultTree[$path];
+				$defaultPhr = $defaultTree[$path];
 			else
 				$defaultPhr = array();
 			if (isset($langTree[$path]))
-				$langPhr =& $langTree[$path];
+				$langPhr = $langTree[$path];
 			else
 				$langPhr = array();
-			$allPhr = array_keys(array_merge($defaultPhr, $langPhr));
+			$allPhr = array();
+			foreach ($langs as $lang) {
+				if (isset($lang[$path]))
+					$allPhr = array_merge_recursive($allPhr, $lang[$path]);
+			}
+			$allPhr = array_keys($allPhr);
 			$needTrans = 0;
 			foreach ($allPhr as $hash) {
 				if (!isset($langPhr[$hash]))
