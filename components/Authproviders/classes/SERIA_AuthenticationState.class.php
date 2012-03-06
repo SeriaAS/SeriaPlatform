@@ -322,7 +322,7 @@ class SERIA_AuthenticationState
 
 	/**
 	 * 
-	 * Redirects to the url pointed to by the field specified. Erases the state from session first.
+	 * Redirects to the url pointed to by the field specified (the first url pushed to it, final destination). Erases the state from session first.
 	 * @param string $field
 	 */
 	public function terminate($field)
@@ -330,8 +330,9 @@ class SERIA_AuthenticationState
 		SERIA_ProxyServer::noCache();
 		if ($field != 'abort') {
 			$url = $this->pop($field);
-			if (!$this->exists($field))
-				$this->forget();
+			while ($this->exists($field))
+				$url = $this->pop($field);
+			$this->forget();
 		} else
 			$url = $this->get($field);
 		SERIA_Base::redirectTo($url);
@@ -513,7 +514,10 @@ class SERIA_AuthenticationState
 		$value = $this->get($name);
 		if ($value && is_array($value)) {
 			$r = array_pop($value);
-			$this->set($name, $value);
+			if ($value)
+				$this->set($name, $value);
+			else
+				$this->clear($name);
 			return $r;
 		}
 		$this->clear($name);
