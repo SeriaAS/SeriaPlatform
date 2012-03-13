@@ -1204,7 +1204,10 @@
 
 		public static function createFromUser($value)
 		{
-			return SERIA_File::createObject($value);
+			if($value)
+				return SERIA_File::createObject($value);
+			else
+				return false;
 		}
 
 		public static function renderFormField($fieldName, $value, array $params = NULL, $hasError = false)
