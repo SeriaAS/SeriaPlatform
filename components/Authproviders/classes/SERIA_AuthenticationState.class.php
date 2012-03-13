@@ -329,10 +329,25 @@ class SERIA_AuthenticationState
 	{
 		SERIA_ProxyServer::noCache();
 		if ($field != 'abort') {
-			$url = $this->pop($field);
-			while ($this->exists($field))
+			$url = $this->popRaw($field);
+			while ($this->exists($field)) {
+				if ($url && !is_string($url) && is_array($url)) {
+					if ($url[0] == 'terminateHook') {
+						$url = $url[1];
+						SERIA_Base::redirectTo($url);
+					} else
+						throw new SERIA_Exception('Unknown type: '.$url[0]);
+				}
 				$url = $this->pop($field);
+			}
 			$this->forget();
+			if ($url && !is_string($url) && is_array($url)) {
+				if ($url[0] == 'terminateHook') {
+					$url = $url[1];
+					SERIA_Base::redirectTo($url);
+				} else
+					throw new SERIA_Exception('Unknown type: '.$url[0]);
+			}
 		} else
 			$url = $this->get($field);
 		SERIA_Base::redirectTo($url);
@@ -485,7 +500,7 @@ class SERIA_AuthenticationState
 	 * @param string $name
 	 * @param mixed $value
 	 */
-	public function push($name, $value)
+	protected function pushRaw($name, $value)
 	{
 		SERIA_Base::debug('Push value for '.$name.': '.$value);
 		if (!$this->exists($name)) {
@@ -503,11 +518,35 @@ class SERIA_AuthenticationState
 	}
 	/**
 	 *
+	 * Pushes values into an array. If the value is a singleton from before it is automatically placed as the first array element. Redirects can be chained by pushing new urls.
+	 * @param string $name
+	 * @param mixed $value
+	 */
+	public function push($name, $value)
+	{
+		if (is_array($value) && !is_string($value))
+			throw new SERIA_Exception('Not allowed to push an array');
+		$this->pushRaw($name, $value);
+	}
+	/**
+	 *
+	 * Pushes a terminate hook url to the array. This url stops a terminate and redirects to the url, otherwise all urls except the last is skipped.
+	 * @param string $name
+	 */
+	public function pushTerminateHook($name, $value)
+	{
+		if (!is_string($value))
+			throw new SERIA_Exception('Terminate hook url is required to be a string.');
+		$this->pushRaw($name, array('terminateHook', $value));
+	}
+
+	/**
+	 *
 	 * Pops a value from an array. If the value is a singleton it will be returned and unset. Emptied arrays will be automatically unset.
 	 * @param string $name
 	 * @return mixed
 	 */
-	public function pop($name)
+	protected function popRaw($name)
 	{
 		if (!$this->exists($name))
 			throw new SERIA_Exception('No values to pop from: '.$name);
@@ -523,6 +562,26 @@ class SERIA_AuthenticationState
 		$this->clear($name);
 		return $value;
 	}
+	/**
+	 *
+	 * Pops a value from an array. If the value is a singleton it will be returned and unset. Emptied arrays will be automatically unset.
+	 * @param string $name
+	 * @return mixed
+	 */
+	public function pop($name)
+	{
+		$data = $this->popRaw($name);
+		if ($data && is_array($data) && !is_string($data)) {
+			if (isset($data[0])) {
+				if ($data[0] == 'terminateHook')
+					return $data[1];
+				else
+					throw new SERIA_Exception('Unknown data type: '.$data[0]);
+			} else
+				throw new SERIA_Exception('No data type');
+		}
+	}
+
 	/**
 	 *
 	 * Get the first value from an array, or get the only value if it is not an array.

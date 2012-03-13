@@ -93,7 +93,7 @@ foreach ($providers as $providerId => &$provider) {
 	if ($action->invoked()) {
 		$state = new SERIA_AuthenticationState();
 		$state->assert();
-		$state->push('continue', $linkedUrl);
+		$state->pushTerminateHook('continue', $linkedUrl);
 		SERIA_Base::redirectTo($provider['url']);
 		die();
 	}

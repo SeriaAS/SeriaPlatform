@@ -240,7 +240,7 @@ foreach ($providers as $providerId => &$provider) {
 	SERIA_Base::debug('Checking provider: '.$providerId);
 	if ($action->invoked()) {
 		$state->assert();
-		$state->push('continue', $linkedUrl);
+		$state->pushTerminateHook('continue', $linkedUrl);
 		SERIA_Base::debug('Action invoked, redirecting to: '.$provider['url']);
 		SERIA_Base::redirectTo($provider['url']);
 		die();
