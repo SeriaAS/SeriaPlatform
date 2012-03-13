@@ -16,26 +16,32 @@
 			$this->_modules[$moduleName] = $moduleUrl;
 		}
 
-		public function getIFrameUrl($width="100%",$height="100%", $options = NULL) {
+		public function getIFrameUrl($width="100%",$height="100%", $options = NULL, $preventRandom = false) {
+			if(SERIA_USE_STROBE)
+				$frameName = 'strobeframe';
+			else
+				$frameName = 'iframe';
+
 			if($options === NULL)
-				return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
-			return SERIA_Meta::manifestUrl('videoplayer','iframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
+				return SERIA_Meta::manifestUrl('videoplayer',$frameName, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999))));
+			return SERIA_Meta::manifestUrl('videoplayer',$frameName, array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999)))));
 		}
 		/**
 		* $options will include variables sent to the flash player or html5 video player
 		*
 		* ie $options = array(
 		*	'autoplay' => true,
-		*	'wmode' => opaque
+		*	'wmode' => 'opaque'
 		*    );
 		*
 		*/
-		public function output($width="100%",$height="100%",$options = NULL) {
+		public function output($width="100%",$height="100%",$options = NULL, $preventRandom = false) {
 			if(trim($width, "%")==$width) $width .= 'px';
 			if(trim($height, "%")==$height) $height .= 'px';
-			return "<iframe src='".$this->getIFrameUrl($width,$height,$options)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
+			return "<iframe src='".$this->getIFrameUrl($width,$height,$options, $preventRandom)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
 		}
-		public function outputXDM($width="100%", $height="100%", $options = NULL, $containerName=""){
+		public function outputXDM($width="100%", $height="100%", $options = NULL, $preventRandom = false, $containerName=""){
+			SERIA_Template::jsInclude('seria/components/SERIA_VideoPlayer/assets/easyXDM.js');
 			return '
 				<script type="text/javascript" language="javascript">
 					var t = new easyXDM.Socket({
