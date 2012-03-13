@@ -212,7 +212,7 @@
 				$filenames = array();
 				foreach($templateFileName as $file)
 					$filenames[] = str_replace(SERIA_ROOT, '', $file);
-				throw new SERIA_Exception('Template file not found. Searched for "'.implode('", "', $filenames).'".');
+				throw new SERIA_Exception('Template file not found. Searched for "'.implode('", "', $filenames).'".', SERIA_Exception::NOT_FOUND);
 			}
 
 //			if(SERIA_DEBUG)
@@ -230,7 +230,7 @@
 				$templateFileName = realpath($templateFileName);
 
 			$code = file_get_contents($templateFileName);
-			if(empty($code)) throw new SERIA_Exception('Template "'.$templateFileName.'" not found');
+			if(empty($code)) throw new SERIA_Exception('Template "'.$templateFileName.'" not found', SERIA_Exception::NOT_FOUND);
 			$code = $this->compile($code, $templateFileName);
 			if(sizeof($this->_includes)>0)
 			{
