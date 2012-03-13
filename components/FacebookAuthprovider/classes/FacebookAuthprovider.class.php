@@ -61,7 +61,7 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 
 	public function isAvailable() /* Ok */
 	{
-		return (SERIA_Base::getParam('SimpleSAML_Facebook_app_id') && SERIA_Base::getParam('SimpleSAML_Facebook_api_key') && SERIA_Base::getParam('SimpleSAML_Facebook_secret'));
+		return (SERIA_Base::getParam('SimpleSAML_Facebook_app_id') && SERIA_Base::getParam('SimpleSAML_Facebook_secret'));
 	}
 
 	/**/
