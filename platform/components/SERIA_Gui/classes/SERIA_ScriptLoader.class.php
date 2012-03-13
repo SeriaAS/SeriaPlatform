@@ -24,10 +24,18 @@ class SERIA_ScriptLoader
 				'1.4.2' => array(
 					'depends' => array(),
 					'filename' => '/seria/platform/js/jquery/js/jquery-1.4.2.min.js'
+				),
+				'1.6.4' => array(
+					'depends' => array(),
+					'filename' => '/seria/platform/js/jquery/js/jquery-1.6.4.min.js'
+				),
+				'1.7' => array(
+					'depends' => array(),
+					'filename' => '/seria/platform/js/jquery/js/jquery-1.7.min.js'
 				)
 			),
 			'default' => array(
-				'preferred' => '1.4.2'
+				'preferred' => '1.7'
 			)
 		),
 		"jQuery-tablesorter" => array(
