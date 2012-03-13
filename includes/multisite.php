@@ -66,6 +66,7 @@
 				}
 			}
 		}
+		define('SERIA_SITE_ID', md5($site['dbName]));
 		return $site;
 	}
 
@@ -75,6 +76,7 @@
 	{
 		// this is the default site. Continue with the default _config.php file
 		require(dirname(dirname(dirname(__FILE__))).'/_config.php');
+		define('SERIA_SITE_ID', md5(SERIA_DB_NAME));
 	}
 	else
 	{
