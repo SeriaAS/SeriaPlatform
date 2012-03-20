@@ -149,8 +149,17 @@
 						$cacheControlText .= 'HTTP/1.0 Date&Expires: date="'.$b->responseHeaders['Date'].'", expires="'.$b->responseHeaders['Expires'].'"'."\n";
 						$date = new DateTime($b->responseHeaders['Date']);
 						$expires = new DateTime($b->responseHeaders['Expires']);
-						$date = $date->getTimestamp();
-						$expires = $expires->getTimestamp();
+
+						/*
+						 * Compat with PHP 5.2
+						 */
+						if ((PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 3) || PHP_MAJOR_VERSION > 5) {
+							$date = $date->getTimestamp();
+							$expires = $expires->getTimestamp();
+						} else {
+							$date = strtotime($date->format('Y-m-d H:i:s'));
+							$expires = strtotime($expires->format('Y-m-d H:i:s'));
+						}
 						$now = time();
 						$cacheControlText .= 'Timestamp: now='.$now.', date='.$date.', expires='.$expires."\n";
 						if ($expires >= $date) {

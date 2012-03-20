@@ -337,8 +337,17 @@
 							    isset($webbrowser->responseHeaders['Expires']) && $webbrowser->responseHeaders['Expires']) {
 								$date = new DateTime($webbrowser->responseHeaders['Date']);
 								$expires = new DateTime($webbrowser->responseHeaders['Expires']);
-								$date = $date->getTimestamp();
-								$expires = $expires->getTimestamp();
+
+								/*
+								 * Compat with PHP 5.2
+								 */
+								if ((PHP_MAJOR_VERSION == 5 && PHP_MINOR_VERSION >= 3) || PHP_MAJOR_VERSION > 5) {
+									$date = $date->getTimestamp();
+									$expires = $expires->getTimestamp();
+								} else {
+									$date = strtotime($date->format('Y-m-d H:i:s'));
+									$expires = strtotime($expires->format('Y-m-d H:i:s'));
+								}
 								$now = time();
 								if ($expires >= $date) {
 									$ttl = $expires - $now;
