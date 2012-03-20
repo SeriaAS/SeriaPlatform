@@ -580,6 +580,7 @@ class SERIA_AuthenticationState
 			} else
 				throw new SERIA_Exception('No data type');
 		}
+		return $data;
 	}
 
 	/**
