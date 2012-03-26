@@ -20,6 +20,7 @@
 
 		function __construct()
 		{
+			$this->setupKeys();
 		}
 
 		public function isEnabled()
@@ -48,6 +49,11 @@
 			 */
 			SERIA_Hooks::listen(SERIA_Base::AFTER_LOGOUT_HOOK, array($this, 'logout'), 1000);
 			SERIA_Hooks::listen(SERIA_GuiHooks::EMBED, array($this, 'guiEmbed'));
+			/*
+			 * ExternalReq2 can show a user-consent-request for sending data to
+			 * an external server.
+			 */
+			SERIA_Hooks::listen(SERIA_ExternalReq2ReturnPost::HOST_ACCESS_CONSENT_HOOK, array($this, 'hostAccessConsentRequest'), 1000);
 		}
 		public function guiEmbed($gui)
 		{
@@ -65,6 +71,20 @@
 				SERIA_Base::debug('Warning: Database failure in authproviders gui-embed: '.$e->getMessage());
 				/* A database will just turn off the useredit blockage. Nothing critical here. */
 			}
+		}
+
+		/**
+		 *
+		 * Creates keys for MAC and authentication
+		 */
+		protected function setupKeys()
+		{
+			if (!self::getMacKey())
+				SERIA_Base::setParam('seria_authproviders_mac_key', sha1(mt_rand().mt_rand().mt_rand().mt_rand()));
+		}
+		public static function getMacKey()
+		{
+			return SERIA_Base::getParam('seria_authproviders_mac_key'); 
 		}
 
 		/*
@@ -303,6 +323,15 @@
 			SERIA_Base::pageRequires('admin');
 			$template = new SERIA_MetaTemplate();
 			echo $template->parse($this->getInstallationPath().'/metaTemplates/remoteUsermanagement.php');
+			die();
+		}
+
+		public function hostAccessConsentRequest($postFormObject, $abortUrl)
+		{
+			$template = new SERIA_MetaTemplate();
+			$template->addVariable('postDataObject', $postFormObject);
+			$template->addVariable('abortUrl', $abortUrl);
+			echo $template->parse($this->getInstallationPath().'/metaTemplates/userConsentRequest.php');
 			die();
 		}
 	}

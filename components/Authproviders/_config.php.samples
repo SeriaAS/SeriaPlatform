@@ -1,0 +1,5 @@
+
+	define('SERIA_AUTHPROVIDERS_ENABLED', 1);
+
+	/* ExternalReq2 ACL: Turns off the user consent request page before allowing the hosts to access user login sessions */
+	define('SERIA_AUTHPROVIDERS_EXTERNAL_HOSTS_USER_ACCESS', '.seria.net,test.seria.no'); // dot first means whole domain incl sub-sub...-names.
