@@ -130,11 +130,8 @@
 			 * Fix query-params without urlencoding
 			 */
 			$p['query'] = rawurlencode($p['query']);
-			$p['query'] = str_replace(
-				array('%25', '%26', '%3D'),
-				array('%',   '&',   '='),
-				$p['query']
-			);
+			$p['query'] = str_replace(array('%26', '%3D'), array('&', '='), $p['query']);
+			$p['query'] = str_replace('%25', '%', $p['query']);
 
 			$this->nextRequest = array(
 				'host' => $p['host'],
