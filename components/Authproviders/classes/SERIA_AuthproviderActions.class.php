@@ -57,6 +57,22 @@ class SERIA_AuthproviderActions
 	}
 
 	/**
+	 *
+	 * Get the direct login url. Nothing else but generating a plain login url is done.
+	 * @param string $continue Optional continue url.
+	 */
+	public static function getLoginUrl($continue=null)
+	{
+		if ($continue === null)
+			$continue = $_SERVER["REQUEST_URI"];
+		if(SERIA_CUSTOM_PAGES_ROOT && file_exists(SERIA_CUSTOM_PAGES_ROOT."/login.php"))
+		{
+			return SERIA_CUSTOM_PAGES_HTTP_ROOT."/login.php?continue=".rawurlencode($continue);
+		}
+		return SERIA_HTTP_ROOT."/seria/platform/pages/login.php?continue=".rawurlencode($continue);
+	}
+
+	/**
 	 * 
 	 * Returns a login action object if the user is not logged in and has system access. Null otherwise.
 	 * @return SERIA_ActionAuthenticationStateUrl
@@ -71,13 +87,7 @@ class SERIA_AuthproviderActions
 		$action = new SERIA_ActionAuthenticationStateUrl('login', 'system', $state);
 		if ($action->invoked()) {
 			SERIA_Base::pageRequires('logout'); /* Logout guest */
-			if(SERIA_CUSTOM_PAGES_ROOT && file_exists(SERIA_CUSTOM_PAGES_ROOT."/login.php"))
-			{
-				SERIA_Base::redirectTo($state->stampUrl(SERIA_CUSTOM_PAGES_HTTP_ROOT."/login.php?continue=".rawurlencode($_SERVER["REQUEST_URI"])));
-				die();
-			}
-			SERIA_Base::redirectTo($state->stampUrl(SERIA_HTTP_ROOT."/seria/platform/pages/login.php?continue=".rawurlencode($_SERVER["REQUEST_URI"])));
-			die();
+			SERIA_Base::redirectTo($state->stampUrl(self::getLoginUrl()));
 		}
 		return $action;
 	}
