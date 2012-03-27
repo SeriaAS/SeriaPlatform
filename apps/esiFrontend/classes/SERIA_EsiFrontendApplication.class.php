@@ -127,6 +127,30 @@
 					$b->customRequestHeaders = array('X-SERIA-HTTPS' => '1');
 				}
 
+				/*
+				 * Generate our own XFF.
+				 */
+				$xff = $_SERVER['REMOTE_ADDR'];
+
+				/*
+				 * Seria Platform oddity: REMOTE_ADDR overwritten by the X-Forwarded-For value.
+				 * Hacking around r2696 of seria/main.php:
+				 */
+				if (isset($_SERVER['HTTP_X_FORWARDED_BY']) && $_SERVER['HTTP_X_FORWARDED_BY'])
+					$xff = $_SERVER['HTTP_X_FORWARDED_BY'];
+
+				/*
+				 * Any existing XFF?
+				 */
+				if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'])
+					$orig_xff = trim($_SERVER['HTTP_X_FORWARDED_FOR']);
+				else
+					$orig_xff = '';
+				if ($orig_xff)
+					$xff = $orig_xff.', '.$xff;
+
+				$b->customRequestHeaders['X-Forwarded-For'] = $xff;
+
 				$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, $_POST, ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
 				$esiMimeTypes = array(
 					'text/xml' => 1,
