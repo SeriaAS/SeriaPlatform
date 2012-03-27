@@ -235,13 +235,15 @@ class SERIA_AuthenticationState
 	public function __construct($stateId=null)
 	{
 		if ($stateId === null) {
-			if (isset($_GET['auth_id']) && isset($_GET['auth_abort'])) {
-				$this->id = $_GET['auth_id'];
+			if (isset($_GET['auth_abort'])) {
 				$this->abort = $_GET['auth_abort'];
-				$this->data = self::getState($this->id);
-				if ($this->data !== null) {
-					$this->created = false;
-					return;
+				if (isset($_GET['auth_id'])) {
+					$this->id = $_GET['auth_id'];
+					$this->data = self::getState($this->id);
+					if ($this->data !== null) {
+						$this->created = false;
+						return;
+					}
 				}
 			}
 		} else {
