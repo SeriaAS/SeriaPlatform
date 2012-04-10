@@ -390,6 +390,9 @@ class SERIA_Authproviders
 					$loginState->set('autoDiscoveryVectorTries', $loginState->get('autoDiscoveryVectorTries') + 1);
 					$res = self::callAuthenticationProvider($provider, false, /*reset:*/false);
 					if ($res && is_string($res)) {
+						if (SERIA_Base::user() !== false && $loginState->exists('continue'))
+							$loginState->terminate('continue'); /* There is no more to do when the user is logged in */
+							
 						SERIA_Base::redirectTo($loginState->stampUrl($res));
 						die();
 					}
