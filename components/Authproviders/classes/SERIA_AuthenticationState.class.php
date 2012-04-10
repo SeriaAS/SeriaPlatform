@@ -340,7 +340,7 @@ class SERIA_AuthenticationState
 					} else
 						throw new SERIA_Exception('Unknown type: '.$url[0]);
 				}
-				$url = $this->pop($field);
+				$url = $this->popRaw($field);
 			}
 			$this->forget();
 			if ($url && !is_string($url) && is_array($url)) {
