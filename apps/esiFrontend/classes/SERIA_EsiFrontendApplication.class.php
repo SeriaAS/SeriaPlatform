@@ -74,6 +74,9 @@
 			if (!$nocache) {
 				$cache = $this->getCacheObject();
 				$cacheKey = md5($url);
+				/* Separate cache for https (urls for assets can be different) */
+				if (SERIA_Url::https())
+					$cacheKey = 'https:'.$cacheKey;
 				$currentCache = $this->getCache($cacheKey, $cache);
 				if (!$currentCache)
 					$currentCache = array();
@@ -123,9 +126,10 @@
 				$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
 				$sentHeaders["Accept-Language"] = $b->acceptLanguage;
 
-				if ($_SERVER['X_SERIA_HTTPS']) {
-					$b->customRequestHeaders = array('X-SERIA-HTTPS' => '1');
-				}
+				if (SERIA_Url::https())
+					$b->customRequestHeaders = array('X-Seria-Https' => '1');
+				else
+					$b->customRequestHeaders = array();
 
 				/*
 				 * Generate our own XFF.
