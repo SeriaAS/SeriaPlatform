@@ -21,6 +21,10 @@
 		return SERIA_ProxyServer::publicCache($ttl);
 	}
 
+	function seria_headers_privatecache_init()
+	{
+		return SERIA_ProxyServer::private_init();
+	}
 	function seria_headers_publiccache_init()
 	{
 		return SERIA_ProxyServer::init();
@@ -48,7 +52,7 @@
 		}
 		else
 		{ // no caching
-			seria_headers_privatecache(null);
+			seria_headers_privatecache_init();
 		}
 		session_start();
 	}

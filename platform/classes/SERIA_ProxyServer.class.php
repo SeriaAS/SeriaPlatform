@@ -19,6 +19,22 @@
 			self::$cacheLim = 'public';
 			self::$expireTime = null;
 		}
+		/**
+		 *
+		 * Called to set the caching to the default of 60 seconds and reset the
+		 * cache headers to default (60 seconds). Limit initially to private.
+		 */
+		public static function private_init()
+		{
+			$ttl = 60;
+			header("Cache-Control: private, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
+			header("Pragma: no-cache");
+			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+			self::$cacheLim = 'private';
+			self::$expireTime = null;
+			session_cache_limiter('private');
+			session_cache_expire(intval($ttl / 60));
+		}
 
 		/**
 		 * Sends headers that informs the proxy server to never cache this page.
