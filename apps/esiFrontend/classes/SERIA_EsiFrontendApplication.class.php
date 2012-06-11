@@ -155,7 +155,7 @@
 
 				$b->customRequestHeaders['X-Forwarded-For'] = $xff;
 
-				$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, $_POST, ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
+				$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, (sizeof($_POST) ? $_POST : false), ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
 				$esiMimeTypes = array(
 					'text/xml' => 1,
 					'text/html' => 1,
