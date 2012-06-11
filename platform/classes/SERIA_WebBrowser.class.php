@@ -267,6 +267,23 @@
 			 */
 			$this->httpTransferCoding = null;
 		}
+
+		/**
+		 *
+		 * Get data about the next request.
+		 */
+		public function getNextRequest()
+		{
+			return $this->nextRequest;
+		}
+		/**
+		 *
+		 * Get data about the current request.
+		 */
+		public function getCurrentRequest()
+		{
+			return $this->currentRequest;
+		}
 		/**
 		 *
 		 * Restart current request (abort+restart).
