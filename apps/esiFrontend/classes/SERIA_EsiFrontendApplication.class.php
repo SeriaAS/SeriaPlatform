@@ -91,10 +91,50 @@
 			$langs = explode(',', $langString);
 			$_SERVER['HTTP_ACCEPT_LANGUAGE'] = $langs[0];
 
+			$b = new SERIA_WebBrowser();
+
+			$b->followRedirect = false;
+			$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
+			$sentHeaders["Accept-Language"] = $b->acceptLanguage;
+
+			if (SERIA_Url::https())
+				$b->customRequestHeaders = array('X-Seria-Https' => '1');
+			else
+				$b->customRequestHeaders = array();
+
+			/*
+			 * Generate our own XFF.
+			 */
+			$xff = $_SERVER['REMOTE_ADDR'];
+
+			/*
+			 * Seria Platform oddity: REMOTE_ADDR overwritten by the X-Forwarded-For value.
+			 * Hacking around r2696 of seria/main.php:
+			 */
+			if (isset($_SERVER['HTTP_X_FORWARDED_BY']) && $_SERVER['HTTP_X_FORWARDED_BY'])
+				$xff = $_SERVER['HTTP_X_FORWARDED_BY'];
+
+			/*
+			 * Any existing XFF?
+			 */
+			if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'])
+				$orig_xff = trim($_SERVER['HTTP_X_FORWARDED_FOR']);
+			else
+				$orig_xff = '';
+			if ($orig_xff)
+				$xff = $orig_xff.', '.$xff;
+
+			$b->customRequestHeaders['X-Forwarded-For'] = $xff;
+
+			$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, (sizeof($_POST) ? $_POST : false), ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
+
+			$requestHeaders = $b->getNextRequest();
+			$requestHeaders = $requestHeaders['headers'];
+
 			if (isset($currentCache['vary']) && $currentCache['vary']) {
 				$ident = '';
 				foreach ($currentCache["vary"] as $vary) {
-					$ident .= $vary.'_'.strtolower($_SERVER['HTTP_'.str_replace('-','_',strtoupper($vary))]).'_';
+					$ident .= $vary.'_'.strtolower($requestHeaders[$vary]).'_';
 				}
 			} else if (isset($currentCache['_']) && $currentCache['_'])
 				$ident = '_';
@@ -119,43 +159,8 @@
 
 			if (ESIFRONTEND_CLOSE_SESSION) session_write_close();
 			if (!$c) {
+				$sentHeaders = $requestHeaders;
 				// if url exists, then we start building the page
-				$b = new SERIA_WebBrowser();
-
-				$b->followRedirect = false;
-				$b->acceptLanguage = $_SERVER['HTTP_ACCEPT_LANGUAGE'];
-				$sentHeaders["Accept-Language"] = $b->acceptLanguage;
-
-				if (SERIA_Url::https())
-					$b->customRequestHeaders = array('X-Seria-Https' => '1');
-				else
-					$b->customRequestHeaders = array();
-
-				/*
-				 * Generate our own XFF.
-				 */
-				$xff = $_SERVER['REMOTE_ADDR'];
-
-				/*
-				 * Seria Platform oddity: REMOTE_ADDR overwritten by the X-Forwarded-For value.
-				 * Hacking around r2696 of seria/main.php:
-				 */
-				if (isset($_SERVER['HTTP_X_FORWARDED_BY']) && $_SERVER['HTTP_X_FORWARDED_BY'])
-					$xff = $_SERVER['HTTP_X_FORWARDED_BY'];
-
-				/*
-				 * Any existing XFF?
-				 */
-				if (isset($_SERVER['HTTP_X_FORWARDED_FOR']) && $_SERVER['HTTP_X_FORWARDED_FOR'])
-					$orig_xff = trim($_SERVER['HTTP_X_FORWARDED_FOR']);
-				else
-					$orig_xff = '';
-				if ($orig_xff)
-					$xff = $orig_xff.', '.$xff;
-
-				$b->customRequestHeaders['X-Forwarded-For'] = $xff;
-
-				$b->navigateTo(ESIFRONTEND_BACKEND_HTTPROOT.$url, (sizeof($_POST) ? $_POST : false), ESIFRONTEND_BACKEND_IP, ESIFRONTEND_BACKEND_PORT);
 				$esiMimeTypes = array(
 					'text/xml' => 1,
 					'text/html' => 1,
