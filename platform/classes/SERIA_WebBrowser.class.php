@@ -247,6 +247,9 @@
 			} else if ($post === false || strtolower($post) == 'get') {
 				$this->method = 'GET';
 				$this->nextRequest['method'] = 'GET';
+			} else if (strtolower($post) == 'head') {
+				$this->method = 'HEAD';
+				$this->nextRequest['method'] = 'HEAD';
 			} else
 				throw new SERIA_Exception('Specify method as either boolean (false=>get, true=>post), array=>post, or string (get or post)');
 			
@@ -785,6 +788,8 @@
 			if ($bytes <= 0)
 				throw new SERIA_Exception('Please read something at least (bytes<=0).');
 			$headers = $this->fetchHeaders($dontWaitForMore);
+			if ($this->currentRequest['method'] == 'HEAD')
+				return false; /* There must be no body in response to a head */
 			if ($dontWaitForMore && $headers === null && !$this->buffer_eof)
 				return '';
 
