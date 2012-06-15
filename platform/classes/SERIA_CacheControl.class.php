@@ -177,7 +177,7 @@ class SERIA_CacheControl
 	 */
 	public function isPublic()
 	{
-		if ($this->noCache() || $this->isPrivate())
+		if ($this->noStore() || $this->noCache() || $this->isPrivate())
 			return false;
 		return (isset($this->cacheControl['public']) || isset($this->cacheControl['s-maxage']) || isset($this->cacheControl['max-age']));
 	}
@@ -187,7 +187,7 @@ class SERIA_CacheControl
 	 */
 	public function isPrivate()
 	{
-		if ($this->noCache())
+		if ($this->noStore() || $this->noCache())
 			return false;
 		return isset($this->cacheControl['private']);
 	}
@@ -197,7 +197,7 @@ class SERIA_CacheControl
 	 */
 	public function getPublicMaxAge()
 	{
-		if ($this->noCache())
+		if ($this->noCache() || $this->noStore())
 			return 0;
 		if (isset($this->cacheControl['public'])) {
 			if (isset($this->cacheControl['s-maxage'])) {
@@ -222,15 +222,12 @@ class SERIA_CacheControl
 	 */
 	public function getPrivateMaxAge()
 	{
-		if ($this->noCache())
+		if ($this->noCache() || $this->noStore())
 			return 0;
-		if (isset($this->cacheControl['public']) || isset($this->cacheControl['private'])) {
-			if (isset($this->cacheControl['max-age']))
-				return intval($this->cacheControl['max-age'], 10);
-			else
-				return null;
-		}
-		return 0;
+		if (isset($this->cacheControl['max-age']))
+			return intval($this->cacheControl['max-age'], 10);
+		else
+			return 0;
 	}
 	
 }
