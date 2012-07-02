@@ -73,7 +73,9 @@
 	{
 		// try to resolve this issue
 		clearstatcache();
-		file_put_contents(SERIA_FILES_ROOT.'/.htaccess', 'AddType text/plain php');
+		file_put_contents(SERIA_FILES_ROOT.'/.htaccess', 'RemoveHandler .php .phtml .php3
+RemoveType .php .phtml .php3
+php_flag engine off');
 		if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
 
 		if(($response = SERIA_WebBrowser::fetchUrlContents(SERIA_FILES_HTTP_ROOT.'/delete_me.php?prevent_loop=1', 5))!==false)
@@ -115,7 +117,9 @@
 		if(trim($response)!='1')
 		{ // try to enable php via .htaccess
 			clearstatcache();
-			file_put_contents(SERIA_DYN_ROOT.'/.htaccess', 'AddType application/x-httpd-php .php .php3 .php4 .php5 .phtml');
+			file_put_contents(SERIA_DYN_ROOT.'/.htaccess', 'AddHandler application/x-httpd-php .php
+AddType application/x-httpd-php .php
+php_flag engine on');
 			if(SERIA_FILES_DELAY) sleep(SERIA_FILES_DELAY); // there might be some propagation delay
 			if(($response = SERIA_WebBrowser::fetchUrlContents(SERIA_DYN_HTTP_ROOT.'/delete_me.php?prevent_loop', 5))!==false)
 			{ // fetched it
