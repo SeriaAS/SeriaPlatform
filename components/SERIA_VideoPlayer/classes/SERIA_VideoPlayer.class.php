@@ -16,15 +16,25 @@
 			$this->_modules[$moduleName] = $moduleUrl;
 		}
 
+		public function getScriptableUrl($width="580", $height="360", $options = NULL) {
+			return '<script src="'.SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/js/strobePlayer.js.php?objectKey='.SERIA_NamedObjects::getPublicId($this->_object).'&width='.$width.'&height='.$height.'"></script>';
+		}
+
 		public function getIFrameUrl($width="100%",$height="100%", $options = NULL, $preventRandom = false) {
-			if(SERIA_USE_STROBE)
-				$frameName = 'strobeframe';
-			else
-				$frameName = 'iframe';
+			$newPlayer = array('ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com');
+			foreach($newPlayer as $domain)
+			{
+				if($_SERVER['HTTP_HOST'] == $domain)
+				{
+					if($options === NULL)
+						return SERIA_Meta::manifestUrl('videoplayer','strobeframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
+					return SERIA_Meta::manifestUrl('videoplayer','strobeframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
+				}
+			}
 
 			if($options === NULL)
-				return SERIA_Meta::manifestUrl('videoplayer',$frameName, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999))));
-			return SERIA_Meta::manifestUrl('videoplayer',$frameName, array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999)))));
+				return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999))));
+			return SERIA_Meta::manifestUrl('videoplayer','iframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999)))));
 		}
 		/**
 		* $options will include variables sent to the flash player or html5 video player
@@ -39,22 +49,6 @@
 			if(trim($width, "%")==$width) $width .= 'px';
 			if(trim($height, "%")==$height) $height .= 'px';
 			return "<iframe src='".$this->getIFrameUrl($width,$height,$options, $preventRandom)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
-		}
-		public function outputXDM($width="100%", $height="100%", $options = NULL, $preventRandom = false, $containerName=""){
-			SERIA_Template::jsInclude('seria/components/SERIA_VideoPlayer/assets/easyXDM.js');
-			return '
-				<script type="text/javascript" language="javascript">
-					var t = new easyXDM.Socket({
-					    remote: "'.$this->getIFrameUrl($width, $height, $options).'",
-					    container: document.getElementById("'.$containerName.'"),
-						props: {
-							style: {
-								width: "100%",
-								height: "100%"
-							}
-						}
-				});
-				</script>';
 		}
 
 		public function generateConfig()
