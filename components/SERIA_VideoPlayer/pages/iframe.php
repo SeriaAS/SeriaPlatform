@@ -1,4 +1,5 @@
 <?php
+	$http = 'http'.(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']=='off' ? '' : 's');
 	if(isset($_GET['admin']) && SERIA_Base::isLoggedIn())
 		SERIA_Base::viewMode('system');
 	try {
@@ -19,10 +20,26 @@
 
 	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
 	$hostname = $rawurl['host'];
+	$hostArray = explode('.', $hostname);
+	$subdomain = $hostArray[0];
+
+	if(file_exists(SERIA_ROOT.'/sites/'.$subdomain[0].'/'.$hostname.'/rules.php')) {
+		include(SERIA_ROOT.'/sites/'.$subdomain[0].'/'.$hostname.'/rules.php');
+	}
+
 	$domain = str_replace('www.', '', $hostname);
 
 	$counter = new SERIA_Counter('SeriaWebTVStatistics');
 	$counter->add(array('Referer:'.$video->get("id").':'.date('Y-m-d').':'.$domain),1);
+
+	if(is_a($video, 'SERIA_LiveProgram')) {
+		$counter = new SERIA_Counter('SeriaLiveStatistics');
+		$counter->add(array(
+			'Ym/i:'.date('Ym', time()).'/'.$video->get("id"),
+			'Ymd/i:'.date('Ymd', time()).'/'.$video->get("id"),
+			'YmdH/i:'.date('YmdH', time()).'/'.$video->get("id"),
+		));
+	}
 
 	$vd = $video->getVideoData();
 	$sources = $vd['sources'];
@@ -78,51 +95,33 @@
 			};
 		</script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/platform/js/SERIA.js' type='text/javascript'></script>
-		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/easyXDM.js' type='text/javascript'></script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/flash_detect.js' type='text/javascript' language='javascript'></script>
 <?php /*		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.js?<?php echo mt_rand();?>' type='text/javascript' language='javascript'></script> */ ?>
-		<script src='http://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
-		<script type='text/javascript'>
-			// VIDEO CONTROLS
-			var i = 0;
-			var playWhenReady;
-			function play()
-			{
-				if(typeof v !== "undefined") {
-					// Using HTML5 Video
-					v.load();
-					playWhenReady = function() {
-						if(i==10) {
-							i=0;
-							v.load();
-						}
-						if(v.readyState > 1) {
-							v.play();
-						} else {
-							i++;
-							setTimeout(playWhenReady, 800);
-						}
-					};
-					setTimeout(playWhenReady, 800);
-				} else {
-					// Using Flash based video
-				}
-			}
 
-			function fullscreen() {
-				if(typeof v !== "undefined") {
-					// Using HTML5
-					v.webkitEnterFullscreen();
-				} else {
-					// Using flash
-				}
-			}
-		</script>
+		<script src='<?php echo $http; ?>://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
+
+function showAlternatives(sources) {
+var found = new Object();
+for(var i in sources) {
+if(sources[i].src.match(/^rtsp/))
+found.android = sources[i].src;
+else if(sources[i].src.match(/^http/) && (window.videoData.sources[i].src.match(/.mp4$/i) || window.videoData.sources[i].src.match(/.m3u8$/i)))
+found.ios = sources[i].src;
+}
+if(found.android || found.ios) {
+html = '<span style="color:white">Unable to autoplay video for you: <br><br>';
+if(found.android) html += 'Play with <a href="' + found.android + '">Android</a><br>';
+if(found.ios) html += 'Play with <a href="' + found.ios + '">iOS</a><br></span>';
+jQuery('#fallback').html(html);
+}
+}
+
+
 jQuery(function(){
 	if(!FlashDetect.installed) {
 		// detect if html5 video is supported
-		v = document.createElement('video');
+		var v = document.createElement('video');
 		if(!v.canPlayType)
 		{
 			jQuery('#fallback').html("<?php echo _t("Please install Adobe Flash player or upgrade to a newer browser that supports HTML 5 video"); ?>");
@@ -180,7 +179,8 @@ jQuery(function(){
 				var httpSrc;
 				for(i in window.videoData.sources)
 				{
-					if(!rtspSrc && window.videoData.sources[i].src.match(/^rtsp/) && window.videoData.sources[i].src.match(/.mp4$/i))
+					// && window.videoData.sources[i].src.match(/.mp4$/i))
+					if(!rtspSrc && window.videoData.sources[i].src.match(/^rtsp/))
 					{
 						rtspSrc = window.videoData.sources[i].src;
 					}
@@ -193,6 +193,7 @@ jQuery(function(){
 				if(!httpSrc)
 				{
 					jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you"); ?>");
+					showAlternatives(window.videoData.sources);
 				}
 				else
 				{
@@ -265,7 +266,7 @@ jQuery(function(){
 });
 		</script>
 	</head>
-	<body>
+	<body style="background-color: #<?php echo $backgroundColor; ?>">
 <?php
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');
@@ -278,37 +279,39 @@ jQuery(function(){
 			$swfRoot = SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/SeriaPlayer.swf';
 		}
 
-?>
+		if(isset($_GET['opaque']))
+			$wmode = 'opaque';
+		else if(isset($_GET["transparent"]))
+			$wmode = 'transparent';
+		else $wmode = 'window'; 
+		if($video->get("id") == 89 && ($_SERVER['HTTP_HOST'] == "webcast.seriatv.com")) {
+			echo '<object width="100%" height="100%" id="flash">
+<div id="fallback" style="color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;">'._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.").'</div>
+<param name="movie" value="http://test.seriatv.com/frode/fp101/StrobeMediaPlayback.swf"></param><param name="flashvars" value="src=rtmp%3A%2F%2Flive.istribute.com%2Flive%2Fwebcast1&streamType=live"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><param name="wmode" value="direct"></param><embed src="http://test.seriatv.com/frode/fp101/StrobeMediaPlayback.swf" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" wmode="direct" width="100%" height="100%" flashvars="src=rtmp%3A%2F%2Flive.istribute.com%2Flive%2Fwebcast1&streamType=live"></embed></object>';
+		} else {
+
+		echo "
 		<!--[if IE]>
 		<object id='flash' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
-<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'><?php echo _t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled."); ?></div>
-			<param name='movie' value='<?php echo $swfRoot; ?>'></param>
+<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+			<param name='movie' value='".$swfRoot."'></param>
 			<param name='allowFullscreen' value='true'></param>
-			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
+			<param name='wmode' value='".$wmode."'></param>
 			<param name='allowscriptaccess' value='always'></param>
-			<param name='flashvars' value='<?php echo $flashVars; ?>&sks=true'></param>
+			<param name='flashvars' value='".$flashVars."&sks=true'></param>
 		</object>
 		<![endif]-->
 		<!--[if !IE]>-->
-		<object id='flash' type='application/x-shockwave-flash' data='<?php echo $swfRoot; ?>' width='100%' height='100%'>
-<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'><?php echo _t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled."); ?></div>
-			<param name='flashvars' value='<?php echo $flashVars; ?>&sks=true'></param>
+		<object id='flash' type='application/x-shockwave-flash' data='".$swfRoot."' width='100%' height='100%'>
+<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+			<param name='flashvars' value='".$flashVars."&sks=true'></param>
 			<param name='allowscriptaccess' value='always'></param>
-			<param name='wmode' value='<?php echo isset($_GET['opaque']) ? 'opaque' : 'window'; ?>'></param>
+			<param name='wmode' value='".$wmode."'></param>
 			<param name='allowFullscreen' value='true'></param>
 		</object>
 		<!--<![endif]-->
-<?php
-		// XDM is used to allow an embedding site to run certain javascript functions on the embedded iframe.
-		// 
+	";
+		}
 ?>
-		<script type="text/javascript" language="javascript">
-			var socket = new easyXDM.Socket({
-				  onMessage: function(message, origin) {
-					window[message]();
-				}
-			});
-
-		</script>
 	</body>
 </html>
