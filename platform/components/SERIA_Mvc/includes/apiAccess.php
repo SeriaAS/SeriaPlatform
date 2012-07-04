@@ -46,7 +46,6 @@
 			$responder = 'respond_html';
 			throw new SERIA_Exception('Format ('.$format.') is not supported', SERIA_Exception::NOT_IMPLEMENTED);
 		}
-
 		if(!class_exists($class) || !in_array('SERIA_IApiAccess', class_implements($class)))
 			throw new SERIA_Exception($class.' does not exist, or is not accessible trough this API.', SERIA_Exception::NOT_FOUND);
 
@@ -65,8 +64,10 @@
 				break;
 		}
 	} catch (SERIA_Exception $e) {
-		if($e->getCode()==SERIA_Exception::NOT_FOUND)
-			header("HTTP/1.0 404 Not Found");
+		if($e->getCode()==SERIA_Exception::NOT_IMPLEMENTED)
+			throw $e;
+		else if($e->getCode()==SERIA_Exception::NOT_FOUND)
+			throw new SERIA_Exception('Not handled ('.$e->getMessage().')', SERIA_Exception::NOT_IMPLEMENTED);
 		else if($e->getCode()==SERIA_Exception::NOT_IMPLEMENTED)
 			header("HTTP/1.0 501 Not Implemented");
 		else
