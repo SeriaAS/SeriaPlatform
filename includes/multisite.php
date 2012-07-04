@@ -66,7 +66,7 @@
 				}
 			}
 		}
-		define('SERIA_SITE_ID', md5($site['dbName]));
+		define('SERIA_SITE_ID', md5($site['dbName']));
 		return $site;
 	}
 
