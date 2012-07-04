@@ -11,7 +11,7 @@
 		/**
 		 *	Set the locale
 		 */
-		$locale = setlocale(LC_ALL ^ LC_NUMERIC, SERIA_LOCALE, 'no');
+		$locale = setlocale(LC_ALL ^ LC_NUMERIC, SERIA_LOCALE, 'no.UTF-8');
 	}
 	
 	seria_localeSettings();
