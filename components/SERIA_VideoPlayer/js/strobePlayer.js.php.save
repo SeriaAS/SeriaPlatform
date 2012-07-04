@@ -1,0 +1,41 @@
+<?php
+	$iframeUrl = $_GET["iframeUrl"];
+	$containerId = $_GET["containerId"];
+?>
+var SeriaPlayerIndex = 0;
+var SeriaPlayerReady = new Array();
+
+(function(){
+	var onEasyXDMReady = function() {
+		alert("Loaded <?php echo $_GET['objectKey']; ?>");
+	}
+
+	alert(SeriaPlayerIndex);
+	if(SeriaPlayerIndex==0) {
+		var head = document.getElementsByTagName('head')[0];
+		var script = document.createElement('script');
+		script.src = 'http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js';
+		script.type = 'text/javascript';
+		head.appendChild(script);
+		script.addEventListener('load', function() {
+			for(var i in SeriaPlayerReady) SeriaPlayerReady[i]();
+		});
+	}
+
+	document.write('<div id="SeriaPlayer' + SeriaPlayerIndex + '" style="<?php echo "width: ".$_GET['width']."px; height: ".$_GET['height']."px;"; ?>border: 2px solid red;"></div>');
+
+	SeriaPlayerIndex++;
+
+}());
+/*
+setTimeout(function() {
+	var ssb = document.createElement('script');
+	ssb.src = 'http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/strobePlayerXDM.js.php?r=<?php echo rand(0, 999999);?>&iframeUrl=<?php echo rawurlencode($iframeUrl); ?>&containerId=<?php echo $containerId; ?>';
+	ssb.type = 'text/javascript';
+	SERIA_VideoPlayer.head.appendChild(ssb);
+}, 1000);
+*/
+
+//	document.write("<script type=\"text/JavaScript\" src=\"http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js\"><\/"+"script>");
+//	document.write("<script type=\"text/JavaScript\" src=\"http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/strobePlayerXDM.js.php?r=5&iframeUrl=<?php echo $iframeUrl; ?>&containerId=<?php echo $containerId; ?>\"><\/"+"script>"); 
+

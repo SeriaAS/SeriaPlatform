@@ -39,20 +39,16 @@
 			'Ymd/i:'.date('Ymd', time()).'/'.$video->get("id"),
 			'YmdH/i:'.date('YmdH', time()).'/'.$video->get("id"),
 		));
-		$isLive = true;
 	}
 
 	$vd = $video->getVideoData();
 
-	function getBestFlashVideoSource($videoSources, $id)
+	function getBestFlashVideoSource($videoSources)
 	{
-//		return "http://streaming.seria.net/vod/smil:seriatv;".substr($_SERVER['SERVER_NAME'],0,1).";".$_SERVER['SERVER_NAME'].";files;seriawebtv;".$id.";alt;streams.smil/manifest.f4m";
 		foreach($videoSources as $i => $source)
 		{
 			if(strpos($source['src'], "rtmp") === false) {
-				if(strpos($source['src'], "f4m") === false) {
-					unset($videoSources[$i]);
-				}
+				unset($videoSources[$i]);
 			}
 		}
 		if(!sizeof($videoSources))
@@ -62,7 +58,7 @@
 		return $selectedSource['src'];
 	}
 
-	$flashVideoSource = getBestFlashVideoSource($vd['sources'], $video->get("id"));
+	$flashVideoSource = getBestFlashVideoSource($vd['sources']);
 
 	$sources = $vd['sources'];
 	$source = current($sources);
@@ -108,8 +104,7 @@
 		'poster' => $vd['previewImage'],
 		'bufferingOverlay' => "false",
 		'bufferTime' => 5,
-		'initialBufferTime' => 2,
-		'streamType' => ($isLive ? 'live' : 'auto')
+		'initialBufferTime' => 2
 	);
 	$newSourcesArray = array();
 
@@ -137,9 +132,8 @@
 	$flashVars = arrayToFlash($flashVars);
 
 ?><!DOCTYPE html>
-<html style="height:100%">
+<html>
 	<head>
-		<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 		<title>Seria WebTV Player for embedding</title>
 		<link rel='stylesheet' href='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.css?<?php echo mt_rand();?>' type='text/css'>
 		<script type='text/javascript' language='javascript'>
@@ -156,14 +150,6 @@
 
 		<script src='<?php echo $http; ?>://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
-
-setInterval(function(){
-	$('video').css({
-		position: "absolute",
-		top: "0px",
-		left: "0px"
-	});
-}, 1000);
 
 function showAlternatives(sources) {
 var found = new Object();
@@ -328,15 +314,8 @@ jQuery(function(){
 
 });
 		</script>
-  <style>
-    @-o-viewport { width: device-width; }
-    @-moz-viewport { width: device-width; }
-    @-ms-viewport { width: device-width; }
-    @-webkit-viewport { width: device-width; }
-    @viewport { width: device-width; }
-  </style>
 	</head>
-	<body style="background-color: #<?php echo $backgroundColor; ?>; height: 100%;">
+	<body style="background-color: #<?php echo $backgroundColor; ?>">
 <?php
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');
@@ -349,11 +328,7 @@ jQuery(function(){
 			$wmode = 'opaque';
 		else if(isset($_GET["transparent"]))
 			$wmode = 'transparent';
-		else $wmode = 'window';
-
-		// HACK :
-		// Should incorporate site-specific settings for wmode, bgcolor etc.
-		$wmode = 'transparent';
+		else $wmode = 'window'; 
 
 			echo "
 			<!--[if IE]>
@@ -361,7 +336,7 @@ jQuery(function(){
 	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
 				<param name='movie' value='".$swfRoot."'></param>
 				<param name='allowFullscreen' value='true'></param>
-				<param name='wmode' value='".$wmode."'></param>
+				<param name='wmode' value='window'></param>
 				<param name='allowscriptaccess' value='always'></param>
 				<param name='flashvars' value='".$flashVars."'></param>
 			</object>
@@ -371,7 +346,7 @@ jQuery(function(){
 	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
 			<param name='flashvars' value='".$flashVars."'></param>
 			<param name='allowscriptaccess' value='always'></param>
-			<param name='wmode' value='".$wmode."'></param>
+			<param name='wmode' value='window'></param>
 			<param name='allowFullscreen' value='true'></param>
 		</object>
 		<!--<![endif]-->
