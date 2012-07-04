@@ -98,7 +98,11 @@
 			$parts = explode("/", $route);
 			if(sizeof($parts)==0) // could provide a list of class names
 				return;
-			require(dirname(__FILE__).'/includes/apiAccess.php');
+			try {
+				require(dirname(__FILE__).'/includes/apiAccess.php');
+			} catch (Exception $e) {
+				if($e->getCode()==SERIA_Exception::NOT_IMPLEMENTED) return NULL;
+			}
 			die();
 		}
 		else if(strpos($route, "seria/")===0)
