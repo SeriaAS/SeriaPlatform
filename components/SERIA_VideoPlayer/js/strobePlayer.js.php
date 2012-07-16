@@ -116,11 +116,10 @@ if(eval("typeof " +script.onload) != "undefined") {
 
 
 var pita;
-var SeriaPlayerClass = function(objectKey, urlOptions) { this.objectKey = objectKey; this.urlOptions = urlOptions}
+var SeriaPlayerClass = function(objectKey) { this.objectKey = objectKey; }
 SeriaPlayerClass.prototype = {
 	element: null,		// HOLDS THE DIV ELEMENT
 	objectKey: null,	// HOLDS THE OBJECT KEY
-	urlOptions : null,
 	onready: null,		// WHEN THE IFRAME IS LOADED AND CAN BE COMMUNICATED WITH
 	onmessage: null,	// WHEN MESSAGES THAT WE DO NOT UNDERSTAND COME
 	onpause: null,		// WHEN USER PAUSES THE VIDEO (NOT WHEN SCRIPTS PAUSES THE VIDEO)
@@ -141,7 +140,9 @@ SeriaPlayerClass.prototype = {
 		var self = this;
 		//this.xmdSocket 
 		pita = new easyXDM.Socket({
-			remote: 'http://<?php echo $_SERVER['HTTP_HOST']; ?>/?route=seria%2Fvideoplayer%2Fstrobeframe_easy&objectKey=' + this.objectKey + this.urlOptions,
+			remote: 'http://<?php echo $_SERVER['HTTP_HOST']; ?>/?route=seria%2Fvideoplayer%2Fstrobeframe_easy&objectKey=' + this.objectKey + "<?php 
+$params = $_GET;
+unset($params['objectKey']); foreach($params as $key => $val) echo "&".$key."=".$val; ?>",
 			container: this.element,
 			onMessage: function(message) {
 				if(message=="hello")				// Special message for notifying that API is available
@@ -172,26 +173,18 @@ SeriaPlayerClass.all = new Array();
 SeriaPlayerClass.allIndex = 0;
 SeriaPlayerClass.allReady = new Array();
 
-function SeriaPlayer(key, urlOptions) {
+function SeriaPlayer(key) {
 	if(!SeriaPlayerClass.all[key]) {
 		SeriaPlayerClass.all[key] = new SeriaPlayerClass(); 
 		SeriaPlayerClass.all[key].objectKey = key;
-		SeriaPlayerClass.all[key].urlOptions = urlOptions;
 	}
 	return SeriaPlayerClass.all[key];
 }
 
 (function(){
 	SeriaPlayerClass.allReady[SeriaPlayerClass.allIndex] = function(el) {
-		var sp = SeriaPlayer(<?php echo $_GET['objectKey']; ?>, <?php 
-	$getVars = $_GET;
-	unset($getVars['objectKey']);
-	$urlOptions = "";
-	foreach($getVars as $key  => $val)
-		$urlOptions.="&".$key."=".$val;
+		var sp = SeriaPlayer(<?php echo $_GET['objectKey']; ?>);
 
-	echo "'".$urlOptions."'";
-		?>);
 		sp.element = el;
 		sp.dispatchEvent('_initialize');
 	}
