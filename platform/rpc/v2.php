@@ -67,5 +67,5 @@
 	}
 	catch (Exception $e)
 	{
-		call_user_func($serialize, array('error' => $e->getMessage(), 'code' => $e->getCode(), 'class' => get_class($e)));
+		call_user_func($serialize, array('error' => $e->getMessage(), 'code' => $e->getCode(), 'class' => get_class($e), 'file' => $e->getFile()));
 	}

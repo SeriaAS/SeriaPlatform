@@ -12,7 +12,45 @@
 		*/
 		public function __construct($url)
 		{
-			$this->_url = $url;
+			if(!is_string($url) && (!is_object($url) || get_class($url)!='SERIA_Url')) throw new Exception("Must receive a string");
+			if(is_object($url)) $this->_url = ''.$url;
+			else $this->_url = $url;
+		}
+
+		/**
+		* Sign the URL using an arbitrary key that must be shared among those that will be able to sign urls.
+		* You may wish to look into SERIA_Fluent::all('SERIA_RpcClientKey') to find keys. It will also be wise
+		* to add an "expires" parameter that states a time stamp after which the URL should not work. Of course,
+		* you can add an application identifier to the url as well - and use that application identifier to figure
+		* out which key to use when checking that the URL is signed.
+		*/
+		public function sign($key, $paramName='sign', $algorithm='sha1') {
+			$parsed = parse_url($this->_url);
+			$identifier = $parsed['path'];
+			if(!empty($parsed['query'])) $identifier .= '?'.$parsed['query'];
+			$hash = hash_hmac($algorithm, $identifier, $key);
+			if(isset($parsed['query'])) $parsed['query'] .= '&'.$paramName.'='.$hash;
+			else $parsed['query'] = $paramName.'='.$hash;
+			$this->_url = self::buildUrl($parsed);
+			return $this;
+		}
+
+		/**
+		* Check that the URL is signed using the specified key. Look at the comment for self::sign()
+		*/
+		public function isSigned($key, $paramName='sign', $algorithm='sha1') {
+			$parsed = parse_url($this->_url);
+			if(empty($parsed['query']))
+				return FALSE;
+			self::parse_str($parsed['query'], $query);
+			if(empty($query[$paramName])) return FALSE;
+			$identifier = $parsed['path'].'?'.$parsed['query'];
+			if(strpos($identifier, '&'.$paramName.'=')!==FALSE)
+				$identifier = str_replace('&'.$paramName.'='.$query[$paramName], '', $identifier);
+			else
+				$identifier = str_replace('?'.$paramName.'='.$query[$paramName], '', $identifier);
+
+			return $query[$paramName] === hash_hmac($algorithm, $identifier, $key);
 		}
 
 		public static function parse_str($str, &$query)
