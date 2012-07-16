@@ -17,6 +17,17 @@
 			return;
 		}
 	}
+	if(!SERIA_Base::isLoggedIn() && $video->get('isPrivate')) {
+		if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("Unsigned request - expecting clientId and sign");
+		if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
+		$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
+		if(!$client) die("Invalid client id");
+		$curr_url = SERIA_Url::current();
+		$curr_sub = substr($curr_url, 0, strpos($curr_url, "&xdm_e"));
+
+		if(!$checkUrl->isSigned($client->get('client_key')))
+			die("Invalid signature");
+	}
 
 	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
 	$hostname = $rawurl['host'];
@@ -39,6 +50,7 @@
 			'Ymd/i:'.date('Ymd', time()).'/'.$video->get("id"),
 			'YmdH/i:'.date('YmdH', time()).'/'.$video->get("id"),
 		));
+		$isLive = true;
 	}
 
 	$vd = $video->getVideoData();
@@ -49,7 +61,9 @@
 		foreach($videoSources as $i => $source)
 		{
 			if(strpos($source['src'], "rtmp") === false) {
-				unset($videoSources[$i]);
+				if(strpos($source['src'], "f4m") === false) {
+					unset($videoSources[$i]);
+				}
 			}
 		}
 		if(!sizeof($videoSources))
@@ -106,6 +120,7 @@
 		'bufferingOverlay' => "false",
 		'bufferTime' => 5,
 		'initialBufferTime' => 2,
+		'streamType' => ($isLive ? 'live' : 'auto'),
 		'javascriptCallbackFunction' => 'onJavaScriptBridgeCreated'
 	);
 	$newSourcesArray = array();
@@ -136,6 +151,7 @@
 ?><!DOCTYPE html>
 <html>
 	<head>
+
 		<title>Seria WebTV Player for embedding</title>
 		<link rel='stylesheet' href='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/assets/player.css?<?php echo mt_rand();?>' type='text/css'>
 		<script type='text/javascript' language='javascript'>
@@ -434,6 +450,7 @@
 				if(currentFlashPlayer == null)
 				{
 					currentFlashPlayer = document.getElementById('flash');
+					currentFlashPlayer.addEventListener("durationChange", "onDurationChange");
 					currentFlashPlayer.addEventListener("currentTimeChange", "onCurrentTimeChange");
 					currentFlashPlayer.addEventListener("stateChange", "onStateChange");
 					currentFlashPlayer.addEventListener("complete", "onComplete");
@@ -464,8 +481,22 @@
 				}
 			}
 			var currentTime = 0;
+			var seenMap = new Object();
+			var seenMapSetup = false;
+
 			function onCurrentTimeChange(time)
 			{
+				if(!getVideoDuration())
+					return;
+				if(!seenMapSetup)
+				{
+					for(var i=0;i<getVideoDuration();i++)
+					{
+						seenMap[i] = "0";
+					}
+					seenMapSetup = true;
+					setInterval(registerSeenMap, 10000);
+				}
 				var newTime = parseInt(time);
 
 				if((newTime-currentTime)>10)
@@ -476,10 +507,40 @@
 				}
 
 				if(currentTime != newTime) {
+					seenMap[newTime] = "1";
 					socket.postMessage("time:"+currentTime);
 				}
 				currentTime = newTime;
 			}
+
+			function registerSeenMap()
+			{
+<?php
+				if(isset($_GET["euid"])) {
+					$url = new SERIA_Url(SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/api/registerVideoVisitorStats.php");
+					$signedUrl = $url->sign($video->get("id").SERIA_FILES_ROOT.SERIA_DB_PASSWORD);
+
+					echo '
+				var seenMapString = "";
+				for(var b in seenMap)
+					seenMapString+=seenMap[b] + "";
+
+				$.ajax({
+					url: "'.$signedUrl.'",
+					type: "POST",
+					data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
+					success : function(e) {
+						console.log("Result: " + e);
+					},
+					error : function(e) {
+						console.log("Failed to submit statistics");
+					}
+				});
+		';
+	}
+?>
+			}
+
 
 			var oldState;
 			function checkStateChanged()
@@ -508,6 +569,19 @@
 				$('#flash').remove();
 			});
 		</script>
+<?php
+	if($_GET["euid"]) {
+echo '
+	<script type="text/javascript">
+		$(function() {
+			$(window).unload(function() {
+				registerSeenMap();
+			});
+		});
+	</script>';
+	}
+?>
+
 	</head>
 	<body style="background-color: #<?php echo $backgroundColor; ?>">
 <?php

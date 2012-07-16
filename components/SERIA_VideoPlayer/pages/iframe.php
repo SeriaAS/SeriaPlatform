@@ -17,6 +17,14 @@
 			return;
 		}
 	}
+	if(!SERIA_Base::isLoggedIn() && $video->get('isPrivate')) {
+		if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("Unsigned request - expecting clientId and sign");
+		if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
+		$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
+		if(!$client) die("Invalid client id");
+		if(!SERIA_Url::current()->isSigned($client->get('client_key')))
+			die("Invalid signature");
+	}
 
 	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
 	$hostname = $rawurl['host'];

@@ -1,4 +1,5 @@
 <?php
+$_GET["euid"] = 123;
 	$http = 'http'.(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']=='off' ? '' : 's');
 	if(isset($_GET['admin']) && SERIA_Base::isLoggedIn())
 		SERIA_Base::viewMode('system');
@@ -16,6 +17,14 @@
 			echo "Not found";
 			return;
 		}
+	}
+	if(!SERIA_Base::isLoggedIn() && $video->get('isPrivate')) {
+		if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("Unsigned request - expecting clientId and sign");
+		if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
+		$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
+		if(!$client) die("Invalid client id");
+		if(!SERIA_Url::current()->isSigned($client->get('client_key')))
+			die("Invalid signature");
 	}
 
 	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
@@ -109,7 +118,8 @@
 		'bufferingOverlay' => "false",
 		'bufferTime' => 5,
 		'initialBufferTime' => 2,
-		'streamType' => ($isLive ? 'live' : 'auto')
+		'streamType' => ($isLive ? 'live' : 'auto'),
+		'javascriptCallbackFunction' => 'onJavaScriptBridgeCreated'
 	);
 	$newSourcesArray = array();
 
@@ -156,6 +166,104 @@
 
 		<script src='<?php echo $http; ?>://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
+
+
+			var usingHtml =  false;
+			var videoObject = null;
+			function getVideoObject()
+			{
+				if(videoObject == null) {
+					if(document.getElementsByTagName('video')[0] != undefined) {
+						videoObject = document.getElementsByTagName('video')[0];
+						usingHtml = true;
+					} else {
+						videoObject = document.getElementById('flash');
+					}
+				}
+				return videoObject;
+			}
+
+			var duration = 0;
+			function getVideoDuration()
+			{
+				if(usingHtml) {
+					return duration = videoObject.duration;
+				} else {
+					return duration;
+				}
+			}
+			function onDurationChange(dur)
+			{
+				duration = parseInt(dur);
+			}
+
+
+
+			var currentFlashPlayer;
+			function onJavaScriptBridgeCreated()
+			{
+				if(currentFlashPlayer == null)
+				{
+					currentFlashPlayer = document.getElementById('flash');
+					currentFlashPlayer.addEventListener("currentTimeChange", "onCurrentTimeChange");
+					currentFlashPlayer.addEventListener("durationChange", "onDurationChange");
+					//currentFlashPlayer.addEventListener("stateChange", "onStateChange");
+					//currentFlashPlayer.addEventListener("complete", "onComplete");
+				}
+			}
+
+			var currentTime = 0;
+			var seenMap = new Object();
+			var seenMapSetup = false;
+			function onCurrentTimeChange(time)
+			{
+				if(!getVideoDuration())
+					return;
+				if(!seenMapSetup)
+				{
+					for(var i=0;i<getVideoDuration();i++)
+					{
+						seenMap[i] = "0";
+					}
+					seenMapSetup = true;
+					setInterval(registerSeenMap, 10000);
+				}
+				var newTime = parseInt(time);
+
+				if(currentTime != newTime) {
+					seenMap[newTime] = "1";
+				}
+				currentTime = newTime;
+			}
+
+			function registerSeenMap()
+			{
+<?php
+				if(isset($_GET["euid"])) {
+					$url = new SERIA_Url(SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/api/registerVideoVisitorStats.php");
+					$signedUrl = $url->sign($video->get("id").SERIA_FILES_ROOT.SERIA_DB_PASSWORD);
+
+					echo '
+				var seenMapString = "";
+				for(var b in seenMap)
+					seenMapString+=seenMap[b] + "";
+
+				$.ajax({
+					url: "'.$signedUrl.'",
+					type: "POST",
+					data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
+					success : function(e) {
+						console.log("Result: " + e);
+					},
+					error : function(e) {
+						console.log("Failed to submit statistics");
+					}
+				});
+		';
+	}
+?>
+			}
+
 
 setInterval(function(){
 	$('video').css({
@@ -207,6 +315,14 @@ jQuery(function(){
 			if(window.videoData.poster)
 				v.poster = window.videoData.poster;
 			var i;
+
+			var oldTime = 0;
+			v.addEventListener("timeupdate", function(ev) {
+				var curTime = parseInt(v.currentTime);
+				oldTime = curTime;
+				onCurrentTimeChange(curTime);
+			}, false);
+
 			if(navigator.userAgent.match(/like Mac OS X/i))
 			{
 				var src;
@@ -335,6 +451,18 @@ jQuery(function(){
     @-webkit-viewport { width: device-width; }
     @viewport { width: device-width; }
   </style>
+<?php
+	if($_GET["euid"]) {
+echo '
+	<script type="text/javascript">
+		$(function() {
+			$(window).unload(function() {
+				registerSeenMap();
+			});
+		});
+	</script>';
+	}
+?>
 	</head>
 	<body style="background-color: #<?php echo $backgroundColor; ?>; height: 100%;">
 <?php
@@ -353,7 +481,7 @@ jQuery(function(){
 
 		// HACK :
 		// Should incorporate site-specific settings for wmode, bgcolor etc.
-		$wmode = 'transparent';
+		$wmode = 'window';
 
 			echo "
 			<!--[if IE]>

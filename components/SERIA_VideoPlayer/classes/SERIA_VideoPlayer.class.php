@@ -17,11 +17,16 @@
 		}
 
 		public function getScriptableUrl($width="580", $height="360", $options = NULL) {
-			return '<script src="'.SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/js/strobePlayer.js.php?objectKey='.SERIA_NamedObjects::getPublicId($this->_object).'&width='.$width.'&height='.$height.'"></script>';
+			if($options === NULL)
+				return '<script src="'.SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/js/strobePlayer.js.php?objectKey='.SERIA_NamedObjects::getPublicId($this->_object).'&width='.$width.'&height='.$height.'"></script>';
+			$addOptions = "";
+			foreach($options as $key => $val)
+				$addOptions.= "&".$key."=".$val;
+			return '<script src="'.SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/js/strobePlayer.js.php?objectKey='.SERIA_NamedObjects::getPublicId($this->_object).'&width='.$width.'&height='.$height.''.$addOptions.'"></script>';
 		}
 
 		public function getIFrameUrl($width="100%",$height="100%", $options = NULL, $preventRandom = false) {
-			$newPlayer = array('ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com');
+			$newPlayer = array('ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com', 'ebs.seriatv.com.dev.seria.net');
 			foreach($newPlayer as $domain)
 			{
 				if($_SERVER['HTTP_HOST'] == $domain)
@@ -32,6 +37,8 @@
 				}
 			}
 
+if(is_a($this->_object, 'SERIA_LiveProgram') && $this->_object->get("id") == 76)
+return SERIA_Meta::manifestUrl('videoplayer','iframe_webcast', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
 			if($options === NULL)
 				return SERIA_Meta::manifestUrl('videoplayer','iframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999))));
 			return SERIA_Meta::manifestUrl('videoplayer','iframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => ($preventRandom ? 1 : mt_rand(0,9999999)))));
@@ -45,10 +52,18 @@
 		*    );
 		*
 		*/
-		public function output($width="100%",$height="100%",$options = NULL, $preventRandom = false) {
+		public function output($width="100%",$height="100%",$options = NULL, $preventRandom = false, $client = NULL, $expires = NULL) {
 			if(trim($width, "%")==$width) $width .= 'px';
 			if(trim($height, "%")==$height) $height .= 'px';
-			return "<iframe src='".$this->getIFrameUrl($width,$height,$options, $preventRandom)."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
+			$url = new SERIA_Url($this->getIFrameUrl($width,$height,$options, $preventRandom, $client, $expires));
+			if($expires!==NULL)
+				$url->setParam('expires', $expires);
+			if($client!==NULL) {
+				$url->setParam('clientId', $client->get('client_id'));
+				$url->sign($client->get('client_key'));
+			}
+
+			return "<iframe src='".$url."' style='width:".$width.";height:".$height.";border:none;margin:0;padding:0;' frameborder='0'>Your browser does not support this type of video. Read more <a href='http://www.seriatv.com/help/iframe-embedding-video'>about web based video content management with Flash and HTML 5</a>.</iframe>";
 		}
 
 		public function generateConfig()
