@@ -5,8 +5,8 @@
 
 	if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
 
-	if(!SERIA_Url::current()->isSigned(intval($_REQUEST["vid"]).SERIA_FILES_ROOT.SERIA_DB_PASSWORD))
-		die("Invalid signature");
+//	if(!SERIA_Url::current()->isSigned(intval($_REQUEST["vid"]).SERIA_FILES_ROOT.SERIA_DB_PASSWORD))
+//		die("Invalid signature");
 
 
 	if(!isset($_REQUEST["vid"]))
