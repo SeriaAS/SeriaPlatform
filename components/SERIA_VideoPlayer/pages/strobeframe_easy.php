@@ -442,6 +442,22 @@
 				return videoObject;
 			}
 
+			var duration = 0;
+			function getVideoDuration()
+			{
+				if(usingHtml) {
+					return duration = videoObject.duration;
+				} else {
+					return duration;
+				}
+			}
+			function onDurationChange(dur)
+			{
+				duration = parseInt(dur);
+			}
+
+
+
 
 			var currentFlashPlayer;
 			// Defines the javascript bridge between the flash player and this script
@@ -450,8 +466,8 @@
 				if(currentFlashPlayer == null)
 				{
 					currentFlashPlayer = document.getElementById('flash');
-					currentFlashPlayer.addEventListener("durationChange", "onDurationChange");
 					currentFlashPlayer.addEventListener("currentTimeChange", "onCurrentTimeChange");
+					currentFlashPlayer.addEventListener("durationChange", "onDurationChange");
 					currentFlashPlayer.addEventListener("stateChange", "onStateChange");
 					currentFlashPlayer.addEventListener("complete", "onComplete");
 				}
@@ -486,8 +502,11 @@
 
 			function onCurrentTimeChange(time)
 			{
-				if(!getVideoDuration())
+				var p = getVideoDuration();
+				if(!p || p == 0) {
+					console.log("No video duration");
 					return;
+				}
 				if(!seenMapSetup)
 				{
 					for(var i=0;i<getVideoDuration();i++)
