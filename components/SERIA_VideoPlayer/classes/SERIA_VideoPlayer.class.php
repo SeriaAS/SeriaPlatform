@@ -26,7 +26,9 @@
 		}
 
 		public function getIFrameUrl($width="100%",$height="100%", $options = NULL, $preventRandom = false) {
-			$newPlayer = array('ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com', 'ebs.seriatv.com.dev.seria.net');
+
+			$newPlayer = array('ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com', 'ebs.seriatv.com.dev.seria.net', 'tibe.seriatv.com');
+
 			foreach($newPlayer as $domain)
 			{
 				if($_SERVER['HTTP_HOST'] == $domain)
