@@ -3,8 +3,8 @@
 ?><!DOCTYPE html>
 <?php
 	if (isset($_POST['url'])) {
-		$loginUrl = $_POST['url'].'seria/components/Authproviders/pages/externalReq2.php';
-		$returnUrl = SERIA_HTTP_ROOT.'seria/tests/components/Authproviders/externalReq2/returned.php';
+		$loginUrl = $_POST['url'].'/seria/components/Authproviders/pages/externalReq2.php';
+		$returnUrl = SERIA_HTTP_ROOT.'/seria/tests/components/Authproviders/externalReq2/returned.php';
 		$data = serialize(array(
 			'authBaseUrl' => $_POST['url']
 		));

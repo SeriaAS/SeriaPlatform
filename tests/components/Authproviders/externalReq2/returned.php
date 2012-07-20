@@ -6,7 +6,7 @@ if (!$loggedIn) {
 		<title>Login failed!</title>
 		<h1>Login failed!</h1>
 		<p>Not logged in after return from external login page!</p>
-		<a href="<?php echo htmlspecialchars(SERIA_HTTP_ROOT.'seria/tests/components/Authproviders/externalReq2.php');?>">Return to test</a>
+		<a href="<?php echo htmlspecialchars(SERIA_HTTP_ROOT.'/seria/tests/components/Authproviders/externalReq2.php');?>">Return to test</a>
 	<?php
 	return;
 }
@@ -69,7 +69,7 @@ function http_get($url, $params)
 	return $adv['content'];
 }
 
-$adv = http_advanced_get($returnData['authBaseUrl'].'seria/api/', array(
+$adv = http_advanced_get($returnData['authBaseUrl'].'/seria/api/', array(
 	'apiPath' => 'SAPI_ExternalReq2/getUserData',
 	'requestToken' => $requestToken
 ));
@@ -96,7 +96,7 @@ $userData = json_decode($adv['content'], true);
 <h2>Server-server session test</h2>
 <?php
 
-$adv = http_advanced_get($returnData['authBaseUrl'].'seria/api/', array(
+$adv = http_advanced_get($returnData['authBaseUrl'].'/seria/api/', array(
 	'apiPath' => 'SAPI_ExternalReq2/getUserSession',
 	'requestToken' => $requestToken
 ));
@@ -123,7 +123,7 @@ $userData = json_decode($adv['content'], true);
 <h2>Check login session</h2>
 <?php
 
-$adv = http_advanced_get($returnData['authBaseUrl'].'seria/api/', array(
+$adv = http_advanced_get($returnData['authBaseUrl'].'/seria/api/', array(
 	'apiPath' => 'SAPI_ExternalReq2/checkLogin'
 ));
 
@@ -145,4 +145,4 @@ if ($resp['loggedIn']) {
 <?php print_r($adv); ?>
 </pre>
 
-<a href="<?php echo htmlspecialchars(SERIA_HTTP_ROOT.'seria/tests/components/Authproviders/externalReq2.php');?>">Return to test</a>
+<a href="<?php echo htmlspecialchars(SERIA_HTTP_ROOT.'/seria/tests/components/Authproviders/externalReq2.php');?>">Return to test</a>
