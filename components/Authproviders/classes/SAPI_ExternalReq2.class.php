@@ -53,6 +53,7 @@ class SAPI_ExternalReq2 extends SAPI
 				$values = array('uid' => $user->get('id'));
 				foreach ($fields as $field)
 					$values[$field] = $user->get($field);
+				$values['safeEmails'] = SERIA_SafeEmailUsers::getSafeEmailAddresses($user);
 				return $values;
 			} else {
 				return array('error' => $access->getError());
