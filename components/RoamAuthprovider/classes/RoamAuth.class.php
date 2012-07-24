@@ -26,7 +26,9 @@ class RoamAuth
 	public static function getRoamAuthParamValue()
 	{
 		if (SERIA_Base::user() !== false) {
-			if (isset($_SESSION['AUTHPROVIDERS_REMOTE_XML']))
+			if (isset($_SESSION['AUTHPROVIDERS_REMOTE_XML']) &&
+			    isset($_SESSION['AUTHPROVIDERS_USER_XML_FILE']) &&
+			    file_exists($_SESSION['AUTHPROVIDERS_USER_XML_FILE']))
 				return $_SESSION['AUTHPROVIDERS_REMOTE_XML'];
 			$component = SERIA_Components::getComponent('seria_authproviders');
 			if ($component && $component->isEnabled()) {
@@ -35,6 +37,7 @@ class RoamAuth
 					return false;
 				$_SESSION['AUTHPROVIDERS_SID'] = array(time(), session_id(), SERIA_Base::user()->get('id'), $sid);
 				new SERIA_UserLoginXml($sid, SERIA_Base::user());
+				$_SESSION['AUTHPROVIDERS_USER_XML_FILE'] = SERIA_UserLoginXml::getUserXmlFilename($sid);
 				$_SESSION['AUTHPROVIDERS_REMOTE_XML'] = SERIA_UserLoginXml::getUserXmlUrl($sid);
 				return $_SESSION['AUTHPROVIDERS_REMOTE_XML'];
 			}
