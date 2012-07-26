@@ -162,6 +162,14 @@ class SERIA_UserLoginXml
 				<hostname><?php echo htmlspecialchars($hostname); ?></hostname>
 				<uid><?php echo $this->user->get('id'); ?></uid>
 				<email><?php echo htmlspecialchars($this->user->get('email')); ?></email>
+				<?php
+					$emails = SERIA_SafeEmailUsers::getSafeEmailAddresses($this->user);
+					foreach ($emails as $email) {
+						?>
+							<verifiedEmail><?php echo htmlspecialchars($email); ?></verifiedEmail>
+						<?php
+					}
+				?>
 				<username><?php echo htmlspecialchars($this->user->get('username')); ?></username>
 				<firstName><?php echo htmlspecialchars($this->user->get('firstName')); ?></firstName>
 				<lastName><?php echo htmlspecialchars($this->user->get('lastName')); ?></lastName>
