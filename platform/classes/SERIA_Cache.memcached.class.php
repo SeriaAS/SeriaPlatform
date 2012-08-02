@@ -108,15 +108,14 @@ class SERIA_Cache implements SERIA_ICache // memcached
 			$value = array(
 				$this->validationToken,
 				'single', /* Stored the serialized value here in one chunk */
-				$value
+				$value,
+				time() + $expires
 			);
 			/*
 			 * Max expire offset in memcached. Longer expire-times can
 			 * be stored by specifying a timestamp.
 			 */
-			if ($expires > 2592000)
-				$expires = 2592000;
-			else {
+			if ($expires > 2592000) {
 				$expires = time() + $expires;
 				if ($expires < time()) /* overflow */
 					$expires = 2592000;
@@ -124,6 +123,7 @@ class SERIA_Cache implements SERIA_ICache // memcached
 			$key = sha1(sha1($this->namespace).'_'.sha1($name));
 			self::$memcached->set($key, $value, $expires);
 		} else {
+			$expire_time = time() + $expires;
 			/*
 			 * Overcome the value-size maximum of 1MB. Using
 			 * chunks of 768kB.
@@ -139,6 +139,15 @@ class SERIA_Cache implements SERIA_ICache // memcached
 					$value = '';
 				}
 			}
+			/*
+			 * Max expire offset in memcached. Longer expire-times can
+			 * be stored by specifying a timestamp.
+			 */
+			if ($expires > 2592000) {
+				$expires = time() + $expires;
+				if ($expires < time()) /* overflow */
+					$expires = 2592000;
+			}
 			$ids = array();
 			foreach ($multi as $i => $blk) {
 				$id = sha1(mt_rand().mt_rand().mt_rand().mt_rand());
@@ -148,7 +157,8 @@ class SERIA_Cache implements SERIA_ICache // memcached
 			$value = array(
 				$this->validationToken,
 				'multi', /* Value is split into multiple fragments stored at their own keys */
-				$ids /* Keys for value fragments */
+				$ids, /* Keys for value fragments */
+				$expire_time
 			);
 			$key = sha1(sha1($this->namespace).'_'.sha1($name));
 			self::$memcached->set($key, $value, $expires);
@@ -164,10 +174,22 @@ class SERIA_Cache implements SERIA_ICache // memcached
 		if ($value !== false) {
 			if (array_shift($value) == $this->validationToken) {
 				$type = array_shift($value);
-				if ($type == 'single')
-					return unserialize(array_shift($value));
+				if ($type == 'single') {
+					$data = unserialize(array_shift($value));
+					$exp = null;
+					if (!$value || ($exp = array_shift($value)) < time()) /* check expire */ {
+						SERIA_Base::debug('Discarded expired value from memcached: '.$exp);
+						return null;
+					}
+					return $data;
+				}
 				else if ($type == 'multi') {
 					$ids = array_shift($value);
+					$exp = null;
+					if (!$value || ($exp = array_shift($value)) < time()) /* check expire */ {
+						SERIA_Base::debug('Discarded expired value from memcached: '.$exp);
+						return null;
+					}
 					$value = '';
 					foreach ($ids as $id) {
 						$blk = self::$memcached->get($id);
