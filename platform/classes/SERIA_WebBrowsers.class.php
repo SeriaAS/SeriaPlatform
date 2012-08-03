@@ -86,6 +86,7 @@ class SERIA_WebBrowsers
 							try {
 								$chunk = $record['record']['webbrowser']->fetch(4096, true);
 							} catch (Exception $e) {
+								SERIA_Base::debug('SERIA_WebBrowsers received exception from fetch method: '.$e->getMessage());
 								$record['record']['error'] = $e->getMessage();
 								$record['record']['exception'] = $e;
 								$record['record']['data'] = false;

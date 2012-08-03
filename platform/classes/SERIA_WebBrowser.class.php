@@ -805,6 +805,7 @@
 				$this->transferLength = 0;
 				$this->chunkLength = null; 
 			}
+			SERIA_Base::debug('Fetch up to '.$bytes.' bytes with transfer coding: '.($this->httpTransferCoding !== false ? $this->httpTransferCoding : 'none'));
 			if (isset($headers['Connection'])) {
 				$connectionType = $headers['Connection'];
 				if ($connectionType != 'keepalive')
@@ -843,6 +844,7 @@
 					$this->transferLength += $len;
 					if ($this->httpContentLength == false && $len == 0 && $xfer > 0 && $this->buffer_eof)
 						$this->httpContentLength = $this->transferLength;
+					SERIA_Base::debug('Retrieved chunk of '.strlen($data).' bytes.');
 					return $data;
 				case 'chunked':
 					if ($this->chunkLength === 0) /* Marks EOF */
