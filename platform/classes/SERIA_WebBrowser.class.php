@@ -843,8 +843,7 @@
 					$this->transferLength += $len;
 					if ($this->httpContentLength == false && $len == 0 && $xfer > 0 && $this->buffer_eof)
 						$this->httpContentLength = $this->transferLength;
-					if (!$this->httpContentLength) return false;
-					else return $data;
+					return $data;
 				case 'chunked':
 					if ($this->chunkLength === 0) /* Marks EOF */
 						return false;
