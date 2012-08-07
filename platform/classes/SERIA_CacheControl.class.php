@@ -146,7 +146,9 @@ class SERIA_CacheControl
 				$tokens[] = $name;
 			else {
 				ob_start();
-				echo $name, '=', self::quotePrintable($value);
+				if (intval($value) != $value)
+					$value = self::quotePrintable($value);
+				echo $name, '=', $value;
 				$tokens[] = ob_get_clean();
 			}
 		}
