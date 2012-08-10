@@ -288,6 +288,13 @@
 						else
 							$urldump = '';
 						$node = array('text', '<!-- ESI from cache ('.$urldump.'ttl='.($ttl !== null ? $ttl : 'unlimited').', age='.$age.') : -->'.JEP_EsiIncludedHtmlTokenCompiler::recursiveCompile($data['content']));
+						$ttl -= $age;
+						if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS) {
+							if ($ttl > 0)
+								SERIA_ProxyServer::publicCache($ttl);
+							else
+								SERIA_ProxyServer::noCache();
+						}
 					} else {
 						$browser = new SERIA_WebBrowser();
 						$browser->navigateTo($params['src']);
