@@ -83,31 +83,59 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 
 		$videostats->limit($params['start'], $params['length']);
 
+		if(!(strpos($params['euid'], ",") === false)) {
+			$result = array();
 
-		if(isset($params['euid']))
-			$videostats->where('euid=:e', array('e' => $params['euid']));
+			$euidArray = explode(",", $params['euid']);
+			foreach($videostats as $videostat) {
+				if(in_array($videostat->get("euid"), $euidArray)) {
+					$seenMap = $videostat->get("seenMap");
+					$seenMap[0] = 1; // Hack, all seenmaps begin with 0
+					$strc = substr_count($seenMap, 1);
+					$percFloat = ($strc/strlen($seenMap));
+					$percentSeen = round($percFloat*100);
+					if($percentSeen>100)
+						$percentSeen = 100;
+					$result[] = array(
+						'videoId' => $videostat->get("video")->get("id"),
+						'objectKey' => SERIA_NamedObjects::getPublicId($videostat->get("video")),
+						'title' => $videostat->get("video")->get("title"),
+						'euid' => $videostat->get("euid"),
+						'seenMap' => $seenMap,
+						'percentSeen' => $percentSeen,
+						'proportionSeen' => round($percFloat, 4),
+						'createdDate' => $videostat->get("createdDate"),
+						'modifiedDate' => $videostat->get("modifiedDate")
+					);
+				}
+			}
+		} else {
+			if(isset($params['euid']))
+				$videostats->where('euid=:e', array('e' => $params['euid']));
 
-		$result = array();
-		foreach($videostats as $videostat) {
-			$seenMap = $videostat->get("seenMap");
-			$seenMap[0] = 1; // Hack, all seenmaps begin with 0
-			$strc = substr_count($seenMap, 1);
-			$percFloat = ($strc/strlen($seenMap));
-			$percentSeen = round($percFloat*100);
-			if($percentSeen>100)
-				$percentSeen = 100;
-			$result[] = array(
-				'videoId' => $videostat->get("video")->get("id"),
-				'objectKey' => SERIA_NamedObjects::getPublicId($videostat->get("video")),
-				'title' => $videostat->get("video")->get("title"),
-				'euid' => $videostat->get("euid"),
-				'seenMap' => $seenMap,
-				'percentSeen' => $percentSeen,
-				'proportionSeen' => round($percFloat, 4),
-				'createdDate' => $videostat->get("createdDate"),
-				'modifiedDate' => $videostat->get("modifiedDate")
-			);
+			$result = array();
+			foreach($videostats as $videostat) {
+				$seenMap = $videostat->get("seenMap");
+				$seenMap[0] = 1; // Hack, all seenmaps begin with 0
+				$strc = substr_count($seenMap, 1);
+				$percFloat = ($strc/strlen($seenMap));
+				$percentSeen = round($percFloat*100);
+				if($percentSeen>100)
+					$percentSeen = 100;
+				$result[] = array(
+					'videoId' => $videostat->get("video")->get("id"),
+					'objectKey' => SERIA_NamedObjects::getPublicId($videostat->get("video")),
+					'title' => $videostat->get("video")->get("title"),
+					'euid' => $videostat->get("euid"),
+					'seenMap' => $seenMap,
+					'percentSeen' => $percentSeen,
+					'proportionSeen' => round($percFloat, 4),
+					'createdDate' => $videostat->get("createdDate"),
+					'modifiedDate' => $videostat->get("modifiedDate")
+				);
+			}
 		}
+
 		return $result;
 	}
 }
