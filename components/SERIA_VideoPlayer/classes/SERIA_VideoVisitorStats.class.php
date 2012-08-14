@@ -27,6 +27,29 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 
 	public static function apiQuery($params)
 	{
+		if(!(strpos($params['objectKey'], ",") === false) && !(strpos($params['videoId'], "," === false))) {
+			$allStats = array();
+			if(isset($params['objectKey'])) {
+				foreach(explode(",", $params['objectKey']) as $objectKey) {
+					$qArray = $params;
+					$qArray['objectKey'] = $objectKey;
+					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
+					return $allStats;
+				}
+			} else if(isset($params['videoId'])) {
+				foreach(explode(",", $params['videoId']) as $objectKey) {
+					$qArray = $params;
+					$qArray['objectKey'] = $objectKey;
+					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
+					return $allStats;
+				}
+			}
+		} else {
+			return SERIA_VideoVisitorStats::getStatistics($params);
+		}
+	}
+
+	public static function getStatistics($params) {
 		if(isset($params['help'])) return array(
 			'info' => 'Fetch user-based videostatistics from Seria VideoPlayer. With no parameters, you will receive an error. Either a videoId, its objectKey or an external unique identifier has to be set.',
 			'params' => array(
@@ -42,7 +65,17 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 		if(!isset($params['euid']) && !isset($params['videoId']) && !isset($params['objectKey']))
 			throw new SERIA_Exception("EUID Required");
 
-		$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
+
+		if(isset($params['videoId'])) {
+			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
+			$videostats->where('video=:vid', array('vid' => $params['videoId']));
+		} else if(isset($params['objectKey'])) {
+			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
+			$obj = SERIA_NamedObjects::getInstanceByPublicId($params['objectKey'], 'SERIA_Video');
+			$videostats->where('video=:vid', array('vid' => $obj->get("id")));
+		} else {
+			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
+		}
 
 		if(!isset($params['start'])) $params['start'] = 0;
 		if(!isset($params['length'])) $params['length'] = 10;
@@ -50,12 +83,6 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 
 		$videostats->limit($params['start'], $params['length']);
 
-		if(isset($params['videoId'])) {
-			$videostats->where('video=:vid', array('vid' => $params['videoId']));
-		} else if(isset($params['objectKey'])) {
-			$obj = SERIA_NamedObjects::getInstanceByPublicId($params['objectKey'], 'SERIA_Video');
-			$videostats->where('video=:vid', array('vid' => $obj->get("id")));
-		}
 
 		if(isset($params['euid']))
 			$videostats->where('euid=:e', array('e' => $params['euid']));
@@ -76,7 +103,9 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 				'euid' => $videostat->get("euid"),
 				'seenMap' => $seenMap,
 				'percentSeen' => $percentSeen,
-				'proportionSeen' => round($percFloat, 4)
+				'proportionSeen' => round($percFloat, 4),
+				'createdDate' => $videostat->get("createdDate"),
+				'modifiedDate' => $videostat->get("modifiedDate")
 			);
 		}
 		return $result;
