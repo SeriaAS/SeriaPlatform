@@ -34,15 +34,15 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 					$qArray = $params;
 					$qArray['objectKey'] = $objectKey;
 					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
-					return $allStats;
 				}
+				return $allStats;
 			} else if(isset($params['videoId'])) {
 				foreach(explode(",", $params['videoId']) as $objectKey) {
 					$qArray = $params;
 					$qArray['objectKey'] = $objectKey;
 					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
-					return $allStats;
 				}
+				return $allStats;
 			}
 		} else {
 			return SERIA_VideoVisitorStats::getStatistics($params);
