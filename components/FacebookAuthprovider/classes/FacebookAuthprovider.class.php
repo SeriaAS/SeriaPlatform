@@ -85,11 +85,14 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 		if (isset($_POST['app_id']) && isset($_POST['secret'])) {
 			SERIA_Base::setParam('SimpleSAML_Facebook_app_id', $_POST['app_id']);
 			SERIA_Base::setParam('SimpleSAML_Facebook_secret', $_POST['secret']);
+			SERIA_Base::setParam('FacebookAuthprovider_disableLogoutFacebookOnLogout', (isset($_POST['logoutFacebook']) && $_POST['logoutFacebook'] ? false : true));
 			SERIA_Base::redirectTo($params['redirect']);
 			die();
 		}
 		$secret = SERIA_Base::getParam('SimpleSAML_Facebook_secret');
 		$app_id = SERIA_Base::getParam('SimpleSAML_Facebook_app_id');
+		$logoutFacebook = SERIA_Base::getParam('FacebookAuthprovider_disableLogoutFacebookOnLogout');
+		$logoutFacebook = $logoutFacebook ? false : true;
 		?>
 		<form method='post'>
 			<input type='hidden' name='id' value="<?php echo htmlspecialchars($provider->getProviderId()); ?>" %XHTML_CLOSE_TAG%>
@@ -106,6 +109,13 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 					<tr>
 						<td><label for='secret_element'><?php echo htmlspecialchars('Secret key: '); ?></label></td>
 						<td><input id='secret_element' type='text' name='secret' value="<?php echo htmlspecialchars($secret); ?>" style='width: 320px;' %XHTML_CLOSE_TAG%></td>
+					</tr>
+					<tr>
+						<td colspan='2'>
+							<label>
+								<input type='checkbox' name='logoutFacebook' value='1'<?php echo ($logoutFacebook ? ' checked="checked"' : ''); ?> %XHTML_CLOSE_TAG%> <?php  echo htmlspecialchars('Logout from facebook at user logout.'); ?>
+							</label>
+						</td>
 					</tr>
 				</table>
 			</div>
@@ -192,7 +202,7 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 	public function logout()
 	{
 		$facebook = $this->getFacebook();
-		if ($facebook->getUser()) {
+		if ($facebook->getUser() && !SERIA_Base::getParam('FacebookAuthprovider_disableLogoutFacebookOnLogout')) {
 			$logoutUrl = $facebook->getLogoutUrl(array(
 				'next' => SERIA_Url::current()->__toString()
 			));
