@@ -835,6 +835,11 @@
 						}
 						else if ($xfer == 0)
 							return '';
+					} else if ($this->httpContentLength === 0) {
+						if ($bytes > 0)
+							return false;
+						else
+							return '';
 					}
 					$data = $this->bufferedFetchOnce($xfer);
 					while (!$dontWaitForMore && strlen($data) < $xfer && !$this->buffer_eof)
