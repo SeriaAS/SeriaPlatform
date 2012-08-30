@@ -234,6 +234,7 @@ class SERIA_AuthenticationState
 	 */
 	public function __construct($stateId=null)
 	{
+		SERIA_ProxyServer::noCache();
 		if ($stateId === null) {
 			if (isset($_GET['auth_abort'])) {
 				$this->abort = $_GET['auth_abort'];
