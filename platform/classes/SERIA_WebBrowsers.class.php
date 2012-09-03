@@ -12,6 +12,26 @@ class SERIA_WebBrowsers
 	protected $prepared = false;
 	protected $timeout = 120;
 
+	const PROGRESS_READ = 'read';
+	const PROGRESS_FINISHED = 'finished';
+	protected $progress = null;
+	protected static $progressText = array(
+			self::PROGRESS_READ => 'Reading data',
+			self::PROGRESS_FINISHED => 'Finished'
+	);
+	
+	public function setProgressCallback($progress)
+	{
+		$this->progress = $progress;
+	}
+
+	public function sendProgress($progress, $url)
+	{
+		if (!$this->progress)
+			return;
+		call_user_func_array($this->progress, array($progress, $url, self::$progressText[$progress]));
+	}
+
 	public function setTimeout($timeout)
 	{
 		$this->timeout = $timeout;
@@ -100,9 +120,11 @@ class SERIA_WebBrowsers
 									$remainingSockets[$remainingKey] = $restarted;
 								}
 								SERIA_Base::debug('Read '.strlen($chunk).' bytes from '.$socket);
+								$this->sendProgress(self::PROGRESS_READ, $record['record']['webbrowser']->url);
 								$record['record']['data'] .= $chunk;
 							} else {
 								SERIA_Base::debug('Terminated read from '.$socket);
+								$this->sendProgress(self::PROGRESS_FINISHED, $record['record']['webbrowser']->url);
 								if (!isset($record['record']['error']) || !$record['record']['error'])
 									$record['record']['completedAt'] = microtime(true);
 								if ($cacheControl && $record['record']['webbrowser']->method == 'GET') {
@@ -141,8 +163,10 @@ class SERIA_WebBrowsers
 						SERIA_Base::debug('Terminating reads for socket '.$record['socket'].' to empty the buffer.');
 						while (($chunk = $record['record']['webbrowser']->fetch())) {
 							SERIA_Base::debug('Read '.strlen($chunk).' bytes from '.$socket);
+							$this->sendProgress(self::PROGRESS_READ, $record['record']['webbrowser']->url);
 							$record['record']['data'] .= $chunk;
 						}
+						$this->sendProgress(self::PROGRESS_FINISHED, $record['record']['webbrowser']->url);
 						$record['record']['completedAt'] = microtime(true);
 						unset($remainingSockets[$remainingKey]);
 						$remaining--;
