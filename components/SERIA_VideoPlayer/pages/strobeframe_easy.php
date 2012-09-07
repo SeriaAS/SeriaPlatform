@@ -230,6 +230,7 @@
 								socket.postMessage("event:seeked");
 							oldTime = curTime;
 							onCurrentTimeChange(curTime);
+
 						}, false);
 						v.addEventListener("seeked", function() {
 							socket.postMessage("event:seeked");
@@ -392,8 +393,9 @@
 
 			function play()
 			{
+
 				var obj = getVideoObject();
-				if(usingHtml) {
+				if(document.getElementsByTagName('video')[0] != undefined) {
 					obj.play();
 				} else {
 					obj.play2();
@@ -403,7 +405,7 @@
 			function seek(seconds)
 			{
 				var obj = getVideoObject();
-				if(usingHtml) {
+				if(document.getElementsByTagName('video')[0] != undefined) {
 					obj.currentTime = seconds;
 				} else {
 					obj.seek(seconds);
@@ -413,7 +415,7 @@
 			function stop()
 			{
 				var obj = getVideoObject();
-				if(usingHtml) {
+				if(document.getElementsByTagName('video')[0] != undefined) {
 					getVideoObject().currentTime = 0;
 					getVideoObject().pause();
 				} else {
@@ -431,22 +433,22 @@
 			var videoObject = null;
 			function getVideoObject()
 			{
-				if(videoObject == null) {
+//				if(videoObject == null) {
 					if(document.getElementsByTagName('video')[0] != undefined) {
 						videoObject = document.getElementsByTagName('video')[0];
 						usingHtml = true;
 					} else {
 						videoObject = document.getElementById('flash');
 					}
-				}
+//				}
 				return videoObject;
 			}
 
 			var duration = 0;
 			function getVideoDuration()
 			{
-				if(usingHtml) {
-					return duration = videoObject.duration;
+				if(document.getElementsByTagName('video')[0] != undefined) {
+					return duration = Math.round(document.getElementsByTagName('video')[0].duration);
 				} else {
 					return duration;
 				}
