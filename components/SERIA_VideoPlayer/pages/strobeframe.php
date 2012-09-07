@@ -1,5 +1,4 @@
 <?php
-$_GET["euid"] = 123;
 	$http = 'http'.(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']=='off' ? '' : 's');
 	if(isset($_GET['admin']) && SERIA_Base::isLoggedIn())
 		SERIA_Base::viewMode('system');
@@ -116,7 +115,7 @@ $_GET["euid"] = 123;
 		'clipEndTime' => $stopTime,
 		'poster' => $vd['previewImage'],
 		'bufferingOverlay' => "false",
-		'bufferTime' => 5,
+		'bufferTime' => 10,
 		'initialBufferTime' => 2,
 		'streamType' => ($isLive ? 'live' : 'auto'),
 		'javascriptCallbackFunction' => 'onJavaScriptBridgeCreated'
@@ -215,8 +214,17 @@ $_GET["euid"] = 123;
 			var currentTime = 0;
 			var seenMap = new Object();
 			var seenMapSetup = false;
+			var shouldSpool = <?php if(isset($_GET["aclipStartTime"])) echo "true"; else echo "false"; ?>;
 			function onCurrentTimeChange(time)
 			{
+				if(shouldSpool) {
+					if(usingHtml) {
+						getVideoObject().currentTime = <?php if($_GET["aclipStartTime"]) echo $_GET["aclipStartTime"]; else echo 0; ?>;
+					} else {
+						getVideoObject().seek(<?php echo $_GET["aclipStartTime"]; ?>);
+					}
+					shouldSpool = false;
+				}
 				if(!getVideoDuration())
 					return;
 				if(!seenMapSetup)
@@ -291,6 +299,11 @@ jQuery('#fallback').html(html);
 
 
 jQuery(function(){
+	if(FlashDetect.versionAtLeast(10, 1)) {
+
+	} else {
+		jQuery('#fallback').html("<?php echo _t("Please upgrade your Flash Version at <a href='http://get.adobe.com/flashplayer/' target='_blank'>http://get.adobe.com/flashplayer/</a>"); ?>");
+	}
 	if(!FlashDetect.installed) {
 		// detect if html5 video is supported
 		var v = document.createElement('video');
