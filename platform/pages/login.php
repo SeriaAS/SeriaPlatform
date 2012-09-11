@@ -1,6 +1,8 @@
 <?php
 	require_once(dirname(__FILE__)."/../../main.php");
 
+	SERIA_ProxyServer::noCache();
+
 	/*
 	 * Throw a hook that a login application can catch
 	 */

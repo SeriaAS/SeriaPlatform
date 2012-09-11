@@ -166,6 +166,7 @@
 		}
 		public function handleLogin()
 		{
+			SERIA_ProxyServer::noCache();
 			if (sizeof($_POST) && !isset($_GET['authenticationModule'])) {
 				/*
 				 * This is the local login provider that is receiving credentials.
@@ -194,6 +195,7 @@
 		}
 		public function handleGuestLogin()
 		{
+			SERIA_ProxyServer::noCache();
 			if (sizeof($_POST) && !isset($_GET['authenticationModule'])) {
 				/*
 				 * This is the local login provider that is receiving credentials.
