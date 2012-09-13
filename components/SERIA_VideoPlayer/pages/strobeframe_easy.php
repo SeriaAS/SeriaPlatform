@@ -1,4 +1,10 @@
 <?php
+	$forceHtml = false;
+	$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+	if(stripos($ua,'android') !== false) { // && stripos($ua,'mobile') !== false) {
+		$forceHtml = true;
+	}
+
 	$http = 'http'.(empty($_SERVER['HTTPS']) || $_SERVER['HTTPS']=='off' ? '' : 's');
 	if(isset($_GET['admin']) && SERIA_Base::isLoggedIn())
 		SERIA_Base::viewMode('system');
@@ -18,15 +24,31 @@
 		}
 	}
 	if(!SERIA_Base::isLoggedIn() && $video->get('isPrivate')) {
-		if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("Unsigned request - expecting clientId and sign");
-		if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
-		$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
-		if(!$client) die("Invalid client id");
-		$curr_url = SERIA_Url::current();
-		$curr_sub = substr($curr_url, 0, strpos($curr_url, "&xdm_e"));
+		$keyFile = sys_get_temp_dir().'/'.$_SERVER['HTTP_HOST'].'.key';
+		if(!file_exists($keyFile)) {
+			$mask = umask(0);
+			file_put_contents($keyFile, $key = mt_rand(0,99999999).microtime(true).mt_rand(0,99999999));
+			chmod($keyFile, 0600);
+			umask($mask);
+		} else $key = trim(file_get_contents($keyFile));
 
-		if(!$checkUrl->isSigned($client->get('client_key')))
-			die("Invalid signature");
+		$currentUrl = SERIA_Url::current();
+		$currentUrl->unsetParam("xdm_e");
+		$currentUrl->unsetParam("xdm_c");
+		$currentUrl->unsetParam("xdm_p");
+
+		if(isset($_GET['internal'])) {
+
+			if(!$currentUrl->isSigned($key))
+				die("Invalid internal signature");
+		} else {
+			if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("Unsigned request - expecting clientId and sign");
+			if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("URL has expired");
+			$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
+			if(!$client) die("Invalid client id");
+			if(!$currentUrl->isSigned($client->get('client_key')))
+				die("Invalid signature");
+		}
 	}
 
 	$rawurl = parse_url($_SERVER['HTTP_REFERER']);
@@ -185,9 +207,15 @@
 					jQuery('#fallback').html(html);
 				}
 			}
+			var forceHtml = false;
+			var ua = navigator.userAgent.toLowerCase();
+			var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+			if(isAndroid) {
+				forceHtml = true;
+			}
 
 			jQuery(function(){
-				if(!FlashDetect.installed) {
+				if(!FlashDetect.installed || forceHtml) {
 					// detect if html5 video is supported
 					var v = document.createElement('video');
 					if(!v.canPlayType)
@@ -506,7 +534,6 @@
 			{
 				var p = getVideoDuration();
 				if(!p || p == 0) {
-					console.log("No video duration");
 					return;
 				}
 				if(!seenMapSetup)
@@ -551,10 +578,8 @@
 					type: "POST",
 					data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
 					success : function(e) {
-						console.log("Result: " + e);
 					},
 					error : function(e) {
-						console.log("Failed to submit statistics");
 					}
 				});
 		';
@@ -623,7 +648,7 @@ echo '
 		// Should incorporate site-specific settings for wmode, bgcolor etc.
 		$wmode = 'transparent';
 
-
+		if(!$forceHtml) {
 			echo "
 			<!--[if IE]>
 			<object id='flash' name='flashobject' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
@@ -645,6 +670,11 @@ echo '
 		</object>
 		<!--<![endif]-->
 	";
+		} else {
+			echo "
+	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+	";
+		}
 
 ?>
 	</body>
