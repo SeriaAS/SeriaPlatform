@@ -59,6 +59,14 @@
 				$result = call_user_func(array($class, 'apiQuery'), $params);
 				$responder($result);
 				break;
+			case 'POST' : // retrieving operations, can retrieve tabular data or a single row
+				$params = $_POST;
+				unset($params['route']);
+				if(!isset($params['start'])) $params['start'] = 0;
+				if(!isset($params['length'])) $params['length'] = 1000;
+				$result = call_user_func(array($class, 'apiQuery'), $params);
+				$responder($result);
+				break;
 			default :
 				throw new SERIA_Exception($_SERVER['REQUEST_METHOD'].' request method not implemented.');
 				break;
