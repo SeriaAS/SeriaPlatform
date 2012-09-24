@@ -261,10 +261,8 @@
 					type: "POST",
 					data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
 					success : function(e) {
-						console.log("Result: " + e);
 					},
 					error : function(e) {
-						console.log("Failed to submit statistics");
 					}
 				});
 		';

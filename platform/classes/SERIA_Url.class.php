@@ -49,7 +49,9 @@
 				$identifier = str_replace('&'.$paramName.'='.$query[$paramName], '', $identifier);
 			else
 				$identifier = str_replace('?'.$paramName.'='.$query[$paramName], '', $identifier);
-
+//die($identifier);
+//die($query[$paramName]."===".hash_hmac("sha1", "/?route=seria%2Fvideoplayer%2Fstrobeframe&objectKey=3", "468b2b2069008ab5c7d15aad9ac88822"));
+//die($query[$paramName]."===".hash_hmac($algorithm, $identifier, $key));
 			return $query[$paramName] === hash_hmac($algorithm, $identifier, $key);
 		}
 

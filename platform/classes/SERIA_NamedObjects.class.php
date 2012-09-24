@@ -67,7 +67,16 @@
 		static function getInstanceByPublicId($id, $classExpected)
 		{
 			$db = SERIA_Base::db();
-			$rs = $db->query("SELECT name FROM {namedobjects} WHERE id=?", array($id));
+			try {
+				$rs = $db->query("SELECT name FROM {namedobjects} WHERE id=?", array($id));
+			} catch (PDOException $e) {
+				if($e->getCode()==="42S02")
+				{
+					$db->exec("CREATE TABLE {namedobjects} (id INTEGER PRIMARY KEY, name VARCHAR(100), UNIQUE(name)) ENGINE=InnoDB");
+					$rs = $db->query("SELECT name FROM {namedobjects} WHERE id=?", array($id));
+				}
+				else throw $e;
+			}
 			$name = $rs->fetch(PDO::FETCH_COLUMN, 0);
 			if($name) {
 				$instance = self::getInstanceOf($name);

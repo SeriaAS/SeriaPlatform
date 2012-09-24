@@ -1,7 +1,34 @@
 <?php
+// Todo: We can improve performance quite a lot by caching the signature for this request. No need for Seria Platform if the url is signed.
+
+	header("Content-Type: text/javascript; charset=utf-8");
+	require(dirname(__FILE__).'/../../../main.php');
+	$video = SERIA_NamedObjects::getInstanceByPublicId($_GET['objectKey'], 'SERIA_IVideoData');
+	if(!SERIA_Base::isLoggedIn() && $video->get('isPrivate')) {
+		if(!isset($_GET['clientId']) || !isset($_GET['sign'])) die("alert('Unsigned request - expecting clientId and sign');");
+		if(isset($_GET['expires']) && time()>intval($_GET['expires'])) die("alert('URL has expired');");
+		$client = SERIA_Fluent::all('SERIA_RPCClientKey')->where('client_id='.intval($_GET['clientId']))->current();
+		if(!$client) die("alert('Invalid client id');");
+		if(!SERIA_Url::current()->isSigned($client->get('client_key')))
+			die("alert('Invalid signature');");
+	}
+
+	SERIA_Template::disable();
+//	require(dirname(__FILE__).'/../../../platform/classes/SERIA_Url.class.php');
+//	header("Content-Type: text/javascript; charset=utf-8");
+
+	$keyFile = sys_get_temp_dir().'/'.$_SERVER['HTTP_HOST'].'.key';
+	if(!file_exists($keyFile)) {
+		$mask = umask(0);
+		file_put_contents($keyFile, $key = mt_rand(0,99999999).microtime(true).mt_rand(0,99999999));
+		chmod($keyFile, 0600);
+		umask($mask);
+	} else $key = trim(file_get_contents($keyFile));
+
 	$iframeUrl = $_GET["iframeUrl"];
 	$containerId = $_GET["containerId"];
 ?>
+
 
 /**
 	USAGE; EMBEDDING VIDEO
@@ -23,6 +50,24 @@
  *  as published by the Free Software Foundation; either version 2
  *  of the License, or (at your option) any later version.
  */
+
+if(typeof SERIA_VideoPlayerUrls=='undefined')
+	SERIA_VideoPlayerUrls = new Array();
+
+<?php
+	$url = SERIA_Url::current();
+	$url->setQuery('');
+	$url->setPath("/");
+	$url->setParam('route', 'seria/videoplayer/strobeframe_easy');
+	foreach($_GET as $k => $v) switch($k) {
+		case 'clientId' : case 'sign' : case 'expires' : break;
+		default : $url->setParam($k, $v); break;
+	}
+	$url->setParam('internal','1');
+	$url->sign($key);
+
+	echo 'SERIA_VideoPlayerUrls['.$_GET['objectKey'].'] = '.json_encode(''.$url).';';
+?>
 
 function isLoaded(url, loadedScripts) {
 	for ( var b in loadedScripts ) {
@@ -137,12 +182,11 @@ SeriaPlayerClass.prototype = {
 		} else this.dispatchEvent('message', message);
 	},	// WHEN THE IFRAME SENDS A MESSAGE
 	on_initialize: function() {
+		var info = SERIA_VideoPlayerUrls[this.objectKey];
 		var self = this;
 		//this.xmdSocket 
 		pita = new easyXDM.Socket({
-			remote: 'http://<?php echo $_SERVER['HTTP_HOST']; ?>/?route=seria%2Fvideoplayer%2Fstrobeframe_easy&objectKey=' + this.objectKey + "<?php 
-$params = $_GET;
-unset($params['objectKey']); foreach($params as $key => $val) echo "&".$key."=".$val; ?>",
+			remote: SERIA_VideoPlayerUrls[this.objectKey],
 			container: this.element,
 			onMessage: function(message) {
 				if(message=="hello")				// Special message for notifying that API is available
