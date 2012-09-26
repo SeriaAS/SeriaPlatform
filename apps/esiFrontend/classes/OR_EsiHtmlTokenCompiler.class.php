@@ -419,8 +419,11 @@
 							if (!defined('ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS') || !ESIFRONTEND_DO_NOT_PASS_CACHE_HEADERS)
 								SERIA_ProxyServer::publicCache($ttl);
 						}
+						if (isset($webbrowser->responseCode) && intval($webbrowser->responseCode[0]) >= 4) {
+							$data["data"] = "<!-- HTTP Error ".$webbrowser->responseCode." -->";
+						}
 					} else {
-						$data["data"] = "Could not fetch data";
+						$data["data"] = "<!-- Could not fetch data -->";
 						$ttl = 60;
 					}
 					if (!sizeof($_POST) && ($ttl || $ttl === null)) {
