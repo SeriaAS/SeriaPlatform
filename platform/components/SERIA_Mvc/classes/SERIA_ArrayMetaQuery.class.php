@@ -51,9 +51,10 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 		$this->limitInEffect = array(
 			'keys' => $this->keys
 		);
-		while (count($this->keys) > 0 && $a > 0) {
-			array_shift($this->keys);
-			$a--;
+		$jump = min(count($this->keys), $a);
+		if ($jump > 0) {
+			$this->keys = array_slice($this->keys, $jump, NULL, true);
+			$a -= $jump;
 		}
 		if (count($this->keys) > $b) {
 			$keys = $this->keys;
