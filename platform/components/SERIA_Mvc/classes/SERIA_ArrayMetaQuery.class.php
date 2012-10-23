@@ -52,18 +52,10 @@ class SERIA_ArrayMetaQueryDataObject implements Iterator
 			'keys' => $this->keys
 		);
 		$jump = min(count($this->keys), $a);
-		if ($jump > 0) {
-			$this->keys = array_slice($this->keys, $jump, NULL, true);
-			$a -= $jump;
-		}
-		if (count($this->keys) > $b) {
-			$keys = $this->keys;
-			$this->keys = array();
-			while ($b > 0) {
-				$this->keys[] = array_shift($keys);
-				$b--;
-			}
-		}
+		if ($jump > 0)
+			$this->keys = array_slice($this->keys, $jump, $b);
+		else
+			$this->keys = array_slice($this->keys, 0, $b);
 	}
 
 	public function count()
