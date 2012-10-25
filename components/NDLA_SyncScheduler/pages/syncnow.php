@@ -1,6 +1,7 @@
 <s:gui title="{'NDLA Sync Now'|_t|htmlspecialchars}">
 	<?php
 		$this->gui->activeMenuItem('controlpanel/settings/ndlasyncschedule');
+		SERIA_Base::pageRequires('login');
 	?>
 	<h1 class='legend'>{{'NDLA Sync Now'|_t}}</h1>
 	<?php
