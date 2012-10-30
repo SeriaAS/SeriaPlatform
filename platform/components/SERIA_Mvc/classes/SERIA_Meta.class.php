@@ -229,7 +229,7 @@
 		*/
 		public static function getNamedObjectId(SERIA_MetaObject $instance)
 		{
-			$id = $instance->MetaBackdoor('get_key');
+			$id = (string) $instance->MetaBackdoor('get_key');
 			if(empty($id))
 				throw new SERIA_Exception("I have no ID!");
 			$className = get_class($instance);
