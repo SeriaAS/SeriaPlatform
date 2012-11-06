@@ -50,7 +50,7 @@ class SERIA_WebBrowsers
 		$this->webbrowsers[] =& $record;
 	}
 
-	protected function &prepareAll()
+	protected function &prepareAll($deadline)
 	{
 		if ($this->prepared)
 			throw new SERIA_Exception('A group of webbrowsers can only be used once.');
@@ -59,7 +59,12 @@ class SERIA_WebBrowsers
 		foreach ($this->webbrowsers as &$record) {
 			$record['webbrowser']->requestDataTimeout = $this->timeout;
 			try {
-				$record['webbrowser']->send();
+				$tmavail = $deadline - time();
+				if ($tmavail < 0)
+					throw new SERIA_Exception('No time available for connecting to remote');
+				if ($tmavail == 0)
+					$tmavail = 1;
+				$record['webbrowser']->send($tmavail);
 				$onlySockets[] = $record['webbrowser']->getSocket();
 			} catch (SERIA_Exception $e) {
 				$record['exception'] = $e;
@@ -80,7 +85,10 @@ class SERIA_WebBrowsers
 	public function fetchAll($cacheControl=false)
 	{
 		$startime = time();
-		$sockets =& $this->prepareAll();
+		$deadline = $startime + ($this->timeout / 2);
+		if ($deadline <= $starttime)
+			$deadline = $starttime + 1;
+		$sockets =& $this->prepareAll($deadline);
 		$write = array();
 		$remainingSockets = $sockets['sockets'];
 		$remaining = count($remainingSockets);

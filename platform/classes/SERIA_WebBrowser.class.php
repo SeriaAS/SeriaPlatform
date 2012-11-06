@@ -494,7 +494,7 @@
 			}
 		}
 
-		protected function connect($request)
+		protected function connect($request, $timeout)
 		{
 			if(isset($this->nextRequest['ip']))
 				$transport = $this->nextRequest['ip'];
@@ -505,7 +505,7 @@
 				SERIA_Base::debug('Opening connection to '.$tranport.' with transport '.$this->nextRequest['transport']);
 				$transport = $this->nextRequest['transport'].'://'.$transport;
 			}
-			if(!($this->socket = fsockopen($transport, $this->nextRequest['port'], $errno, $errstr, 30))) {
+			if(!($this->socket = fsockopen($transport, $this->nextRequest['port'], $errno, $errstr, $timeout))) {
 				$this->socket = null;
 				throw new SERIA_Exception('SERIA_WebBrowser could not connect: '.$errno.': '.$errstr);
 			}
@@ -533,7 +533,7 @@
 			$this->nextRequest['headers']['Content-Length'] = strlen($post);
 			return $post;
 		}
-		public function send()
+		public function send($conntimeout=30)
 		{
 			SERIA_Base::debug('(SERIA_WebBrowser)->send(): '.$this->nextRequest['method'].' '.$this->nextRequest['host'].':'.$this->nextRequest['port']);
 			if ($this->nextRequest['method'] == 'POST')
@@ -541,7 +541,7 @@
 			else
 				$postdata = '';
 
-			if(!$this->connect($this->nextRequest))
+			if(!$this->connect($this->nextRequest, $conntimeout))
 				throw new SERIA_Exception('Unable to connect to server');
 
 			$this->requestHeaders = $this->nextRequest['headers'];
