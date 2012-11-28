@@ -131,10 +131,10 @@
 	}
 
 	$flashVars = array(
-		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
-		'autoPlay' => (isset($_GET['autoPlay']) ? 1 : 0),
+		'autoplay' => (isset($_GET['autoplay']) ? 'true' : 0),
+		'autoPlay' => (isset($_GET['autoPlay']) ? 'true' : 0),
 		'backgroundColor' => $backgroundColor,
-		'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
+		'controlBarMode' => (isset($_GET['hideControls']) ? 'none' : 0),
 		'src' => $flashVideoSource,
 		'clipStartTime' => $startTime,
 		'clipEndTime' => $stopTime,
@@ -523,6 +523,7 @@
 						socket.postMessage("event:finished");
 						break;
 					default :
+						alert("event:unknown:"+state);
 						break;
 				}
 			}
