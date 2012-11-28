@@ -185,8 +185,12 @@
 		*	SERIA_MetaObjects often are saved using SERIA_Meta::save($object) and this method will
 		*	not be invoked.
 		*/
-		protected final function save() {
+		public final function save() {
 			return SERIA_Meta::save($this);
+		}
+
+		protected function delete() {
+			return SERIA_Meta::delete($this);
 		}
 
 		/**
@@ -458,6 +462,30 @@
 
 			return $this;
 		}
+
+		public function __set($name, $value) {
+			$spec = SERIA_Meta::_getSpec($this);
+			if(!isset($spec['fields'][$name]))
+				throw new SERIA_Exception('No such field '.$name);
+
+			if(is_object($value))
+			{
+				throw new SERIA_Exception('Setting by property requires scalar values currently.');
+			}
+			$this->row[$name] = $value;
+			unset($this->metaCache[$name]);
+			$this->changedRow[$name] = true;
+		}
+
+
+		public function __get($name) {
+			if(isset($this->metaCache[$name])) {
+				$row = $this->MetaBackdoor('get_row');
+				return $row[$name];
+			}
+			return $this->row[$name];
+		}
+
 		/**
 		*	@see SERIA_MetaObject::set
 		*/
@@ -519,7 +547,7 @@
 
 			if($p === false)
 			{ // entirely new object
-				$this->primaryKey = false;
+// Seems to not be in use, if it is in use it needs to be declared on the class				$this->primaryKey = false;
 				$this->row = array();
 				$this->MetaBackdoor('raise_event', SERIA_Meta::AFTER_CREATE_EVENT);
 			}

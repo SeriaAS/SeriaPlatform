@@ -478,7 +478,8 @@
 			$cache = new SERIA_Cache('SERIA_Meta:classmtimes');
 			$cTime = $cache->get($item);
 			$mTime = $GLOBALS['seria']['classmtimes'][$item];
-			if($cTime != $mTime)
+
+			if($cTime===NULL || $cTime != $mTime)
 			{
 				self::_syncColumnSpec($spec);
 				$cache->set($item, $mTime);
@@ -501,6 +502,24 @@
 					return array(
 						"fieldtype" => "hidden",
 						"type" => "integer unsigned",
+					);
+				case "seed" : // A seed that can be used in encryption - for example to perform one way encryption of a password
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(50)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MAX_LENGTH, 50),
+							array(SERIA_Validator::MIN_LENGTH, 1),
+						)),
+					);
+				case "uid" : // Store any ID
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(100)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MAX_LENGTH, 100),
+							array(SERIA_Validator::MIN_LENGTH, 1),
+						)),
 					);
 				case "title" :
 					return array(
@@ -1038,8 +1057,9 @@
 						SERIA_Base::debug("<strong>Modified table '".$spec['table']."'. Altered ".sizeof($alteredColumns)." columns.</strong>");
 				}
 
-				if(sizeof($addedColumns)>0 && sizeof($removedColumns)>0)
-					throw new SERIA_Exception('Schema for table "'.$spec['table'].'" has changed too much. It is not possible for me to know if you have renamed or added and deleted tables. Please update the database manually.');
+				if(sizeof($addedColumns)>0 && sizeof($removedColumns)>0) {
+					throw new SERIA_Exception('Schema for table "'.$spec['table'].'" has changed too much (Add: "'.implode(",", $addedColumns).'", remove: "'.implode(", ", $removedColumns).'", alter: "'.implode(", ", $alteredColumns).'"). It is not possible for me to know if you have renamed or added and deleted tables. Please update the database manually.');
+				}
 
 				// add new columns
 				foreach($addedColumns as $columnName)
