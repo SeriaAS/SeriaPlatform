@@ -6,7 +6,7 @@
 
 		public function __construct($namespace = '') {
 			$this->namespace = strtolower($namespace);
-			$this->root = SERIA_CACHE_ROOT.'/'.md5($this->namespace);
+			$this->root = SERIA_CACHE_ROOT.'/'.SERIA_Sanitize::filename($this->namespace);
 
 			if(!is_dir($this->root))
 			{
@@ -17,14 +17,17 @@
 		}
 
 		public function set($name, $value, $expiry = 1800) {
-			return file_put_contents($this->root.'/'.md5($name), serialize(array(
+			$res = file_put_contents($this->root.'/'.SERIA_Sanitize::filename($name), serialize(array(
 				'name:'.$name => $value,  // theoretically two names can give the same md5 hash
 				'expires' => time()+$expiry,
 			)));
+//			echo $this->namespace.":".$name.":";
+//			var_dump($res);
+			return $res;
 		}
 
 		public function get($name) {
-			$fn = $this->root.'/'.md5($name);
+			$fn = $this->root.'/'.SERIA_Sanitize::filename($name);
 			if(file_exists($fn))
 			{
 				$token = unserialize(file_get_contents($fn));
@@ -37,9 +40,10 @@
 			}
 			return null;
 		}
+
 		public function delete($name)
 		{
-			$fn = $this->root.'/'.md5($name);
+			$fn = $this->root.'/'.SERIA_Sanitize::filename($name);
 			if (file_exists($fn))
 				unlink($fn);
 		}
