@@ -27,6 +27,13 @@
 
 	$iframeUrl = $_GET["iframeUrl"];
 	$containerId = $_GET["containerId"];
+
+	$optionString = "";
+	foreach($_GET as $key => $val) {
+		if(!in_array($key, array('width', 'height', 'objectKey'))) {
+			$optionString.="&".$key."=".$val;
+		}
+	}
 ?>
 
 
