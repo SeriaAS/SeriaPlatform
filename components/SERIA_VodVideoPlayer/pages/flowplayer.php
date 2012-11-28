@@ -1,7 +1,30 @@
 <?php
-	$object = SERIA_NamedObjects::getInstanceByPublicId($_GET["objectKey"]);
+/*
+Typical event order:
 
-	$streamInfo = $object->getStreamPoint();
+onLoad
+onStart
+onStop
+
+
+MUST SUPPORT:
+$_GET['startTime'] number of seconds to skip
+$_GET['autoplay'] automatically start playing
+$_GET['nocontrols'] hide all control bars
+$_GET['rangeStartTime'] cut beginning with the number of seconds
+$_GET['rangeStopTime'] cut end of at second
+
+FUTURE:
+$_GET['playlist'] = url of a playlist file hosted at the client server. Will play the videos in order.
+
+INFO:
+$app	Application instance available
+$video 	Current Video object
+$data	Array containing path to videos and protocols
+*/
+        $object = SERIA_NamedObjects::getInstanceByPublicId($_GET["objectKey"]);
+
+        $videoFiles = $object->getVodVideoData();
 
 	$flashVars = array(
 		'wmode',
@@ -14,75 +37,91 @@
 		}
 	}
 
-	$settings = '{
-	clip: {
-		autoPlay: true,
-		scaling: "stretch",
-		url: "dnb;009-1280x720-betal-innland-u-kid-sub.flv",
-		live: false,
-		provider: "rtmp",
-		onMetaData: window.onMetaData
-	},
-	plugins: {
-		controls: null,
-		rtmp: {
-			url: SERIA_VARS.HTTP_ROOT + "/seria/components/SERIA_VodVideoPlayer/bin/flowplayer/flowplayer.rtmp-3.2.10.swf",
-			netConnectionUrl: "rtmp://streaming.seria.net/vod/",
-		},
-		slowmotion: {
-			url: SERIA_VARS.HTTP_ROOT + "/seria/components/SERIA_VodVideoPlayer/bin/flowplayer/flowplayer.slowmotion-3.2.9.swf",
-			serverType: "fms"
-	},
-		content: {
+/*
+	$flowPlayer = array(
+		"clip" => array(
+			'bitrates' => array(),
+		),
+	);
+
+	$heightToBitrate = array(
+		360 => 300,
+		480 => 750,
+		720 => 1300,
+		1080 => 2500,
+	);
+	$maxSize = 0;
+	foreach(array(360, 480, 720, 1080) as $height) {
+		foreach(array('mp4') as $format) {
+			$key = $format.'_'.$height;
+			if($video->$key) {
+		if($maxSize < $height) $maxSize = $height;
+		$pixels = $height*($height*16/9);
+		$x = sqrt($pixels*0.5654);
+		$flowPlayer['clip']['bitrates'][] = array(
+			'width' => intval($x),
+			'bitrate' => $heightToBitrate[$height],
+			'url' => 'mp4:'.$app->slug.'/'.$video->slug.'/'.$height.".mp4",
+		);
+			}
+		}
+	}
+	if($maxSize>360) $maxSize = 360;
+	$flowPlayer['clip']['bitrates'][0]['isDefault'] = TRUE;
+*/
+$settings = array(
+	"showErrors" => "true",
+	"debug" => "true",
+	"clip" => array(
+		"autoPlay" => "true",
+		"scaling" => "stretch",
+		"url" => $videoFiles[0]['src'],
+		"live" => "false",
+		"provider" => "httpstreaming",
+		"onStart" => 'function() {
+			this.getPlugin("play").hide();
+		}',
+		"onBeforeFinish" => 'function() {
+			this.getPlugin("play").show();
+		}'
+	),
+	"plugins" => array(
+		"httpstreaming" => array(
+			"url" => SERIA_HTTP_ROOT."/seria/components/SERIA_VodVideoPlayer/bin/flowplayer.httpstreaming-3.2.8.swf"
+		),
+		"controls" => null,
+	),
+/*
+	"content" => array(
 			url: SERIA_VARS.HTTP_ROOT + "/seria/components/SERIA_VodVideoPlayer/bin/flowplayer/flowplayer.content-3.2.8.swf",
 			top: 0, left: 0, width: 250, height: 150,
 			backgroundColor: "transparent", backgroundGradient: "none", border: 0,
 			textDecoration: "outline",
 			style: {
-				body: {
-					fontSize: 14,
-					fontFamily: "Arial",
-					textAlign: "center",
-					color: "#ffffff"
-				}
+		body: {
+			fontSize: 14,
+			fontFamily: "Arial",
+			textAlign: "center",
+			color: "#ffffff"
+		}
 			}
-		},
-		speedIndicator: {
-			 url: SERIA_VARS.HTTP_ROOT + "/seria/components/SERIA_VodVideoPlayer/bin/flowplayer/flowplayer.content-3.2.8.swf",
-			bottom: 10,
-			right: 15,
-			width: 135,
-			height: 30,
-			border: "none",
-			style: {
-				body: {
-					fontSize: 12,
-					fontFamily: "Helvetica",
-					textAlign: "center",
-					color: "#ffffff"
-				}
-			},
- 
-backgroundColor: "rgba(20, 20, 20, 0.5)",
- 
-// we don"t want the plugin to be displayed by default,
-// only when a speed change occur.
-display: "none"
-},
+		}
 	},
-	onLoad: window.onLoad,
-	onStart: window.onStart,
-	onStop: window.onStop,
-	onFinish: window.onFinish,
-	onFullscreen: window.onFullscreen,
-	onFullscreenExit: window.onFullscreenExit,
-	onError: window.onError
-}';
+*/
+	"onLoad" => "window.onLoad",
+	"onStart" => "window.onStart",
+	"onStop" => "window.onStop",
+	"onFinish" => "window.onFinish",
+	"onFullscreen" => "window.onFullscreen",
+	"onFullscreenExit" => "window.onFullscreenExit",
+	"onError" => "window.onError"
+);
+
 
 ?><!DOCTYPE html>
 <html><head>
-	<title><?php echo $data['title']; ?></title>
-	<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_LiveVideoPlayer/js/easyXDM.min.js' type='text/javascript' language='javascript'></script>
+	<title><?php echo $data['title']; ?> - Istribute.com</title>
+	<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VodVideoPlayer/js/easyXDM.min.js' type='text/javascript' language='javascript'></script>
 	<style type='text/css'>
 html, body, #player, #poster { background-color: #000; height: 100%; width: 100%; margin: 0; padding: 0; border-width:0; box-sizing: border-box; overflow: hidden; color: #fff;}
 #player video {
@@ -101,56 +140,71 @@ html, body, #player, #poster { background-color: #000; height: 100%; width: 100%
 body:hover #playbutton { opacity: 1; }
 	</style>
 	<script>
-var actions = {
-	backward: function(speed) {
-		$f().getPlugin('slowmotion').backward(speed);
-	},
-	forward: function(speed) {
-		$f().getPlugin('slowmotion').forward(speed);
-	},
-	normal: function() {
-		$f().getPlugin('slowmotion').normal();
-	}
+if(typeof console!="object") var console = { log: function() {} };
+function apiPost(message) {
+	console.log("Sending message: " + message);
+	socket.postMessage(message);
 }
 
-window.actions = actions;
 /* SHARED EVENT CALLBACKS. These are called by the current player to update information for apis. */
 // Called immediately after initializing is finished. The API must be fully available.
 function onLoad() {
-	socket.postMessage("event:load");
+	console.log("onLoad");
+	loadedEventSent = true;
+	clearInterval(checkLoadedInterval);
+	apiPost("event:load");
 }
-function onFullscreen() { socket.postMessage("event:fullscreen"); }
-function onFullscreenExit() { socket.postMessage("event:fullscreenExit"); }
-function onError(errorCode, errorMessage) { socket.postMessage("event:error:");
-//(" + errorCode + ", " + errorMessage + ")"); 
+function onFullscreen() {
+	console.log("onFullscreen");
+	apiPost("event:fullscreen");
 }
-function onStart() {
-	var self = this;
-	var currentTimeInterval = setInterval(function() {
-		onCurrentTimeChange(self.getTime());
-		if (self.getState() == 5)
-			clearInterval(currentTimeInterval);
-	}, 500);
-	socket.postMessage("event:start");
+function onFullscreenExit() {
+	console.log("onFullscreenExit");
+	apiPost("event:fullscreenExit");
 }
-function onMetaData(metadata) {
-	duration = parseInt(metadata.duration);
-	socket.postMessage("duration:" + parseInt(metadata.duration));
+function onError(errorCode, errorMessage) {
+	console.log("onError(" + errorCode + ", " + errorMessage + ")");
+	switch(errorCode) {
+		case 200:
+			onStop();
+			break;
+		default :
+			apiPost("event:error:" + errorCode);
+			break;
+	}
 }
-function onStop() { socket.postMessage("event:stop"); }
-function onPause() { socket.postMessage("event:pause"); }
-function onResume() { socket.postMessage("event:resume"); }
-function onFinish() { socket.postMessage("event:finish"); }
+function onStart(clip) {
+	console.log("onStart");
+	console.log($f().getClip());
+	// Frode //alert("Hoyde: " + $f().getClip().height + ", Bredde: " + $f().getClip().width);
+	apiPost("event:start");
+}
+function onStop() {
+	console.log("onStop");
+	apiPost("event:stop");
+}
+function onPause() {
+	console.log("onPause");
+	apiPost("event:pause");
+}
+function onResume() {
+	console.log("onResume");
+	apiPost("event:resume");
+}
+function onFinish() {
+	console.log("onFinish");
+	apiPost("event:finish");
+}
 
 // Easy XDM
 
 	var socket = new easyXDM.Socket({
-	onMessage: messageReceived,
-	onReady : function() {
-		socket.postMessage("hello");
-	}
+	    onMessage: messageReceived,
+	    onReady : function() {
+		apiPost("hello");
+	    }
 	});
-
+	var loadedEventSent = false;
 	function messageReceived(message)
 	{
 		if(message.indexOf(":")) {
@@ -172,23 +226,14 @@ function onFinish() { socket.postMessage("event:finish"); }
 			case "seek" :
 				seek(param);
 				break;
-			case "forward" :
-				if(param)
-					actions.forward(param);
-				else
-					actions.forward(2);
-				break;
-			case "backward" :
-				if(param)
-					actions.backward(param);
-				else
-					actions.backward(2);
+			case "changeVolume" :
+				changeVolume(param);
 				break;
 			default :
 				alert("Unknown function: " + message);
 				break;
 		}
-	}
+			}
 
 	function play()
 	{
@@ -196,7 +241,18 @@ function onFinish() { socket.postMessage("event:finish"); }
 		if(usingHtml) {
 			obj.play();
 		} else {
+//			obj.play2();
 			$f(0).play();
+		}
+	}
+
+	function changeVolume(vol)
+	{
+		var obj = getVideoObject();
+		if(usingHtml) {
+			obj.volume = vol;
+		} else {
+			$f(0).setVolume(vol);
 		}
 	}
 
@@ -206,7 +262,7 @@ function onFinish() { socket.postMessage("event:finish"); }
 		if(usingHtml) {
 			obj.currentTime = seconds;
 		} else {
-			$f().seek(seconds);
+			obj.seek(seconds);
 		}
 	}
 
@@ -224,15 +280,11 @@ function onFinish() { socket.postMessage("event:finish"); }
 
 	function pause()
 	{
-		if(usingHtml) {
-			getVideoObject().pause();
-		} else {
-			$f().pause();
-		}
+		getVideoObject().pause();
 	}
 
-	var usingHtml =false;
-	var videoObject = null;
+			var usingHtml =  false;
+			var videoObject = null;
 	function getVideoObject()
 	{
 		if(videoObject == null) {
@@ -252,34 +304,55 @@ function onFinish() { socket.postMessage("event:finish"); }
 		if(usingHtml) {
 			return duration = videoObject.duration;
 		} else {
-			return duration; // getVideoObject().getClip(0).duration;
+			return duration;
 		}
+			}
+			function onDurationChange(dur)
+			{
+		duration = parseInt(dur);
 	}
+
+
+
 
 	var currentFlashPlayer;
 	// Defines the javascript bridge between the flash player and this script
+	function onJavaScriptBridgeCreated()
+	{
+		if(currentFlashPlayer == null)
+		{
+			currentFlashPlayer = document.getElementById('player_api');
+			currentFlashPlayer.addEventListener("currentTimeChange", "onCurrentTimeChange");
+			currentFlashPlayer.addEventListener("durationChange", "onDurationChange");
+			currentFlashPlayer.addEventListener("stateChange", "onStateChange");
+			currentFlashPlayer.addEventListener("complete", "onComplete");
+		}
+	}
 
 	function seeking()
 	{
-		socket.postMessage("event:seeked");
+		apiPost("event:seeked");
 	}
 
 	function onComplete()
 	{
-		socket.postMessage("event:finished");
+		apiPost("event:finished");
 	}
 
 	function onStateChange(state)
 	{
 		switch(state) {
-			case "paused" :	
-				socket.postMessage("event:pause");
-				break;	
+			case "paused" :
+				onPause();
+//				apiPost("event:pause");
+				break;
 			case "playing" :
-				socket.postMessage("event:playing");
+				onStart();
+				apiPost("event:playing");
 				break;
 			case "finished" :
-				socket.postMessage("event:finished");
+				FRODE
+				apiPost("event:finished");
 				break;
 			default :
 				alert("event:unknown:"+state);
@@ -309,15 +382,15 @@ function onFinish() { socket.postMessage("event:finish"); }
 		var newTime = parseInt(time);
 
 		if((newTime-currentTime)>10)
-			socket.postMessage("event:seeked");
+			apiPost("event:seeked");
 		else if((currentTime-newTime)>10) {
-			socket.postMessage("event:seeked");
+			apiPost("event:seeked");
 		} else {
 		}
 
 		if(currentTime != newTime) {
 			seenMap[newTime] = "1";
-			socket.postMessage("time:"+currentTime);
+			apiPost("time:"+currentTime);
 		}
 		currentTime = newTime;
 	}
@@ -358,21 +431,35 @@ function onFinish() { socket.postMessage("event:finish"); }
 			if((currentFlashPlayer != null) && (currentFlashPlayer != "undefined")) {
 				if(oldState == null) {
 					oldState = currentFlashPlayer.getState();
-				} else
-					if(oldState != currentFlashPlayer.getState())
-					{
-				oldState = currentFlashPlayer.getState();
-				onStateChange(oldState);
-					}
+				} else if(oldState != currentFlashPlayer.getState()) {
+					oldState = currentFlashPlayer.getState();
+					onStateChange(oldState);
+				}
 			}
 		} catch (e) {
 			alert(e);
 		}
 	}
 
+	function checkLoaded()
+	{
+		if(!loadedEventSent) {
+			try {
+				if(!(typeof document.getElementsByTagName("object")[0] == "undefined")) {
+					loadedEventSent = true;
+					window.onLoad();
+				}
+			} catch(e) {
+				alert(e);
+			}
+		}
+	}
+
 	var stateChangeInterval;
+	var checkLoadedInterval;
 	$(function() {
 		stateChangeInterval = setInterval(checkStateChanged, 1000);
+		checkLoadedInterval = setInterval(checkLoaded, 1000);
 	});
 	$(window).unload(function() {
 		$('#player').remove();
@@ -382,12 +469,12 @@ function onFinish() { socket.postMessage("event:finish"); }
 	</script>
 	<link href="http://vjs.zencdn.net/c/video-js.css" rel="stylesheet">
 	<script src="http://vjs.zencdn.net/c/video.js"></script>
-	<script src="<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_LiveVideoPlayer/bin/flowplayer/flowplayer-3.2.11.min.js"></script>
+	<script src="<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VodVideoPlayer/bin/flowplayer/flowplayer-3.2.11.min.js"></script>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
 </head><body>
 	<div id="player" class="player">
-		<img id="playbutton" src="<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_LiveVideoPlayer/assets/play.png">
-		<img id="poster" src="<?php echo SERIA_HTTP_ROOT.'/seria/components/SERIA_LiveVideoPlayer/assets/temp_image_do_not_use.png'; ?>" style="width: 100%; height: 100%;">
+		<img id="playbutton" src="<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VodVideoPlayer/assets/play.png">
+		<img id="poster" src="<?php echo SERIA_HTTP_ROOT.'/seria/components/SERIA_VodVideoPlayer/assets/temp_image_do_not_use.png'; ?>" style="width: 100%; height: 100%;">
 	</div>
 	<script type="text/javascript">
 /**
@@ -404,7 +491,7 @@ for(var vh in {360:1,480:1,720:1,1080:1})if(h>vh)ch=vh;
 var player_flowPlayer;
 var player_videoJS;
 if(window.flashembed.isSupported([10, 1])) {
-	player_flowPlayer = flowplayer("player", { src: "<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_LiveVideoPlayer/bin/flowplayer-3.2.12.swf" <?php echo $flashVarsString; ?> }, <?php echo $settings; ?>);
+	player_flowPlayer = flowplayer("player", { src: "<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VodVideoPlayer/bin/flowplayer-3.2.12.swf" <?php echo $flashVarsString; ?> }, <?php echo json_encode($settings); ?>);
 	<?php if(isset($_GET['autoPlay'])) echo "player_flowPlayer.load();"; ?>
 } else {
 	var showPlayer = function(){
@@ -425,6 +512,10 @@ if(window.flashembed.isSupported([10, 1])) {
 		for(var i in $sources) $video.append($sources[i]);
 		if(!$container.attr('data-html')) $container.attr('data-html', $container.html());
 		$container.html($video);
+//FRODE		apiPost("event:load");
+		document.getElementById($video).addEventListener("playing", function() {
+			onStateChange("playing");
+		});
 	}
 
 	<?php if(isset($_GET['autoPlay'])) echo "showPlayer();"; else echo '$(window).click(showPlayer);'; ?>

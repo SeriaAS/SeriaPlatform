@@ -1,5 +1,12 @@
 <?php
 /*
+Typical event order:
+
+onLoad
+onStart
+onStop
+
+
 MUST SUPPORT:
 $_GET['startTime'] number of seconds to skip
 $_GET['autoplay'] automatically start playing
@@ -62,7 +69,8 @@ $data	Array containing path to videos and protocols
 	if($maxSize>360) $maxSize = 360;
 	$flowPlayer['clip']['bitrates'][0]['isDefault'] = TRUE;
 */
-	$settings = '{
+$settings = '{
+	showErrors: false,
 	clip: {
 		autoPlay: true,
 		scaling: "stretch",
@@ -73,6 +81,12 @@ $data	Array containing path to videos and protocols
 //		urlResolvers: ["f4m", "bwcheck"],
 //		provider: "httpstreaming",
 		provider: "rtmp",
+		onStart: function() {
+			this.getPlugin("play").hide();
+		},
+		onBeforeFinish: function() {
+			this.getPlugin("play").show();
+		}
 	},
 	plugins: {
 
@@ -140,30 +154,68 @@ html, body, #player, #poster { background-color: #000; height: 100%; width: 100%
 body:hover #playbutton { opacity: 1; }
 	</style>
 	<script>
+if(typeof console!="object") var console = { log: function() {} };
+function apiPost(message) {
+	console.log("Sending message: " + message);
+	socket.postMessage(message);
+}
+
 /* SHARED EVENT CALLBACKS. These are called by the current player to update information for apis. */
 // Called immediately after initializing is finished. The API must be fully available.
 function onLoad() {
+	console.log("onLoad");
 	loadedEventSent = true;
 	clearInterval(checkLoadedInterval);
-	socket.postMessage("event:load");
+	apiPost("event:load");
 }
-function onFullscreen() { socket.postMessage("event:fullscreen"); }
-function onFullscreenExit() { socket.postMessage("event:fullscreenExit"); }
-function onError(errorCode, errorMessage) { socket.postMessage("event:error:");
-//(" + errorCode + ", " + errorMessage + ")"); 
+function onFullscreen() {
+	console.log("onFullscreen");
+	apiPost("event:fullscreen");
 }
-function onStart() { socket.postMessage("event:start"); }
-function onStop() { socket.postMessage("event:stop"); }
-function onPause() { socket.postMessage("event:pause"); }
-function onResume() { socket.postMessage("event:resume"); }
-function onFinish() { socket.postMessage("event:finish"); }
+function onFullscreenExit() {
+	console.log("onFullscreenExit");
+	apiPost("event:fullscreenExit");
+}
+function onError(errorCode, errorMessage) {
+	console.log("onError(" + errorCode + ", " + errorMessage + ")");
+	switch(errorCode) {
+		case 200:
+			onStop();
+			break;
+		default :
+			apiPost("event:error:" + errorCode);
+			break;
+	}
+}
+function onStart(clip) {
+	console.log("onStart");
+	console.log($f().getClip());
+	// Frode //alert("Hoyde: " + $f().getClip().height + ", Bredde: " + $f().getClip().width);
+	apiPost("event:start");
+}
+function onStop() {
+	console.log("onStop");
+	apiPost("event:stop");
+}
+function onPause() {
+	console.log("onPause");
+	apiPost("event:pause");
+}
+function onResume() {
+	console.log("onResume");
+	apiPost("event:resume");
+}
+function onFinish() {
+	console.log("onFinish");
+	apiPost("event:finish");
+}
 
 // Easy XDM
 
 	var socket = new easyXDM.Socket({
 	    onMessage: messageReceived,
 	    onReady : function() {
-		socket.postMessage("hello");
+		apiPost("hello");
 	    }
 	});
 	var loadedEventSent = false;
@@ -226,10 +278,10 @@ function onFinish() { socket.postMessage("event:finish"); }
 		} else {
 			obj.seek(seconds);
 		}
-			}
+	}
 
-			function stop()
-			{
+	function stop()
+	{
 		var obj = getVideoObject();
 		if(usingHtml) {
 			getVideoObject().currentTime = 0;
@@ -238,12 +290,12 @@ function onFinish() { socket.postMessage("event:finish"); }
 			getVideoObject().seek(0);
 			getVideoObject().pause();
 		}
-			}
+	}
 
-			function pause()
-			{
+	function pause()
+	{
 		getVideoObject().pause();
-			}
+	}
 
 			var usingHtml =  false;
 			var videoObject = null;
@@ -293,25 +345,28 @@ function onFinish() { socket.postMessage("event:finish"); }
 
 	function seeking()
 	{
-		socket.postMessage("event:seeked");
+		apiPost("event:seeked");
 	}
 
 	function onComplete()
 	{
-		socket.postMessage("event:finished");
+		apiPost("event:finished");
 	}
 
 	function onStateChange(state)
 	{
 		switch(state) {
-			case "paused" :	
-				socket.postMessage("event:pause");
-				break;	
+			case "paused" :
+				onPause();
+//				apiPost("event:pause");
+				break;
 			case "playing" :
-				socket.postMessage("event:playing");
+				onStart();
+				apiPost("event:playing");
 				break;
 			case "finished" :
-				socket.postMessage("event:finished");
+				FRODE
+				apiPost("event:finished");
 				break;
 			default :
 				alert("event:unknown:"+state);
@@ -341,15 +396,15 @@ function onFinish() { socket.postMessage("event:finish"); }
 		var newTime = parseInt(time);
 
 		if((newTime-currentTime)>10)
-			socket.postMessage("event:seeked");
+			apiPost("event:seeked");
 		else if((currentTime-newTime)>10) {
-			socket.postMessage("event:seeked");
+			apiPost("event:seeked");
 		} else {
 		}
 
 		if(currentTime != newTime) {
 			seenMap[newTime] = "1";
-			socket.postMessage("time:"+currentTime);
+			apiPost("time:"+currentTime);
 		}
 		currentTime = newTime;
 	}
@@ -390,12 +445,10 @@ function onFinish() { socket.postMessage("event:finish"); }
 			if((currentFlashPlayer != null) && (currentFlashPlayer != "undefined")) {
 				if(oldState == null) {
 					oldState = currentFlashPlayer.getState();
-				} else
-					if(oldState != currentFlashPlayer.getState())
-					{
-				oldState = currentFlashPlayer.getState();
-				onStateChange(oldState);
-					}
+				} else if(oldState != currentFlashPlayer.getState()) {
+					oldState = currentFlashPlayer.getState();
+					onStateChange(oldState);
+				}
 			}
 		} catch (e) {
 			alert(e);
@@ -473,7 +526,7 @@ if(window.flashembed.isSupported([10, 1])) {
 		for(var i in $sources) $video.append($sources[i]);
 		if(!$container.attr('data-html')) $container.attr('data-html', $container.html());
 		$container.html($video);
-		socket.postMessage("event:load");
+//FRODE		apiPost("event:load");
 		document.getElementById($video).addEventListener("playing", function() {
 			onStateChange("playing");
 		});

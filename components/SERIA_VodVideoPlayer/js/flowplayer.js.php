@@ -113,7 +113,7 @@ SeriaPlayerClass.prototype = {
 	onpause: null,		// WHEN USER PAUSES THE VIDEO (NOT WHEN SCRIPTS PAUSES THE VIDEO)
 	onplay: null,
 	currentTime: 0,
-	duration: 0,
+
 	// INTERNAL FUNCTIONS
 	on_message: function(message) {
 		if(message.indexOf('event:')===0) {
@@ -121,9 +121,7 @@ SeriaPlayerClass.prototype = {
 		} else if(message.indexOf('time:')===0) {
 			this.currentTime = parseInt(message.substring(5));
 		} else if(message.indexOf('duration:')===0) {
-//alert(this.duration + "=" + duration);
-			this.duration = message.substring(9);
-			this.duration = parseInt(duration);
+			this.duration = parseInt(message.subsring(9));
 		} else this.dispatchEvent('message', message);
 	},	// WHEN THE IFRAME SENDS A MESSAGE
 	on_initialize: function() {
@@ -156,11 +154,8 @@ SeriaPlayerClass.prototype = {
 	seek : function(seconds) {
 		pita.postMessage("seek:"+seconds);
 	},
-	forward : function(speed) {
-		pita.postMessage("forward:"+speed);
-	},
-	backward : function(speed) {
-		pita.postMessage("backward:"+speed);
+	changeVolume : function(vol) {
+		pita.postMessage("changeVolume:"+vol);
 	}
 }
 SeriaPlayerClass.elements = new Array();
@@ -196,11 +191,12 @@ function SeriaPlayer(key) {
 
 	}
 <?php
-
-	if(!isset($_GET['element'])) {
-		echo ' document.write(\'<div id="SeriaPlayer\' + SeriaPlayerClass.allIndex + \'" style="'."width: ".$_GET['width']."px; height: ".$_GET['height']."px;".'"></div><style type="text/css">#SeriaPlayer\' + SeriaPlayerClass.allIndex + \' iframe { width: 100%; height: 100%; }</style>\'); 
-		SeriaPlayerClass.elements[SeriaPlayerClass.allIndex] = "SeriaPlayer" + SeriaPlayerClass.allIndex; ';
-	} else { ?>
+	if(!isset($_GET['element']))
+		echo '
+document.write(\'<div id="SeriaPlayer\' + SeriaPlayerClass.allIndex + \'" style="'."width: ".$_GET['width']."px; height: ".$_GET['height']."px;".'"></div><style type="text/css">#SeriaPlayer\' + SeriaPlayerClass.allIndex + \' iframe { width: 100%; height: 100%; }</style>\');
+SeriaPlayerClass.elements[SeriaPlayerClass.allIndex] = "SeriaPlayer" + SeriaPlayerClass.allIndex;
+';
+	else { ?>
 		var st = document.createElement('style');
 		var text = '#<?php echo $_GET['element']; ?> iframe { width: 100%; height: 100%; }';
 		st.setAttribute("type", "text/css");
@@ -215,9 +211,8 @@ function SeriaPlayer(key) {
 			head.appendChild(st);
 		else
 			document.body.appendChild(st);
+
 		SeriaPlayerClass.elements[SeriaPlayerClass.allIndex] = document.getElementById(<?php echo json_encode($_GET['element']); ?>);
 <?php } ?>
-console.log(SeriaPlayerClass);
-
 	SeriaPlayerClass.allIndex++;
 }());
