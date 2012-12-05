@@ -5,7 +5,16 @@
 
 	$GLOBALS['seria']['applications'] = array();
 
-	$apps = glob(SERIA_ROOT."/seria/apps/*", GLOB_ONLYDIR);
+	if(defined('SERIA_USER_APPS')) {
+		$apps = explode(",", trim(SERIA_USER_APPS));
+		foreach($apps as $i => $app) {
+			if($app) {
+				$apps[$i] = SERIA_ROOT.'/seria/apps/'.$app;
+			} else unset($apps[$i]);
+		}
+	} else {
+		$apps = glob(SERIA_ROOT."/seria/apps/*", GLOB_ONLYDIR);
+	}
 	foreach($apps as $app)
 		require($app."/application.php");
 

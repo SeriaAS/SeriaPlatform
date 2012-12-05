@@ -4,7 +4,16 @@
 	*/
 	$GLOBALS['seria']['components'] = array();
 
-	$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
+	if(defined('SERIA_USER_COMPONENTS')) {
+		$components = explode(",", trim(SERIA_USER_COMPONENTS));
+		foreach($components as $i => $component) {
+			if($component) {
+				$components[$i] = SERIA_ROOT.'/seria/components/'.$component;
+			} else unset($components[$i]);
+		}
+	} else {
+		$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
+	}
 	$callbacks = array();
 	$manifests = array();
 	foreach($components as $c)

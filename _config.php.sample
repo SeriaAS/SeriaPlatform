@@ -72,6 +72,8 @@
 
 	define('SERIA_COMPATIBILITY',	2);					// This define is for keeping backward compatability. Sometimes APIs change, and we need to know what APIs your site is depending on.
 
+//	define('SERIA_USER_COMPONENTS', 'Component1,Component2');		// Comma separated list of components to load from /seria/components
+//	define('SERIA_USER_APPS', 'App1,App2');					// Comma separated list of components to load from /seria/components
 
 
 /**
