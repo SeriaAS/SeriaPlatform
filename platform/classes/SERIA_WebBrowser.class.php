@@ -210,10 +210,12 @@
 					if (strpos($cookie['value'], '"') !== false)
 						continue;
 					$cookieSpec[] = $cookie['name'].'='.$cookie['value'].'';
-					if (strpos($cookie['attrs']['path'], '"') === false)
-						$cookieSpec[] = '$Path='.$cookie['attrs']['path'].'';
-					if (strpos($cookie['attrs']['domain'], '"') === false)
-						$cookieSpec[] = '$Domain='.$cookie['attrs']['domain'].'';
+					if (isset($cookie['attrs'])) {
+						if (isset($cookie['attrs']['path']) && strpos($cookie['attrs']['path'], '"') === false)
+							$cookieSpec[] = '$Path='.$cookie['attrs']['path'].'';
+						if (isset($cookie['attrs']['domain']) && strpos($cookie['attrs']['domain'], '"') === false)
+							$cookieSpec[] = '$Domain='.$cookie['attrs']['domain'].'';
+					}
 				}
 				if (count($cookieSpec) > 1)
 					$this->nextRequest['headers']['Cookie'] = implode('; ', $cookieSpec);
