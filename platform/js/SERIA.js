@@ -50,8 +50,9 @@ S.ajax = function(method, url) {
 *			this.sendPlayEvent(onSuccess, onFailure);
 */
 S.rpc = function(classname,method) {
-	var u = this.httpRoot + '/seria/platform/rpc/v2.php?_r=' + Math.random() + '&e=json&c=' + encodeURIComponent(classname) + '&m=' + encodeURIComponent(method);
+	var httpRoot = this.httpRoot;
 	return function() {
+		var u = httpRoot + '/seria/platform/rpc/v2.php?_r=' + Math.random() + '&e=json&c=' + encodeURIComponent(classname) + '&m=' + encodeURIComponent(method);
 		if(arguments.length>0)
 		{
 			for(var i = 0; i < arguments.length; i++)
