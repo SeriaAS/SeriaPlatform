@@ -102,7 +102,7 @@ class SERIA_Cache implements SERIA_ICache // memcached
 	public function set($name, $value, $expires=1800)
 	{
 		if ($this->validationToken === null)
-			return;
+			return false;
 		$value = serialize($value);
 		if (strlen($value) <= 786432) {
 			$value = array(
@@ -163,6 +163,7 @@ class SERIA_Cache implements SERIA_ICache // memcached
 			$key = sha1(sha1($this->namespace).'_'.sha1($name));
 			self::$memcached->set($key, $value, $expires);
 		}
+		return true;
 	}
 
 	public function get($name)
