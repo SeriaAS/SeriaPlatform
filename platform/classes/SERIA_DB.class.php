@@ -65,6 +65,16 @@
 		        try {
 	        	        if(class_exists('PDO') && !defined('DISABLE_PDO'))
 				{
+					if(isset($_GET['debug_db_connection'])) {
+						echo "<pre>";
+						$debug = debug_backtrace();
+						array_shift($debug);
+						array_shift($debug);
+						array_shift($debug);
+						$debug = array_shift($debug);
+						echo $debug['class'].' '.$debug['function'];
+						die();
+					}
 		                        $this->_db = new PDO($this->dsn, $this->user, $this->pass);
 		                }
 				else

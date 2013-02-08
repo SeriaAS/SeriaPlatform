@@ -608,7 +608,15 @@ $trace
 		static function getParam($name)
 		{
 			try {
-				$res = SERIA_Base::db()->query($sql = "SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
+				if(false && defined('SERIA_CACHE_BACKEND') && SERIA_CACHE_BACKEND=='memcached') {
+					$cache = new SERIA_Cache('core-params');
+					if(!($res = $cache->get($name))) {
+						$res = SERIA_Base::db()->query($sql = "SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
+						$cache->set($name, $res, 1);
+					}
+				} else {
+					$res = SERIA_Base::db()->query($sql = "SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
+				}
 				return (string) $res;
 			} catch (PDOException $e) {
 				if ($e->getCode() == '42S02')
