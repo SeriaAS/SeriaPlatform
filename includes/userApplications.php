@@ -13,7 +13,10 @@
 			} else unset($apps[$i]);
 		}
 	} else {
-		$apps = glob(SERIA_ROOT."/seria/apps/*", GLOB_ONLYDIR);
+	        if(!($apps = $componentCache->get('user-apps'))) {
+			$apps = glob(SERIA_ROOT."/seria/apps/*", GLOB_ONLYDIR);
+	                $componentCache->set('user-apps', $apps, 5);
+	        }
 	}
 	foreach($apps as $app)
 		require($app."/application.php");

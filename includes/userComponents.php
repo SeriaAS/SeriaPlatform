@@ -12,7 +12,10 @@
 			} else unset($components[$i]);
 		}
 	} else {
-		$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
+	        if(!($components = $componentCache->get('user-components'))) {
+			$components = glob(SERIA_ROOT."/seria/components/*", GLOB_ONLYDIR);
+	                $componentCache->set('user-components', $components, 5);
+	        }
 	}
 	$callbacks = array();
 	$manifests = array();
