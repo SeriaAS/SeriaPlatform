@@ -256,9 +256,6 @@ require(SERIA_ROOT . '/seria/includes/locale.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/locale.php)');
 require(SERIA_ROOT . '/seria/includes/session.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/session.php)');
-
-$componentCache = new SERIA_Cache("core_components");
-
 require(SERIA_ROOT . '/seria/includes/coreComponents.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/coreComponents.php)');
 require(SERIA_ROOT . '/seria/includes/userComponents.php');

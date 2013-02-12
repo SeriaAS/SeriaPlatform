@@ -156,28 +156,23 @@ body:hover #playbutton { opacity: 1; }
 	<script>
 if(typeof console!="object") var console = { log: function() {} };
 function apiPost(message) {
-	console.log("Sending message: " + message);
 	socket.postMessage(message);
 }
 
 /* SHARED EVENT CALLBACKS. These are called by the current player to update information for apis. */
 // Called immediately after initializing is finished. The API must be fully available.
 function onLoad() {
-	console.log("onLoad");
 	loadedEventSent = true;
 	clearInterval(checkLoadedInterval);
 	apiPost("event:load");
 }
 function onFullscreen() {
-	console.log("onFullscreen");
 	apiPost("event:fullscreen");
 }
 function onFullscreenExit() {
-	console.log("onFullscreenExit");
 	apiPost("event:fullscreenExit");
 }
 function onError(errorCode, errorMessage) {
-	console.log("onError(" + errorCode + ", " + errorMessage + ")");
 	switch(errorCode) {
 		case 200:
 			onStop();
@@ -188,25 +183,23 @@ function onError(errorCode, errorMessage) {
 	}
 }
 function onStart(clip) {
-	console.log("onStart");
-	console.log($f().getClip());
 	// Frode //alert("Hoyde: " + $f().getClip().height + ", Bredde: " + $f().getClip().width);
 	apiPost("event:start");
 }
+function onPlaying(clip) {
+	// Frode //alert("Hoyde: " + $f().getClip().height + ", Bredde: " + $f().getClip().width);
+	apiPost("event:playing");
+}
 function onStop() {
-	console.log("onStop");
 	apiPost("event:stop");
 }
 function onPause() {
-	console.log("onPause");
 	apiPost("event:pause");
 }
 function onResume() {
-	console.log("onResume");
 	apiPost("event:resume");
 }
 function onFinish() {
-	console.log("onFinish");
 	apiPost("event:finish");
 }
 
@@ -361,7 +354,7 @@ function onFinish() {
 //				apiPost("event:pause");
 				break;
 			case "playing" :
-				onStart();
+				onPlaying();
 				apiPost("event:playing");
 				break;
 			case "finished" :
@@ -381,7 +374,6 @@ function onFinish() {
 	{
 		var p = getVideoDuration();
 		if(!p || p == 0) {
-			console.log("No video duration");
 			return;
 		}
 		if(!seenMapSetup)
@@ -426,10 +418,8 @@ function onFinish() {
 			type: "POST",
 			data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
 			success : function(e) {
-				console.log("Result: " + e);
 			},
 			error : function(e) {
-				console.log("Failed to submit statistics");
 			}
 		});
 		';

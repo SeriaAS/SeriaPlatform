@@ -4,9 +4,9 @@
 	*/
 	$GLOBALS['seria']['components'] = array();
 
-	if(!($components = $componentCache->get('platform-components'))) {
+	if(!($components = SERIA_Base::coreCache('platform-components'))) {
 		$components = glob(SERIA_ROOT."/seria/platform/components/*", GLOB_ONLYDIR);
-		$componentCache->set('platform-components', $components, 5);
+		SERIA_Base::coreCache('platform-components', $components, 10);
 	}
 	$callbacks = array();
 	$manifests = array();

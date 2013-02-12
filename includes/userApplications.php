@@ -13,9 +13,9 @@
 			} else unset($apps[$i]);
 		}
 	} else {
-	        if(!($apps = $componentCache->get('user-apps'))) {
+	        if(!($apps = SERIA_Base::coreCache('user-apps'))) {
 			$apps = glob(SERIA_ROOT."/seria/apps/*", GLOB_ONLYDIR);
-	                $componentCache->set('user-apps', $apps, 5);
+	                SERIA_Base::coreCache('user-apps', $apps, 5);
 	        }
 	}
 	foreach($apps as $app)

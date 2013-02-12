@@ -608,15 +608,11 @@ $trace
 		static function getParam($name)
 		{
 			try {
-				if(false && defined('SERIA_CACHE_BACKEND') && SERIA_CACHE_BACKEND=='memcached') {
-					$cache = new SERIA_Cache('core-params');
-					if(!($res = $cache->get($name))) {
-						$res = SERIA_Base::db()->query($sql = "SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
-						$cache->set($name, $res, 1);
-					}
-				} else {
-					$res = SERIA_Base::db()->query($sql = "SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
+				if($res = self::coreCache('getParam-'.$name)) {
+					return unserialize($res);
 				}
+				$res = SERIA_Base::db()->query("SELECT value FROM {params} WHERE name=:name", array('name' => $name))->fetch(PDO::FETCH_COLUMN, 0);
+				self::coreCache('getParam-'.$name, serialize($res), 3600);
 				return (string) $res;
 			} catch (PDOException $e) {
 				if ($e->getCode() == '42S02')
@@ -634,6 +630,7 @@ $trace
 		*/
 		static function unsetParam($name)
 		{
+			self::coreCache('getParam-'.$name, FALSE, 1);
 			try {
 				return SERIA_Base::db()->exec('DELETE FROM {params} WHERE name=:name', array('name' => $name), true);
 			}
@@ -655,6 +652,7 @@ $trace
 		*/
 		static function setParam($name, $value)
 		{
+			self::coreCache('getParam-'.$name, FALSE, 1);
 			$value = (string) $value;
 			SERIA_Base::debug('SERIA_Base::setParam('.$name.','.substr($value,0,50).')');
 			$sql = "INSERT INTO {params} (name, value) VALUES (:name, :value) ON DUPLICATE KEY UPDATE value=:value2";
@@ -681,6 +679,7 @@ $trace
 		 */
 		static function insertParam($name, $value)
 		{
+			self::coreCache('getParam-'.$name, FALSE, 1);
 			$value = (string) $value;
 			$sql = "INSERT INTO {params} (name, value) VALUES (:name, :value)";
 			$data = array('name' => $name, 'value' => $value);
@@ -719,6 +718,7 @@ $trace
 		 */
 		static function replaceParam($name, $value, $oldValue)
 		{
+			self::coreCache('getParam-'.$name, FALSE, 1);
 			$value = (string) $value;
 			$oldValue = (string) $oldValue;
 			$sql = 'UPDATE {params} SET value = :value WHERE name = :name AND value = :compare';
@@ -807,5 +807,66 @@ $trace
 			call_user_func_array(array('SERIA_Async','call'), $args);
 		}
 
+		/**
+		*	Only for Seria Platform internal usage.
+		*
+		*	Set or get a value that will be shared between all instances
+		*	of this software. Caching will not be used unless a memcached
+		*	server has been configured.
+		*
+		*	Currently does not support multiple memcached servers. If multiple servers are provided,
+		*	it will use only the first.
+		*/
+		protected static $_mc;
+		protected static $_mc_prefix;
+		static function coreCache($key, $value = NULL, $ttl = 60) {
+			if(trim($key, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-:')!='') throw new Exception("characters and _ only for coreCache. Got: ".$key);
+			if($value!==NULL) {
+				return self::_mc_set($key, $value, $ttl);
+			} else {
+				$res = self::_mc_get($key);
+				return $res;
+			}
+		}
+
+		protected static function _mc_connect() {
+			if(self::$_mc) return TRUE;
+			if(self::$_mc === FALSE) return FALSE;
+			if(!defined('MEMCACHED_SERVERS')) {
+				self::$_mc = FALSE;
+				return FALSE;
+			}
+			list($server) = explode(",", MEMCACHED_SERVERS);
+			@list($host, $port) = explode(":", $server);
+			if(!$port) $port = 11211;
+			self::$_mc = stream_socket_client('tcp://'.$host.':'.$port, $errno);
+			if($errno) {
+				self::$_mc = FALSE;
+				return FALSE;
+			}
+			self::$_mc_prefix = md5(SERIA_DB_USER.SERIA_DB_PASSWORD);
+			return TRUE;
+		}
+
+		protected static function _mc_set($key, $value, $ttl=60) {
+			if(!self::_mc_connect()) return FALSE;
+			$value = serialize($value);
+			fwrite(self::$_mc, $s = "set ".self::$_mc_prefix."$key 0 $ttl ".strlen($value)." noreply\r\n$value\r\n");
+		}
+
+		protected static function _mc_get($key) {
+			if(!self::_mc_connect()) return NULL;
+			fwrite(self::$_mc, "get ".self::$_mc_prefix."$key\r\n");
+			$result = explode(" ", stream_get_line(self::$_mc, 4096, "\r\n"));
+			if($result[0] == "NOT_FOUND")
+				return NULL;
+			if($result[0] == "VALUE") {
+				list($null, $skey, $flags, $length) = $result;
+				$result = substr(stream_get_line(self::$_mc, $length + 2), 0, $length);
+				$end = stream_get_line(self::$_mc, 5, "\r\n");
+				if($skey != self::$_mc_prefix.$key) return NULL;
+				return unserialize($result);
+			}
+		}
 	}
 

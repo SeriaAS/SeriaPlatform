@@ -101,6 +101,7 @@ class SERIA_Cache implements SERIA_ICache // memcached
 
 	public function set($name, $value, $expires=1800)
 	{
+echo "SET CACHE $name EXPIRES $expires<br>";
 		if ($this->validationToken === null)
 			return false;
 		$value = serialize($value);

@@ -23,11 +23,19 @@
 			$this->user = $user;
 			$this->pass = $pass;
 		}
-
+		protected static $_queryLog;
 		protected function rememberQuery()
 		{
+			$args = func_get_args();
+			if(defined('SERIA_DB_LOGFILE') && !self::$_queryLog) {
+				self::$_queryLog = fopen(SERIA_DB_LOGFILE, 'ab');
+			}
 			if ($this->queryMemory !== null)
-				$this->queryMemory[] = func_get_args();
+				$this->queryMemory[] = $args;
+			if(self::$_queryLog) {
+				if(is_array($args[2])) $args[2] = serialize($args[2]);
+				fwrite(self::$_queryLog,  implode("|\t|", $args)."\n");
+			}
 		}
 
 		public function disableQueryLog()
@@ -72,8 +80,10 @@
 						array_shift($debug);
 						array_shift($debug);
 						$debug = array_shift($debug);
-						echo $debug['class'].' '.$debug['function'];
-						die();
+var_dump($debug);
+echo "</pre>";
+//						echo $debug['class'].' '.$debug['function'];
+//						die();
 					}
 		                        $this->_db = new PDO($this->dsn, $this->user, $this->pass);
 		                }
@@ -90,7 +100,7 @@
 					}
 					switch($type)
 					{
-						case 'mysql' : 
+						case 'mysql' :
 				                        require_once(SERIA_ROOT."/seria/platform/compatability/PDO_MySQLi.class.php");
 							if(!isset($vals['port']))
 								$vals['port'] = 3306;
@@ -188,7 +198,7 @@
 		function exec($statement, $params=NULL, $transactionLess = null) {
 			if ($transactionLess !== null)
 				SERIA_Base::debug('<strong>ERROR: $transactionLess is OBSOLETE (AND IGNORED)! You have to start any transaction explicitly!</strong>');
-			$this->rememberQuery('exec', $statement);
+			$this->rememberQuery('exec', $statement, $params);
 			if($params !== NULL && !is_array($params))
 			{
 				if($params instanceof SERIA_MetaObject)
@@ -239,7 +249,7 @@
 		}
 
 		function query($statement, $params=NULL) {
-			$this->rememberQuery('query', $statement);
+			$this->rememberQuery('query', $statement, $params);
 			$this->autoCursorClose();
 //			$original = $statement;
 			try
@@ -363,29 +373,29 @@
 			} else
 				return true;
 		}
-		function errorCode() { 
+		function errorCode() {
 			$this->doConnect();
-			return $this->_db->errorCode(); 
+			return $this->_db->errorCode();
 		}
-		function errorInfo() { 
+		function errorInfo() {
 			$this->doConnect();
-			return $this->_db->errorInfo(); 
+			return $this->_db->errorInfo();
 		}
-		function getAttribute($attribute) { 
+		function getAttribute($attribute) {
 			$this->doConnect();
-			return $this->_db->getAttribute($attribute); 
+			return $this->_db->getAttribute($attribute);
 		}
-		static function getAvailableDrivers() { 
-			return PDO::getAvailableDrivers(); 
+		static function getAvailableDrivers() {
+			return PDO::getAvailableDrivers();
 		}
-		function lastInsertId($name=NULL) { 
+		function lastInsertId($name=NULL) {
 			$this->doConnect();
-			return $this->_db->lastInsertId($name); 
+			return $this->_db->lastInsertId($name);
 		}
-		function prepare($statement, array $driver_options=NULL) { 
-			if($driver_options===NULL) $driver_options = array(); 
+		function prepare($statement, array $driver_options=NULL) {
+			if($driver_options===NULL) $driver_options = array();
 			$this->doConnect();
-			return $this->_db->prepare($statement, $driver_options); 
+			return $this->_db->prepare($statement, $driver_options);
 		}
 		/**
 		 *
