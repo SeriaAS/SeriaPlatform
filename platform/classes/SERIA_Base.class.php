@@ -821,6 +821,12 @@ $trace
 		protected static $_mc_prefix;
 		static function coreCache($key, $value = NULL, $ttl = 60) {
 			if(trim($key, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-:')!='') throw new Exception("characters and _ only for coreCache. Got: ".$key);
+			if(defined('SERIA_CACHE_BACKEND') && SERIA_CACHE_BACKEND=='memcached') {
+				if(!self::$_mc) self::$_mc = new SERIA_Cache('core-cache');
+				if($value!==NULL) return self::$_mc->set($key, $value, $ttl);
+				else return self::$_mc->get($key);
+			}
+
 			if($value!==NULL) {
 				return self::_mc_set($key, $value, $ttl);
 			} else {
@@ -844,22 +850,25 @@ $trace
 				self::$_mc = FALSE;
 				return FALSE;
 			}
-			self::$_mc_prefix = md5(SERIA_DB_USER.SERIA_DB_PASSWORD);
+			self::$_mc_prefix = md5(SERIA_DB_USER.SERIA_DB_PASSWORD.SERIA_DB_NAME);
 			return TRUE;
 		}
 
 		protected static function _mc_set($key, $value, $ttl=60) {
 			if(!self::_mc_connect()) return FALSE;
+
 			$value = serialize($value);
-			fwrite(self::$_mc, $s = "set ".self::$_mc_prefix."$key 0 $ttl ".strlen($value)." noreply\r\n$value\r\n");
+			$res = fwrite(self::$_mc, $s = "set ".self::$_mc_prefix."$key 0 $ttl ".strlen($value)." noreply\r\n$value\r\n");
 		}
 
 		protected static function _mc_get($key) {
 			if(!self::_mc_connect()) return NULL;
 			fwrite(self::$_mc, "get ".self::$_mc_prefix."$key\r\n");
-			$result = explode(" ", stream_get_line(self::$_mc, 4096, "\r\n"));
-			if($result[0] == "NOT_FOUND")
+			$result = explode(" ", trim(fgets(self::$_mc, 4096)));
+//			$result = explode(" ", stream_get_line(self::$_mc, 4096, "\n"));
+			if($result[0] == "NOT_FOUND") {
 				return NULL;
+			}
 			if($result[0] == "VALUE") {
 				list($null, $skey, $flags, $length) = $result;
 				$result = substr(stream_get_line(self::$_mc, $length + 2), 0, $length);
