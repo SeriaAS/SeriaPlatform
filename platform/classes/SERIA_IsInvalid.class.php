@@ -356,6 +356,7 @@
 
 			$numbers = "0123456789";
 			$phone = str_replace(" ", "", $phone);
+			$phone = str_replace("-", "", $phone);
 			if($phone[0]=="+") $i = 1;
 			else $i = 0;
 
