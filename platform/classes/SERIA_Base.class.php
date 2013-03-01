@@ -820,12 +820,14 @@ $trace
 		protected static $_mc;
 		protected static $_mc_prefix;
 		static function coreCache($key, $value = NULL, $ttl = 60) {
-			if(trim($key, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-:')!='') throw new Exception("characters and _ only for coreCache. Got: ".$key);
 			if(defined('SERIA_CACHE_BACKEND') && SERIA_CACHE_BACKEND=='memcached') {
 				if(!self::$_mc) self::$_mc = new SERIA_Cache('core-cache');
 				if($value!==NULL) return self::$_mc->set($key, $value, $ttl);
 				else return self::$_mc->get($key);
 			}
+
+			if(trim($key, '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ_-:')!='')
+				$key = sha1($key);
 
 			if($value!==NULL) {
 				return self::_mc_set($key, $value, $ttl);
