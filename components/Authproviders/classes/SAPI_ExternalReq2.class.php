@@ -2,6 +2,24 @@
 
 class SAPI_ExternalReq2 extends SAPI
 {
+	protected static function getUserDataArray(SERIA_User $user)
+	{
+		$fields = array(
+			"firstName",
+			"lastName",
+			"displayName",
+			"username",
+			"email",
+			'is_administrator',
+			'guestAccount'
+		);
+		$values = SERIA_ExternalReq2ExtensionValues::getObject($user)->getValues();
+		$values['uid'] = $user->get('id');
+		foreach ($fields as $field)
+			$values[$field] = $user->get($field);
+		$values['safeEmails'] = SERIA_SafeEmailUsers::getSafeEmailAddresses($user);
+		return $values;
+	}
 	public static function getUserData($requestToken)
 	{
 		SERIA_ProxyServer::noCache();
@@ -10,19 +28,7 @@ class SAPI_ExternalReq2 extends SAPI
 		try {
 			if ($access->validateToken()) {
 				$user = SERIA_User::createObject($data['uid']);
-				$fields = array(
-					"firstName",
-					"lastName",
-					"displayName",
-					"username",
-					"email",
-					'is_administrator',
-					'guestAccount'
-				);
-				$values = array('uid' => $user->get('id'));
-				foreach ($fields as $field)
-					$values[$field] = $user->get($field);
-				return $values;
+				return self::getUserDataArray($user);
 			} else {
 				return array('error' => $access->getError());
 			}
@@ -40,21 +46,7 @@ class SAPI_ExternalReq2 extends SAPI
 		try {
 			if ($access->validateToken()) {
 				$user = SERIA_User::createObject($data['uid']);
-				SERIA_Base::user($user); /* <-- Log the user in! */
-				$fields = array(
-					"firstName",
-					"lastName",
-					"displayName",
-					"username",
-					"email",
-					'is_administrator',
-					'guestAccount'
-				);
-				$values = array('uid' => $user->get('id'));
-				foreach ($fields as $field)
-					$values[$field] = $user->get($field);
-				$values['safeEmails'] = SERIA_SafeEmailUsers::getSafeEmailAddresses($user);
-				return $values;
+				return self::getUserDataArray($user);
 			} else {
 				return array('error' => $access->getError());
 			}

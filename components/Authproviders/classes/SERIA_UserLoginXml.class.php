@@ -190,6 +190,17 @@ class SERIA_UserLoginXml
 						</meta>
 						<?php
 					}
+					$extvalues = SERIA_ExternalReq2ExtensionValues::getObject($this->user)->getValues();
+					if ($extvalues) {
+						?>
+							<extensionValues>
+								<?php
+									foreach ($extvalues as $name => $value)
+										echo '<'.$name.'>'.htmlspecialchars($value).'</'.$name.'>';
+								?>
+							</extensionValues>
+						<?php
+					}
 				?>
 			</user>
 		<?php
