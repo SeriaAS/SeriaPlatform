@@ -2,6 +2,25 @@
 
 require(dirname(dirname(__FILE__)).'/main.php');
 
+function SAPI_returnData($format, $result)
+{
+	switch ($format) {
+		case 'jsonp':
+			SERIA_Template::disable();
+			header('Content-Type: text/javascript');
+			/* Javascript: */
+			?>
+				<?php echo $_GET['jsonp']; ?>(<?php echo SERIA_Lib::toJSON($result); ?>);
+			<?php
+			die();
+		case 'json':
+		default:
+			SERIA_Template::disable();
+			header('Content-Type: application/json');
+			echo SERIA_Lib::toJSON($result);
+			die();
+	}
+}
 function SAPI_error($httpErrorCode, $title, $message, $die, $extraHTML)
 {
 	$error = $message;
@@ -77,6 +96,26 @@ if (isset($get['apiPath']) && $get['apiPath']) {
 		throw new SERIA_Exception('API path must be class/method');
 } else
 	throw new SERIA_Exception('API requires path');
+if (isset($get['apiReturn'])) {
+	$returnFormat = $get['apiReturn'];
+	unset($get['apiReturn']);
+} else
+	$returnFormat = 'json';
+$GLOBALS['returnFormat'] = $returnFormat;
+
+switch ($returnFormat) {
+	case 'json':
+		break; /* Ok */
+	case 'jsonp':
+		if (!isset($_GET['jsonp']) || !$_GET['jsonp']) {
+			$GLOBALS['returnFormat'] = 'json';
+			throw new SERIA_Exception('jsonp return-data format requires the jsonp-parameter with the callback name');
+		}
+		break; /* Ok */
+	default:
+		$GLOBALS['returnFormat'] = 'json';
+		throw new SERIA_Exception('Unknown return-data format: '.$returnFormat);
+}
 
 switch ($_SERVER['REQUEST_METHOD']) {
 	case 'POST':
@@ -94,5 +133,4 @@ switch ($_SERVER['REQUEST_METHOD']) {
 		$result = SAPI::get($class, $method, $get);
 }
 
-echo SERIA_Lib::toJSON($result);
-die();
+SAPI_returnData($returnFormat, $result);
