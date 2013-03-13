@@ -1,5 +1,6 @@
 <?php
 	SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/SERIA_Outboard/classes/*.class.php');
+	SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/SERIA_Outboard/sapi/*.class.php');
 
 	function SERIA_OutboardInit()
 	{
