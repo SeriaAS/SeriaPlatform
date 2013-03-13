@@ -39,4 +39,11 @@ class SAPI_Token extends SERIA_MetaObject
 		}
 		return $action;
 	}
+
+	public static function deleteAllTokensOwnedByUser(SERIA_User $user)
+	{
+		$tokens = SERIA_Meta::all('SAPI_Token')->where('user = :user', array('user' => $user->get('id')));
+		foreach ($tokens as $token)
+			SERIA_Meta::delete($token);
+	}
 }

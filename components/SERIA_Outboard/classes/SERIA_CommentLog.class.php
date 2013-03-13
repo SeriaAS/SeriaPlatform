@@ -44,4 +44,9 @@
 				$comment->sendFlaggedNotice();
 			return $action;
 		}
+
+		public static function deleteUserHook(SERIA_User $user)
+		{
+			SERIA_Base::db()->exec('UPDATE {comments_log} SET user = NULL WHERE user = :user', array('user' => $user->get('id')));
+		}
 	}

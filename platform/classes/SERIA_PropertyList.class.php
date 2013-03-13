@@ -136,6 +136,10 @@
 			$db = SERIA_Base::db();
 			return $db->exec('DELETE FROM {property_list} WHERE name LIKE :name', array('name' => $propertyNameQuery));
 		}
+		public static function deleteAll(SERIA_NamedObject $object)
+		{
+			SERIA_Base::db()->exec('DELETE FROM {property_list} WHERE owner=:owner', array('owner' => serialize($object->getObjectId())));
+		}
 
 		public function fetchAll()
 		{

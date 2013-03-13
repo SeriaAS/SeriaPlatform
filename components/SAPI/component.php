@@ -27,4 +27,5 @@ class SAPIManifest
 
 function SAPIInit()
 {
+	SERIA_Hooks::listen(SERIA_User::DELETE_HOOK, array('SAPI_Token', 'deleteAllTokensOwnedByUser'));
 }

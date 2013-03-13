@@ -473,4 +473,16 @@
 				SERIA_Hooks::dispatch(self::COMMENT_CHANGED_HOOK, $this);
 			$this->metaObjectIsNew = false;
 		}
+
+		public static function deleteUserHook(SERIA_User $user)
+		{
+			$comments = SERIA_Meta::all('SERIA_Comment')->where('user = :user', array('user' => $user->get('id')));
+			foreach ($comments as $comment) {
+				$comment->set('displayName', _t('Anonymous'));
+				$comment->set('userUrl', '');
+				$comment->set('userEMail', 'noemail_autodelete@ndla.no');
+				SERIA_Meta::save($comment);
+			}
+			SERIA_Base::db()->exec('UPDATE {comments} SET user = NULL WHERE user = :user', array('user' => $user->get('id')));
+		}
 	}

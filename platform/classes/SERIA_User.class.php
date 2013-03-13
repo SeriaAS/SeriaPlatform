@@ -5,6 +5,8 @@
 			$_rights = false,
 			$_db;
 
+		const DELETE_HOOK = 'SERIA_User::DELETE_HOOK';
+
 		public function offsetExists($name)
 		{
 			return isset($this->_row[$name]);
@@ -338,6 +340,28 @@
 			$this->_row['email'] = '';
 
 			$this->save();
+		}
+
+		/**
+		 * This deletes the user from the database permanently. Use this method to implement delete-me-features
+		 * for website users. It dispatches the SERIA_User::DELETE_HOOK before actually deleting the user, so
+		 * all application features connected to the user-object should act upon that hook and detach or delete
+		 * any user-related content.
+		 *
+		 * @param SERIA_User $user
+		 */
+		public static function deleteUserPermanently(SERIA_User $user)
+		{
+			SERIA_Hooks::dispatch(self::DELETE_HOOK, $user);
+			SERIA_Base::db()->exec('DELETE FROM {user_meta_value} WHERE owner = :owner', array(
+				'owner' => $user->get('id')
+			));
+			SERIA_PropertyList::deleteAll($user);
+
+			/*
+			 * Finally delete the user:
+			 */
+			SERIA_Base::db()->exec('DELETE FROM {users} WHERE id = :id', array('id' => $user->get('id')));
 		}
 
 		/**

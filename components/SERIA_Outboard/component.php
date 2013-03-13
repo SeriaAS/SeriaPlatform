@@ -5,6 +5,8 @@
 	{
 		SERIA_Router::instance()->addRoute('SERIA_Outboard', 'SERIA_Outboard pages', 'SERIA_Outboard_comments_show_template', 'outboard/comments/:template');
 		SERIA_Hooks::listen(SERIA_Gui::EMBED_HOOK, 'SERIA_Outboard_guiEmbed');
+		SERIA_Hooks::listen(SERIA_User::DELETE_HOOK, array('SERIA_Comment', 'deleteUserHook'));
+		SERIA_Hooks::listen(SERIA_User::DELETE_HOOK, array('SERIA_CommentLog', 'deleteUserHook'));
 	}
 
 	function SERIA_Outboard_comments_show_template($vars)

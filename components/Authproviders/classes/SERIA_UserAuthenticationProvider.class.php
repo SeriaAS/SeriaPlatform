@@ -89,4 +89,12 @@ class SERIA_UserAuthenticationProvider extends SERIA_MetaObject
 		} else
 			return null;
 	}
+
+	public static function deletingUser(SERIA_User $user)
+	{
+		$providers = SERIA_Meta::all('SERIA_UserAuthenticationProvider')->where('user = :user', array('user' => $user->get('id')));
+		foreach ($providers as $provider) {
+			SERIA_Meta::delete($provider);
+		}
+	}
 }
