@@ -63,8 +63,8 @@ class SAPI_Method
 		if (!in_array('get', $this->avail))
 			throw new SERIA_Exception('GET is not available for this SAPI-method ('.$this->class.'/'.$this->method.').');
 		$this->params = $params;
-		if (method_exists($this->class, 'post_'.$this->method))
-			$this->callMethod = 'post_'.$this->method;
+		if (method_exists($this->class, 'get_'.$this->method))
+			$this->callMethod = 'get_'.$this->method;
 		else
 			$this->callMethod = $this->method;
 		return $this->callMethod();
@@ -74,8 +74,8 @@ class SAPI_Method
 		if (!in_array('put', $this->avail))
 			throw new SERIA_Exception('PUT is not available for this SAPI-method ('.$this->class.'/'.$this->method.').');
 		$this->params = $params;
-		if (method_exists($this->class, 'post_'.$this->method))
-			$this->callMethod = 'post_'.$this->method;
+		if (method_exists($this->class, 'put_'.$this->method))
+			$this->callMethod = 'put_'.$this->method;
 		else
 			$this->callMethod = $this->method;
 		return $this->callMethod();
@@ -85,8 +85,8 @@ class SAPI_Method
 		if (!in_array('delete', $this->avail))
 			throw new SERIA_Exception('DELETE is not available for this SAPI-method ('.$this->class.'/'.$this->method.').');
 		$this->params = $params;
-		if (method_exists($this->class, 'post_'.$this->method))
-			$this->callMethod = 'post_'.$this->method;
+		if (method_exists($this->class, 'delete_'.$this->method))
+			$this->callMethod = 'delete_'.$this->method;
 		else
 			$this->callMethod = $this->method;
 		return $this->callMethod();
