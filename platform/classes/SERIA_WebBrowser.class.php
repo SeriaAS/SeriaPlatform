@@ -103,7 +103,7 @@
 		/**
 		*	@param string $url	Expects a complete URL with hostname
 		*/
-		public function navigateTo($url, $post=false, $ip=NULL, $port=NULL)
+		public function navigateTo($url, $post=false, $connectToHost=NULL, $port=NULL)
 		{
 			SERIA_Base::debug('(SERIA_WebBrowser)->navigateTo('.$url.', ...)');
 
@@ -163,8 +163,8 @@
 				}
 			}
 
-			if($ip)
-				$this->nextRequest['ip'] = $ip;
+			if($connectToHost)
+				$this->nextRequest['connectToHost'] = $connectToHost;
 
 			$this->nextRequest['secure'] = false;
 			switch($p['scheme'])
@@ -310,11 +310,11 @@
 				$postFiles = $this->currentRequest['postFiles'];
 			else
 				$postFiles = array();
-			$ip = false;
-			if (isset($this->currentRequest['ip']))
-				$ip = $this->currentRequest['ip'];
+			$connectToHost = false;
+			if (isset($this->currentRequest['connectToHost']))
+				$connectToHost = $this->currentRequest['connectToHost'];
 			$port = $this->currentRequest['port'];
-			$this->navigateTo($this->url, $post, $ip, $port);
+			$this->navigateTo($this->url, $post, $connectToHost, $port);
 			foreach ($postFiles as $name => $file)
 				$this->postFile($name, $file);
 		}
@@ -498,8 +498,8 @@
 
 		protected function connect($request, $timeout)
 		{
-			if(isset($this->nextRequest['ip']))
-				$transport = $this->nextRequest['ip'];
+			if(isset($this->nextRequest['connectToHost']))
+				$transport = $this->getHostByName($this->nextRequest['connectToHost']);
 			else
 				$transport = $this->getHostByName($this->nextRequest['host']);
 
@@ -940,16 +940,16 @@
 				$post = false;
 				$postFiles = array();
 			}
-			$ip = false;
+			$connectToHost = false;
 			$port = false;
 			$from = parse_url($redirectPoint);
 			$to = parse_url($location);
 			if ($from['scheme'] == $to['scheme'] && $from['host'] == $to['host'] && $from['port'] == $to['port']) {
-				if (isset($this->currentRequest['ip']))
-					$ip = $this->currentRequest['ip'];
+				if (isset($this->currentRequest['connectToHost']))
+					$connectToHost = $this->currentRequest['connectToHost'];
 				$port = $this->currentRequest['port'];
 			}
-			$this->navigateTo($location, $post, $ip, $port);
+			$this->navigateTo($location, $post, $connectToHost, $port);
 			foreach ($postFiles as $name => $file)
 				$this->postFile($name, $file);
 			if ($this->responseCode == 301)
