@@ -33,6 +33,11 @@
 			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders config', array($this, 'showConfigurationPage'), 'components/authproviders/config');
 			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders config check', array($this, 'showConfigCheck'), 'components/authproviders/configcheck');
 			SERIA_Router::instance()->addRoute('Authproviders', 'Local usermanagement is blocked', array($this, 'showUsermanagementBlockage'), 'components/authproviders/usermanagement');
+			/*
+			 * Single signon by javascript:
+			 */
+			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders Javascript SSO', array($this, 'ssoByJavascriptCall'), 'components/authproviders/ssobyjs');
+
 			if ($this->isEnabled()) {
 				SERIA_Hooks::listen('SERIA_Base::user', array($this, 'userObjectRequested'));
 				SERIA_Hooks::listen('SeriaPlatformBootComplete', array($this, 'platformBootComplete'));
@@ -326,6 +331,14 @@
 			$template = new SERIA_MetaTemplate();
 			echo $template->parse($this->getInstallationPath().'/metaTemplates/remoteUsermanagement.php');
 			die();
+		}
+
+		public function ssoByJavascriptCall()
+		{
+			SERIA_Template::disable();
+			if (!isset($_GET['siteType']))
+				die('You must specify site type (siteType). Sorry.');
+			die(SAPI_SSOByJavascript::activationScript($_GET['siteType']));
 		}
 
 		public function hostAccessConsentRequest($postFormObject, $abortUrl)
