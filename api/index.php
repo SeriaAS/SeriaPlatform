@@ -10,7 +10,57 @@ function SAPI_returnData($format, $result)
 			header('Content-Type: text/javascript');
 			/* Javascript: */
 			?>
-				<?php echo $_GET['jsonp']; ?>(<?php echo SERIA_Lib::toJSON($result); ?>);
+			(function () {
+				var checkXdmAclHost = function (host) {
+					<?php
+						if (defined('XDM_AJAX_ACL')) {
+							$acl = XDM_AJAX_ACL;
+							$acl = explode(',', $acl);
+							foreach ($acl as &$allow)
+								$allow = trim($allow);
+							unset($allow);
+						} else {
+							$acl = array();
+						}
+						$acl[] = SERIA_Url::current()->getHost();
+					?>
+					var acls = <?php echo SERIA_Lib::toJSON($acl); ?>;
+					var ok = false;
+					for (i in acls) {
+						var acl = acls[i];
+						if (acl.substr(0, 1) == '.' && host.length > acl.length && host.substr(host.length - acl.length) == acl) {
+							ok = true;
+							break;
+						} else if (host == acl) {
+							ok = true;
+							break;
+						}
+					}
+					return ok;
+				}
+				var getRequestingHost = function () {
+					var url = window.location.href;
+					if (url.indexOf('http://') == 0) {
+						url = url.substr(7);
+					} else if (url.indexOf('https://') == 0) {
+						url = url.substr(8);
+					} else
+						return false;
+					var i = url.indexOf('/');
+					var host = '';
+					if (i > 0)
+						host = url.substr(0, i);
+					else if (i == -1)
+						host = url;
+					return host;
+				}
+				var host = getRequestingHost();
+			
+				if (checkXdmAclHost(host))
+					<?php echo $_GET['jsonp']; ?>(<?php echo SERIA_Lib::toJSON($result); ?>);
+				else
+					alert('Access denied to an XDM API (Add hostname '+host+' to XDM_AJAX_ACL in _config.php)!');
+			})();
 			<?php
 			die();
 		case 'json':
