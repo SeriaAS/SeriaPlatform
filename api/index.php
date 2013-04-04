@@ -27,13 +27,15 @@ function SAPI_returnData($format, $result)
 					var acls = <?php echo SERIA_Lib::toJSON($acl); ?>;
 					var ok = false;
 					for (i in acls) {
-						var acl = acls[i];
-						if (acl.substr(0, 1) == '.' && host.length > acl.length && host.substr(host.length - acl.length) == acl) {
-							ok = true;
-							break;
-						} else if (host == acl) {
-							ok = true;
-							break;
+						if (acls.hasOwnProperty(i)) {
+							var acl = acls[i];
+							if (acl.substr(0, 1) == '.' && host.length > acl.length && host.substr(host.length - acl.length) == acl) {
+								ok = true;
+								break;
+							} else if (host == acl) {
+								ok = true;
+								break;
+							}
 						}
 					}
 					return ok;
