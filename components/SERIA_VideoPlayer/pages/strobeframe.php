@@ -54,7 +54,9 @@
 
 	function getBestFlashVideoSource($videoSources, $id)
 	{
-//		return "http://streaming.seria.net/vod/smil:seriatv;".substr($_SERVER['SERVER_NAME'],0,1).";".$_SERVER['SERVER_NAME'].";files;seriawebtv;".$id.";alt;streams.smil/manifest.f4m";
+		if($_SERVER['HTTP_HOST'] == "dna.seriatv.com")
+			return urlencode("rtmp://live.istribute.com/live/dna1");
+//			return urlencode("http://dna.seriatv.com/dnamanifest.f4m");
 		foreach($videoSources as $i => $source)
 		{
 			if(strpos($source['src'], "rtmp") === false) {
@@ -104,22 +106,31 @@
 	} else {
 		$stopTime = false;
 	}
-
-	$flashVars = array(
-		'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
-		'autoPlay' => (isset($_GET['autoPlay']) ? 1 : 0),
-		'backgroundColor' => $backgroundColor,
-		'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
-		'src' => $flashVideoSource,
-		'clipStartTime' => $startTime,
-		'clipEndTime' => $stopTime,
-		'poster' => $vd['previewImage'],
-		'bufferingOverlay' => "false",
-		'bufferTime' => 10,
-		'initialBufferTime' => 2,
-		'streamType' => ($isLive ? 'live' : 'auto'),
-		'javascriptCallbackFunction' => 'onJavaScriptBridgeCreated'
-	);
+	if($isLive) {
+		$flashVars = array(
+			'src' => $flashVideoSource,
+			'poster' => $vd['previewImage'],
+			'bufferTime' => 10,
+			'initialBufferTime' => 2,
+//			'scaleMode' => 'letterbox'
+		);
+	} else {
+		$flashVars = array(
+			'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
+			'autoPlay' => (isset($_GET['autoPlay']) ? 1 : 0),
+			'backgroundColor' => $backgroundColor,
+			'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
+			'src' => $flashVideoSource,
+			'clipStartTime' => $startTime,
+			'clipEndTime' => $stopTime,
+			'poster' => $vd['previewImage'],
+			'bufferingOverlay' => "false",
+			'bufferTime' => 10,
+			'initialBufferTime' => 2,
+			'streamType' => ($isLive ? 'live' : 'auto'),
+			'javascriptCallbackFunction' => 'onJavaScriptBridgeCreated'
+		);
+	}
 	$newSourcesArray = array();
 
 /*
@@ -483,7 +494,12 @@ echo '
 		// Let's find out if this site has a custom videoplayer 
 
 		$swfRoot = SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/StrobeMediaPlayback.swf';
-
+/*
+		if($isLive) {
+			$swfRoot = SERIA_HTTP_ROOT.'/seria/components/SERIA_VideoPlayer/bin/StrobeLive.swf';
+			//$swfRoot = "http://www.osmf.org/dev/1.5gm/StrobeMediaPlayback.swf";
+		}
+*/
 		if(isset($_GET['opaque']))
 			$wmode = 'opaque';
 		else if(isset($_GET["transparent"]))
@@ -493,6 +509,9 @@ echo '
 		// HACK :
 		// Should incorporate site-specific settings for wmode, bgcolor etc.
 		$wmode = 'window';
+
+		if(isset($_GET['opaque']))
+			$wmode = 'opaque';
 
 			echo "
 			<!--[if IE]>
