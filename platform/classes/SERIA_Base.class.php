@@ -577,6 +577,11 @@ $trace
 					if ($setUser->get('guestAccount'))
 						$_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED'] = true;
 					$_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX] = $setUser->get('id');
+				} else {
+					/*
+					 * A temporary login will not store session data:
+					 */
+					SERIA_NullSessionHandler::activateSessionHandler();
 				}
 				$user = $setUser;
 				SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::NOTICE, _t('%USER%@%IP%: Login.', array('USER' => $user->get('username'), 'IP' => $_SERVER['REMOTE_ADDR'])), 'security');
