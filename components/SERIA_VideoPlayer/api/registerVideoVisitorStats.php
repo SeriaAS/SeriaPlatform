@@ -24,9 +24,28 @@
 
 	if($res->count() == 1) {
 		$obj = $res->current();
-		$oldMap = $obj->get("seenMap");
-		$newMap = $oldMap | $seenMap;
-		$obj->set("seenMap", $newMap);
+		$currentSeenMap = $obj->get("seenMap");
+		$oldLinePos = strpos($currentSeenMap, ",");
+
+		if(!$oldLinePos) {
+			// old seen map needs to be converted
+			$oldLine = str_split($currentSeenMap);
+			$currentSeenMap = implode(",", $oldLine);
+		}
+
+		$pos = strpos($seenMap, ",");
+
+		if($pos === false) {
+			throw new SERIA_Exception("Discarding seenMap(".$seenMap.") due to lack of data on euid".$euid." and vid=".$vid);
+		}
+		$oldMap = explode(",", $currentSeenMap); // 0000000011111111111111110000000000000 changed to 0,0,0,0,0,1,1,1,1,1,1,1,,2,2,2,2,2,2,
+		$newMap = array();
+
+		foreach(explode(",", $seenMap) as $i => $second) {
+			$newMap[$i] = $oldMap[$i] + $second;
+		}
+
+		$obj->set("seenMap", implode(",", $newMap));
 		SERIA_Meta::save($obj);
 
 		echo json_encode(array("status" => "ok"));

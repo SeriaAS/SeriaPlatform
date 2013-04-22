@@ -34,8 +34,8 @@
 				if($_SERVER['HTTP_HOST'] == $domain)
 				{
 					if($options === NULL)
-						return SERIA_Meta::manifestUrl('videoplayer','strobeframe', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
-					return SERIA_Meta::manifestUrl('videoplayer','strobeframe', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
+						return SERIA_Meta::manifestUrl('videoplayer','strobeframe_easy', array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999)));
+					return SERIA_Meta::manifestUrl('videoplayer','strobeframe_easy', array_merge($options, array('objectKey' => SERIA_NamedObjects::getPublicId($this->_object), '_r' => mt_rand(0,9999999))));
 				}
 			}
 

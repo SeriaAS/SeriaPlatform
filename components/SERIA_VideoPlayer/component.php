@@ -27,3 +27,5 @@
 			),
 		);
 	}
+
+	SERIA_Hooks::listen(SERIA_MAINTAIN_5_MINUTES_HOOK, array('SERIA_AnonymousVideoVisitorStats', 'maintainTemporaryVideoStats'));

@@ -65,6 +65,42 @@
 	$counter = new SERIA_Counter('SeriaWebTVStatistics');
 	$counter->add(array('Referer:'.$video->get("id").':'.date('Y-m-d').':'.$domain),1);
 
+	// Count EUID-VID relation number
+	if(isset($_GET["euid"]) && intval($_GET["euid"]))
+		$counter->add(array('ObjectKey:'.SERIA_NamedObjects::getPublicId($video).',EUID:'.intval($_GET["euid"])), 1);
+	// Count Device Type
+
+	$ua = $_SERVER['HTTP_USER_AGENT'];
+	if(preg_match("/iPhone/", $ua)) {
+		$agent = "iPhone";
+	} else if(preg_match("/iPad/", $ua)) {
+		$agent = "iPad";
+	} else if(preg_match("/Chrome/", $ua)) {
+		$agent = "Chrome";
+	} else if(preg_match("/AppleWebKit/", $ua)) {
+		$agent = "Safari";
+	} else if(preg_match("/android/", $ua)) {
+		$agent = "Android";
+	} else if(preg_match("/MSIE/", $ua)) {
+		$agent = "Explorer";
+	} else if(preg_match("/Firefox/", $ua)) {
+		$agent = "Firefox";
+	} else {
+		$agent = "Other";
+	}
+
+	$counter->add(array(
+			'UA-Ym/i:'.date('Ym', time()).'/'.$agent,
+			'UA-Ymd/i:'.date('Ymd', time()).'/'.$agent,
+			'UA-YmdH/i:'.date('YmdH', time()).'/'.$agent,
+	));
+	$counter->add(array(
+			'UA-Ym/i:'.date('Ym', time()).'/'.$_SERVER['HTTP_USER_AGENT'],
+			'UA-Ymd/i:'.date('Ymd', time()).'/'.$_SERVER['HTTP_USER_AGENT'],
+			'UA-YmdH/i:'.date('YmdH', time()).'/'.$_SERVER['HTTP_USER_AGENT'],
+	));
+
+
 	if(is_a($video, 'SERIA_LiveProgram')) {
 		$counter = new SERIA_Counter('SeriaLiveStatistics');
 		$counter->add(array(
@@ -98,6 +134,7 @@
 	$flashVideoSource = getBestFlashVideoSource($vd['sources']);
 
 	$sources = $vd['sources'];
+	$onComplete = $vd['onComplete'];
 	$source = current($sources);
 	$source = $source['src'];
 
@@ -191,7 +228,7 @@
 		<script src='<?php echo $http; ?>://ajax.microsoft.com/ajax/jquery/jquery-1.5.min.js' type='text/javascript' language='javascript'></script>
 		<script src='<?php echo SERIA_HTTP_ROOT; ?>/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js' type='text/javascript' language='javascript'></script>
 		<script type='text/javascript'>
-
+			var v = false;
 			function showAlternatives(sources) {
 				var found = new Object();
 				for(var i in sources) {
@@ -217,7 +254,7 @@
 			jQuery(function(){
 				if(!FlashDetect.installed || forceHtml) {
 					// detect if html5 video is supported
-					var v = document.createElement('video');
+					v = document.createElement('video');
 					if(!v.canPlayType)
 					{
 						jQuery('#fallback').html("<?php echo _t("Please install Adobe Flash player or upgrade to a newer browser that supports HTML 5 video"); ?>");
@@ -245,7 +282,7 @@
 						}, false);
 						v.addEventListener("ended", function() {
 							onStateChange("finished");
-						},  false);
+						},false);
 						v.addEventListener("pause", function() {
 							onStateChange("paused");
 						}, false);
@@ -253,15 +290,15 @@
 						v.addEventListener("timeupdate", function(ev) {
 							var curTime = parseInt(v.currentTime);
 							if((curTime-oldTime)>10)
-								socket.postMessage("event:seeked");
+								if(socket) socket.postMessage("event:seeked");
 							else if((curTime-oldTime)<-10)
-								socket.postMessage("event:seeked");
+								if(socket) socket.postMessage("event:seeked");
 							oldTime = curTime;
 							onCurrentTimeChange(curTime);
 
 						}, false);
 						v.addEventListener("seeked", function() {
-							socket.postMessage("event:seeked");
+							if(socket) socket.postMessage("event:seeked");
 						}, false);
 
 						var i;
@@ -385,13 +422,14 @@
 				}
 			});
 			var _self = this;
+try {
 			var socket = new easyXDM.Socket({
-			    onMessage: messageReceived,
-			    onReady : function() {
-				socket.postMessage("hello");
-			    }
+			onMessage: messageReceived,
+			onReady : function() {
+				if(socket) socket.postMessage("hello");
+			}
 			});
-
+} catch(err) { }
 			function messageReceived(message)
 			{
 				if(message.indexOf(":")) {
@@ -457,7 +495,7 @@
 				getVideoObject().pause();
 			}
 
-			var usingHtml =  false;
+			var usingHtml =false;
 			var videoObject = null;
 			function getVideoObject()
 			{
@@ -504,33 +542,67 @@
 			}
 			function seeking()
 			{
-				socket.postMessage("event:seeked");
+				if(socket) socket.postMessage("event:seeked");
+			}
+			function exitfs(){
+				if(v) v.webkitExitFullScreen();
 			}
 			function onComplete()
 			{
-				socket.postMessage("event:finished");
+				seenMap[0] = 0;
+				if(socket) socket.postMessage("event:finished");
+				<?php
+					switch($onComplete['type']) {
+						case 'iframe' :
+							echo '
+								exitfs();
+								var ifr = document.createElement("IFRAME");
+								ifr.setAttribute("src", "'.$onComplete['data'].'");
+								ifr.style.width = "100%";
+								ifr.style.height = "100%";
+								$(v).remove();
+								ifr.style.zIndex = 5000;
+								ifr.setAttribute("frameborder", "0");
+								$("#callToActionOverlay").append(ifr).css("display", "block");
+							';
+							break;
+						case 'redirect' :
+							echo '
+								exitfs();
+								top.location.href = "'.$onComplete['data'].'";
+							';
+							break;
+						default :
+							echo 'alert("Unknown Call-To-Action: "'.$onComplete['type'].');';
+							break;
+					}
+				?>
 			}
 			function onStateChange(state)
 			{
 				switch(state) {
 					case "paused" :
-						socket.postMessage("event:pause");
-						break;	
+						if(socket) socket.postMessage("event:pause");
+						break;
 					case "playing" :
-						socket.postMessage("event:playing");
+						if(socket) socket.postMessage("event:playing");
 						break;
 					case "finished" :
-						socket.postMessage("event:finished");
+						onComplete();
 						break;
 					default :
-						alert("event:unknown:"+state);
 						break;
 				}
 			}
-			var currentTime = 0;
+			var currentTime = null;
 			var seenMap = new Object();
 			var seenMapSetup = false;
-
+			function resetSeenMap() {
+				for(var i=0;i<getVideoDuration();i++)
+				{
+					seenMap[i] = 0;
+				}
+			}
 			function onCurrentTimeChange(time)
 			{
 				var p = getVideoDuration();
@@ -541,50 +613,102 @@
 				{
 					for(var i=0;i<getVideoDuration();i++)
 					{
-						seenMap[i] = "0";
+						seenMap[i] = 0;
 					}
 					seenMapSetup = true;
 					setInterval(registerSeenMap, 10000);
+					setInterval(registerSeenBlock, 10000);
 				}
 				var newTime = parseInt(time);
 
 				if((newTime-currentTime)>10)
-					socket.postMessage("event:seeked");
+					if(socket) socket.postMessage("event:seeked");
 				else if((currentTime-newTime)>10) {
-					socket.postMessage("event:seeked");
+					if(socket) socket.postMessage("event:seeked");
 				} else {
 				}
-
 				if(currentTime != newTime) {
-					seenMap[newTime] = "1";
-					socket.postMessage("time:"+currentTime);
+					if(seenMap[newTime] >= 0) {
+						seenMap[newTime] = parseInt(seenMap[newTime])+1;
+					}
+					if(socket) socket.postMessage("time:"+currentTime);
 				}
 				currentTime = newTime;
+
+			}
+<?php
+	// Generate a temporary UID Hash that we store in the cache.
+	session_start();
+	if(isset($_SESSION["uid_hash_".$video->get("id")]) && isset($_SESSION["uid_hash_".$video->get("id")]["uid"])) {
+		$uid = $_SESSION["uid_hash_".$video->get("id")]["uid"];
+	} else {
+		$uid = md5(mt_rand(1000000000, 9999999999).date('Y-m-d H:i:s', time()));
+		$_SESSION["uid_hash_".$video->get("id")]["uid"] = $uid;
+	}
+?>
+			var temp_uid = "<?php echo $_SESSION["uid_hash_".$video->get("id")]["uid"]; ?>";
+			var lastRegisteredMap = "";
+			function registerSeenBlock()
+			{
+				anonymousSeenMapString = '';
+				for( var b in seenMap ) {
+					if(seenMap[b]>0) {
+						anonymousSeenMapString +=1;
+					} else {
+						anonymousSeenMapString +=0;
+					}
+				}
+				if(anonymousSeenMapString == lastRegisteredMap) return;
+				<?php
+					$url = new SERIA_Url(SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/api/registerVideoBlocks.php");
+
+					$signedUrl = $url->sign($video->get("id").SERIA_FILES_ROOT.SERIA_DB_PASSWORD);
+
+					echo '
+						$.ajax({
+							url: "'.$signedUrl.'",
+							type: "POST",
+							data: "anonymousSeenMap=" + anonymousSeenMapString + "&vid='.$video->get("id").'&anonymousId=" + temp_uid,
+							success: function() {
+								lastRegisteredMap = anonymousSeenMapString;
+							},
+							error: function() {
+	
+							}
+						});
+					';
+				?>
 			}
 
 			function registerSeenMap()
 			{
 <?php
-				if(isset($_GET["euid"])) {
+				if(isset($_GET["euid"]) && $_GET["euid"]) {
 					$url = new SERIA_Url(SERIA_HTTP_ROOT."/seria/components/SERIA_VideoPlayer/api/registerVideoVisitorStats.php");
 					$signedUrl = $url->sign($video->get("id").SERIA_FILES_ROOT.SERIA_DB_PASSWORD);
 
 					echo '
-				var seenMapString = "";
-				for(var b in seenMap)
-					seenMapString+=seenMap[b] + "";
+						var registeringSeenMap = new Object();
+						for( var b in seenMap ) {
+							registeringSeenMap[b] = seenMap[b];
+						}
+						resetSeenMap();
 
-				$.ajax({
-					url: "'.$signedUrl.'",
-					type: "POST",
-					data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
-					success : function(e) {
-					},
-					error : function(e) {
-					}
-				});
-		';
-	}
+						var seenMapString = "";
+						for(var b in registeringSeenMap) {
+							seenMapString+=registeringSeenMap[b] + ",";
+						}
+						$.ajax({
+							url: "'.$signedUrl.'",
+							type: "POST",
+							data: "seenMap="+seenMapString+"&vid='.$video->get("id").'&euid='.$_GET["euid"].'",
+							success : function(e) {
+							},
+							error : function(e) {
+							}
+						});
+					';
+				}
 ?>
 			}
 
@@ -631,6 +755,7 @@ echo '
 
 	</head>
 	<body style="background-color: #<?php echo $backgroundColor; ?>">
+		<div style="position:absolute;left:10px;top:10px;right:10px;bottom:10px;display:none;" id="callToActionOverlay"></div>
 <?php
 		if(defined('SERIA_VIDEOPLAYER_SKIN')) require(SERIA_VIDEOPLAYER_SKIN);
 		else require(SERIA_ROOT.'/seria/components/SERIA_VideoPlayer/assets/skin.php');

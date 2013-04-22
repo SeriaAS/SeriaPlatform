@@ -96,12 +96,19 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 					$percentSeen = round($percFloat*100);
 					if($percentSeen>100)
 						$percentSeen = 100;
+
+					$objectKey = SERIA_NamedObjects::getPublicId($videostat->get("video"));
+
+					$counter = new SERIA_Counter('SeriaWebTVStatistics');
+					$viewCount = array_shift($counter->get(array('ObjectKey:'.$objectKey.',EUID:'.$videostat->get("euid"))));
+
 					$result[] = array(
 						'videoId' => $videostat->get("video")->get("id"),
-						'objectKey' => SERIA_NamedObjects::getPublicId($videostat->get("video")),
+						'objectKey' => $objectKey,
 						'title' => $videostat->get("video")->get("title"),
 						'euid' => $videostat->get("euid"),
 						'seenMap' => $seenMap,
+						'timesLoaded' => $viewCount,
 						'percentSeen' => $percentSeen,
 						'proportionSeen' => round($percFloat, 4),
 						'createdDate' => $videostat->get("createdDate"),
@@ -122,12 +129,20 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 				$percentSeen = round($percFloat*100);
 				if($percentSeen>100)
 					$percentSeen = 100;
+
+
+				$objectKey = SERIA_NamedObjects::getPublicId($videostat->get("video"));
+
+				$counter = new SERIA_Counter('SeriaWebTVStatistics');
+				$viewCount = array_shift($counter->get(array('ObjectKey:'.$objectKey.',EUID:'.$videostat->get("euid"))));
+
 				$result[] = array(
 					'videoId' => $videostat->get("video")->get("id"),
-					'objectKey' => SERIA_NamedObjects::getPublicId($videostat->get("video")),
+					'objectKey' => $objectKey,
 					'title' => $videostat->get("video")->get("title"),
 					'euid' => $videostat->get("euid"),
 					'seenMap' => $seenMap,
+					'timesLoaded' => $viewCount,
 					'percentSeen' => $percentSeen,
 					'proportionSeen' => round($percFloat, 4),
 					'createdDate' => $videostat->get("createdDate"),
