@@ -9,7 +9,7 @@ class SERIA_UserLoginXml
 	{
 		$this->sid = $sid;
 		$this->user = $user;
-		self::setUserXml($sid, $this->genUserXml());
+		self::setUserXml($sid, self::genUserXml($user));
 	}
 
 	protected static function getXmlFileDirectory()
@@ -152,7 +152,7 @@ class SERIA_UserLoginXml
 		}
 	}
 
-	protected function genUserXml()
+	public static function genUserXml(SERIA_User $user)
 	{
 		ob_start();
 		$hostname = parse_url(SERIA_HTTP_ROOT, PHP_URL_HOST);
@@ -160,26 +160,26 @@ class SERIA_UserLoginXml
 		?>
 			<user>
 				<hostname><?php echo htmlspecialchars($hostname); ?></hostname>
-				<uid><?php echo $this->user->get('id'); ?></uid>
-				<email><?php echo htmlspecialchars($this->user->get('email')); ?></email>
+				<uid><?php echo $user->get('id'); ?></uid>
+				<email><?php echo htmlspecialchars($user->get('email')); ?></email>
 				<?php
-					$emails = SERIA_SafeEmailUsers::getSafeEmailAddresses($this->user);
+					$emails = SERIA_SafeEmailUsers::getSafeEmailAddresses($user);
 					foreach ($emails as $email) {
 						?>
 							<verifiedEmail><?php echo htmlspecialchars($email); ?></verifiedEmail>
 						<?php
 					}
 				?>
-				<username><?php echo htmlspecialchars($this->user->get('username')); ?></username>
-				<firstName><?php echo htmlspecialchars($this->user->get('firstName')); ?></firstName>
-				<lastName><?php echo htmlspecialchars($this->user->get('lastName')); ?></lastName>
-				<displayName><?php echo htmlspecialchars($this->user->get('displayName')); ?></displayName>
+				<username><?php echo htmlspecialchars($user->get('username')); ?></username>
+				<firstName><?php echo htmlspecialchars($user->get('firstName')); ?></firstName>
+				<lastName><?php echo htmlspecialchars($user->get('lastName')); ?></lastName>
+				<displayName><?php echo htmlspecialchars($user->get('displayName')); ?></displayName>
 				<loginUrl><?php echo htmlspecialchars(SERIA_HTTP_ROOT.'/seria/platform/pages/login.php'); ?></loginUrl>
 				<profileEditUrl><?php echo htmlspecialchars(SERIA_HTTP_ROOT); ?></profileEditUrl>
 				<logoutUrl><?php echo htmlspecialchars(SERIA_HTTP_ROOT.'/seria/components/Authproviders/pages/externalLogout.php'); ?></logoutUrl>
 				<timestamp><?php echo time(); ?></timestamp>
 				<?php
-					$meta = $this->user->getAllMetaExtended();
+					$meta = $user->getAllMetaExtended();
 					foreach ($meta as $values) {
 						?>
 						<meta>
@@ -190,7 +190,7 @@ class SERIA_UserLoginXml
 						</meta>
 						<?php
 					}
-					$extvalues = SERIA_ExternalReq2ExtensionValues::getObject($this->user)->getValues();
+					$extvalues = SERIA_ExternalReq2ExtensionValues::getObject($user)->getValues();
 					if ($extvalues) {
 						?>
 							<extensionValues>
