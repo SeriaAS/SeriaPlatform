@@ -56,6 +56,18 @@ class RoamAuthprovider implements SERIA_IAuthprovider
 	public function findUserByRoamAuthData($simpleUserData)
 	{
 		/*
+		 * Check wether this is a roamauth from this host itself..
+		 */
+		$myHost = parse_url(SERIA_HTTP_ROOT, PHP_URL_HOST);
+		if ($myHost == $simpleUserData['hostname']) {
+			/* Loopback authentication .. this is my own roamauth file! */
+			$user = SERIA_User::createObject($simpleUserData['uid']);
+			if ($user->get('username') == $simpleUserData['username'])
+				return $user;
+			else
+				throw new SERIA_Exception('The user does not exist or does not match the local!');
+		}
+		/*
 		 * Check hostname whitelist.
 		 */
 		SERIA_Base::debug('DANGER: There is no whitelist for checking RoamAuth trust!');
