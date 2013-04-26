@@ -37,6 +37,10 @@
 			 * Single signon by javascript:
 			 */
 			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders Javascript SSO', array($this, 'ssoByJavascriptCall'), 'components/authproviders/ssobyjs');
+			/*
+			 * Delete user:
+			 */
+			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders SSO delete user', array($this, 'ssoDeleteUser'), 'components/authproviders/ssodeleteuser');
 
 			if ($this->isEnabled()) {
 				SERIA_Hooks::listen('SERIA_Base::user', array($this, 'userObjectRequested'));
@@ -347,6 +351,13 @@
 			$template->addVariable('postDataObject', $postFormObject);
 			$template->addVariable('abortUrl', $abortUrl);
 			echo $template->parse($this->getInstallationPath().'/metaTemplates/userConsentRequest.php');
+			die();
+		}
+
+		public function ssoDeleteUser()
+		{
+			$template = new SERIA_MetaTemplate();
+			echo $template->parse($this->getInstallationPath().'/metaTemplates/ssoDeleteUser.php');
 			die();
 		}
 	}
