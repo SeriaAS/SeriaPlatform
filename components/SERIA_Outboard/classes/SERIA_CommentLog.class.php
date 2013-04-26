@@ -47,6 +47,12 @@
 
 		public static function deleteUserHook(SERIA_User $user)
 		{
-			SERIA_Base::db()->exec('UPDATE {comments_log} SET user = NULL WHERE user = :user', array('user' => $user->get('id')));
+			try {
+				SERIA_Base::db()->exec('UPDATE {comments_log} SET user = NULL WHERE user = :user', array('user' => $user->get('id')));
+			} catch (PDOException $e) {
+				if ($e->getCode() == '42S02') /* Base table or view not found: No problem... */
+					return;
+				throw $e;
+			}
 		}
 	}
