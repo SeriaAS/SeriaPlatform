@@ -13,10 +13,28 @@ $user = RoamAuthprovider::findUserByRoamAuthData($roamAuthData);
 if ($user)
 	SERIA_User::deleteUserPermanently($user);
 
-$reportDone = new SERIA_WebBrowser();
-$reportDone->navigateTo($taskData['postReportDoneUrl'], $taskData['postReportDoneData']);
-$reportDone->fetchAll();
-if ($reportDone->responseCode != 200)
-	throw new SERIA_Exception('Failed to report back user delete!');
+try {
+	$reportDone = new SERIA_WebBrowser();
+	$reportDone->navigateTo($taskData['postReportDoneUrl'], $taskData['postReportDoneData']);
+	$reportDone->fetchAll();
+	if ($reportDone->responseCode != 200)
+		throw new SERIA_Exception('Failed to report back user delete!');
 
-echo 'OK';
+	if (isset($_GET['jsonp']) && $_GET['jsonp']) {
+		SERIA_Template::disable();
+		?>
+			<?php echo $_GET['jsonp']; ?>(true);
+		<?php
+		die();
+	}
+
+	echo 'OK';
+} catch (Exception $e) {
+	if (isset($_GET['jsonp']) && $_GET['jsonp']) {
+		SERIA_Template::disable();
+		?>
+			<?php echo $_GET['jsonp']; ?>(false);
+		<?php
+		die();
+	}
+}
