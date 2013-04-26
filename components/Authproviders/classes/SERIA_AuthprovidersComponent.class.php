@@ -63,6 +63,10 @@
 			 * an external server.
 			 */
 			SERIA_Hooks::listen(SERIA_ExternalReq2ReturnPost::HOST_ACCESS_CONSENT_HOOK, array($this, 'hostAccessConsentRequest'), 1000);
+			/*
+			 * Clean up login-provider info at delete:
+			 */
+			SERIA_Hooks::listen(SERIA_User::DELETE_HOOK, array('SERIA_UserAuthenticationProvider', 'deletingUser'));
 		}
 		public function guiEmbed($gui)
 		{
