@@ -474,7 +474,7 @@
 			$this->metaObjectIsNew = false;
 		}
 
-		public static function deleteUserHook(SERIA_User $user)
+		public static function anonymizeUser(SERIA_User $user)
 		{
 			$comments = SERIA_Meta::all('SERIA_Comment')->where('user = :user', array('user' => $user->get('id')));
 			foreach ($comments as $comment) {
@@ -484,5 +484,9 @@
 				SERIA_Meta::save($comment);
 			}
 			SERIA_Base::db()->exec('UPDATE {comments} SET user = NULL WHERE user = :user', array('user' => $user->get('id')));
+		}
+		public static function deleteUserHook(SERIA_User $user)
+		{
+			self::anonymizeUser($user);
 		}
 	}
