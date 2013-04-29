@@ -152,6 +152,23 @@ class SERIA_UserLoginXml
 		}
 	}
 
+	protected static function xmlSerialize($data)
+	{
+		if (!is_array($data))
+			return htmlspecialchars($data);
+		else {
+			ob_start();
+			foreach ($data as $name => $value) {
+				echo '<'.$name.'>';
+				if (!is_array($value))
+					echo htmlspecialchars($value);
+				else
+					echo self::xmlSerialize($value);
+				echo '</'.$name.'>';
+			}
+			return ob_get_clean();
+		}
+	}
 	public static function genUserXml(SERIA_User $user)
 	{
 		ob_start();
@@ -195,8 +212,7 @@ class SERIA_UserLoginXml
 						?>
 							<extensionValues>
 								<?php
-									foreach ($extvalues as $name => $value)
-										echo '<'.$name.'>'.htmlspecialchars($value).'</'.$name.'>';
+									echo self::xmlSerialize($extvalues);
 								?>
 							</extensionValues>
 						<?php
