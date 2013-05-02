@@ -152,19 +152,47 @@ class SERIA_UserLoginXml
 		}
 	}
 
-	protected static function xmlSerialize($data)
+	protected static function xmlSerialize($name, $data)
 	{
-		if (!is_array($data))
-			return htmlspecialchars($data);
-		else {
+		if (!is_array($data)) {
 			ob_start();
-			foreach ($data as $name => $value) {
+			if ($name !== null)
 				echo '<'.$name.'>';
-				if (!is_array($value))
-					echo htmlspecialchars($value);
-				else
-					echo self::xmlSerialize($value);
+			echo htmlspecialchars($data);
+			if ($name !== null)
 				echo '</'.$name.'>';
+			return ob_get_clean();
+		} else {
+			/*
+			 * If we have an item name and this is an array with numeric keys
+			 * we will just create multiple named items. Otherwise create tags
+			 * with the key as name.
+			 */
+			$fallback = false;
+			ob_start();
+			if ($name !== null) {
+				foreach ($data as $key => $value) {
+					if (!is_numeric($key) || !is_string($value)) {
+						$fallback = true;
+						break;
+					}
+					echo '<'.$name.'>';
+					echo htmlspecialchars($value);
+					echo '</'.$name.'>';
+				}
+			} else
+				$fallback = true;
+			if ($fallback) {
+				ob_end_clean();
+				ob_start();
+				foreach ($data as $key => $value) {
+					if (!is_array($value)) {
+						echo '<'.$key.'>';
+						echo htmlspecialchars($value);
+						echo '</'.$key.'>';
+					} else
+						echo self::xmlSerialize($key, $value);
+				}
 			}
 			return ob_get_clean();
 		}
@@ -212,7 +240,7 @@ class SERIA_UserLoginXml
 						?>
 							<extensionValues>
 								<?php
-									echo self::xmlSerialize($extvalues);
+									echo self::xmlSerialize(null, $extvalues);
 								?>
 							</extensionValues>
 						<?php

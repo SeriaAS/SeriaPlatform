@@ -27,7 +27,7 @@ class SERIA_ExternalReq2ExtensionValues
 		foreach ($allValueArrays as $valueArray) {
 			if ($valueArray) {
 				foreach ($valueArray as $name => $value) {
-					if (is_string($name) && is_string($value))
+					if (is_string($name))
 						$values[$name] = $value;
 				}
 			}
