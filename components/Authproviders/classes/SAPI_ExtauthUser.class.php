@@ -33,6 +33,8 @@ class SAPI_ExtauthUser extends SAPI
 			$values = array('loggedIn' => true, 'uid' => $user->get('id'));
 			foreach ($fields as $field)
 				$values[$field] = $user->get($field);
+			$extvalues = SERIA_ExternalReq2ExtensionValues::getObject($user);
+			$values['extensionValues'] = $extvalues->getValues();
 			return $values;
 		} else
 			return array('loggedIn' => false);
