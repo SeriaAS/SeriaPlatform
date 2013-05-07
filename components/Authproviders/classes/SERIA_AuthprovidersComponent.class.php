@@ -176,6 +176,7 @@
 		{
 			SERIA_Base::debug('Authproviders: Logged in!');
 			$this->setLoginDiscoveryCookie('auto:'.mt_rand().':'.time());
+			new SERIA_UserLoginXml(session_id(), $user);
 		}
 		public function handleLogin()
 		{
