@@ -630,4 +630,63 @@ class SERIA_Manifests {
 		}
 		return $result;
 	}
+
+	/**
+	 * Load a set of components for a namespace.
+	 *
+	 * @param string $namespace The manifest namespace.
+	 * @param array $paths The paths to the components.
+	 */
+	public function loadComponents($namespace, array $paths)
+	{
+		static $loaded = array();
+		static $namespaces = array();
+
+		$postpone = false; /* Postponing of manifest-processing due to recusive additions (dependencies) to the namespace */
+
+		if (isset($namespaces[$namespace])) {
+			if ($namespace[$namespace]['recursive'])
+				$postpone = true; /* force postponing of the manifest-processing */
+			else if (!$namespace[$namespace]['postponed'])
+				throw new SERIA_Exception('Loading of components in this namespace ('.$namespace.') twice causes the manifest-processing to overwrite its version-tracking. Sorry!');
+		} else {
+			$namespaces[$namespace] = array(
+				'recursive' => 0,
+				'postponed' => $postpone,
+				'manifests' => array(),
+				'callbacks' => array()
+			);
+		}
+		$namespaces[$namespace]['recursive']++;
+		foreach ($paths as $path) {
+			require($path."/component.php");
+			$bn = basename($path);
+			if(function_exists($bn.'Init'))
+			{
+				$namespaces[$namespace]['callbacks'][] = $bn.'Init';
+			}
+			else if(function_exists($bn.'_init'))
+			{
+				SERIA_Base::debug("<strong>"._t("%namespace%: Component '%component%' is using deprecated callback '%wrong_callback%' to initialize. Rename function to '%callback%'.", array(
+				'namespace' => $namespace,
+				'component' => $c,
+				'wrong_callback' => $bn.'_init()',
+				'callback' => $bn.'Init()',
+				))."</strong>");
+				$namespaces[$namespace]['callbacks'][] = $bn.'_init';
+			}
+
+			if(class_exists($bn."Manifest", false))
+			{
+				$namespaces[$namespace]['manifests'][] = $bn."Manifest";
+			}
+		}
+		if (!$postpone) {
+			$namespaces[$namespace]['postponed'] = false;
+			SERIA_Manifests::processManifests($namespace, $namespaces[$namespace]['manifests']);
+			foreach($namespaces[$namespace]['callbacks'] as $callback)
+				$callback();
+		}
+		$namespaces[$namespace]['recursive']--;
+	}
 }
