@@ -8,6 +8,8 @@
 	if(!SERIA_Url::current()->isSigned(intval($_REQUEST["vid"]).SERIA_FILES_ROOT.SERIA_DB_PASSWORD))
 		die("Invalid signature");
 
+	if($_REQUEST["seenMap"] == '')
+		return;
 
 	if(!isset($_REQUEST["vid"]))
 		throw new SERIA_Exception("No such video");
@@ -20,7 +22,7 @@
 	$euid = $_REQUEST["euid"];
 	$seenMap = $_REQUEST["seenMap"];
 
-	$res = SERIA_Meta::all('SERIA_VideoVisitorStats')->where("video=:vid", array("vid" => $vid->get("id")))->where("euid=:euid", array("euid" => $euid));
+	$res = SERIA_Meta::all('SERIA_VideoVisitorStats')->where("video=:vid", array("vid" => $vid->get("id")))->where("euid=:euid", array("euid" => $euid))->limit(1);
 
 	if($res->count() == 1) {
 		$obj = $res->current();
@@ -54,6 +56,7 @@
 		$obj = new SERIA_VideoVisitorStats();
 
 		$obj->set("video", $vid);
+		$obj->set("objectKey", SERIA_NamedObjects::getPublicId(SERIA_Meta::load('SERIA_Video', $vid->get("id"))));
 		$obj->set("euid", $euid);
 		$obj->set("seenMap", $seenMap);
 

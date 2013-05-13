@@ -57,7 +57,6 @@
  *  as published by the Free Software Foundation; either version 2
  *  of the License, or (at your option) any later version.
  */
-
 if(typeof SERIA_VideoPlayerUrls=='undefined')
 	SERIA_VideoPlayerUrls = new Array();
 
@@ -101,7 +100,16 @@ var Prototype = {
 var LazyLoader = {}; //namespace
 LazyLoader.timer = {};  // contains timers for scripts
 LazyLoader.scripts = [];  // contains called script references
-LazyLoader.load = function(url, callback) {
+LazyLoader.loaded = {};
+LazyLoader.load = function(url, userCallback) {
+	var callback = function() {
+		if(LazyLoader.loaded[url]) {
+			return;
+		}
+		LazyLoader.loaded[url] = true;
+		userCallback();
+	}
+
         // handle object or path
         var classname = null;
         var properties = null;
@@ -115,35 +123,30 @@ LazyLoader.load = function(url, callback) {
                         script.type = "text/javascript";
                         document.getElementsByTagName("head")[0].appendChild(script);  // add script tag to head element
                         // was a callback requested
-                        if (callback) {    
+                        if (callback) {
                                 // test for onreadystatechange to trigger callback
                                 script.onreadystatechange = function () {
                                         if (script.readyState == 'loaded' || script.readyState == 'complete') {
                                                 callback();
                                         }
                                 }
-                                // test for onload to trigger callback
-var hasLoaded = false;
-if(eval("typeof " +script.onload) != "undefined") {
-	hasLoaded = true;
-}
                                 script.onload = function () {
                                         callback();
                                         return;
                                 }
                                 // safari doesn't support either onload or readystate, create a timer
                                 // only way to do this in safari
-                                if (!hasLoaded && (Prototype.Browser.WebKit && !navigator.userAgent.match("Version/3/")) || Prototype.Browser.Opera) { // sniff
+                                if (!(eval("typeof " +script.onload) != "undefined") && (Prototype.Browser.WebKit && !navigator.userAgent.match("Version/3/")) || Prototype.Browser.Opera) { // sniff
                                         LazyLoader.timer[url] = setInterval(function() {
                                                 if (/loaded|complete/.test(document.readyState)) {
                                                         clearInterval(LazyLoader.timer[url]);
-                                                        callback(); // call the callback handler
+                                                        callback();
                                                 }
                                         }, 10);
                                 }
                         }
                 } else {
-                        if (callback) { callback(); }
+                        if (callback) callback();
                 }
         } catch (e) {
                 alert(e);
@@ -164,10 +167,6 @@ if(eval("typeof " +script.onload) != "undefined") {
 
 
 
-
-
-
-var pita;
 var SeriaPlayerClass = function(objectKey) { this.objectKey = objectKey; }
 SeriaPlayerClass.prototype = {
 	element: null,		// HOLDS THE DIV ELEMENT
@@ -191,9 +190,9 @@ SeriaPlayerClass.prototype = {
 	on_initialize: function() {
 		var info = SERIA_VideoPlayerUrls[this.objectKey];
 		var self = this;
-		//this.xmdSocket 
-		pita = new easyXDM.Socket({
+		this.xmdSocket = new easyXDM.Socket({
 			remote: SERIA_VideoPlayerUrls[this.objectKey],
+
 			container: this.element,
 			onMessage: function(message) {
 				if(message=="hello")				// Special message for notifying that API is available
@@ -207,16 +206,16 @@ SeriaPlayerClass.prototype = {
 		if(this["on" + name]) this["on" + name].apply(this, [a1, a2, a3, a4, a5, a6]);
 	},
 	play : function() {
-		pita.postMessage("play");
+		this.xdmSocket.postMessage("play");
 	},
 	pause : function() {
-		pita.postMessage("pause");
+		this.xdmSocket.postMessage("pause");
 	},
 	stop : function() {
-		pita.postMessage("stop");
+		this.xdmSocket.postMessage("stop");
 	},
 	seek : function(seconds) {
-		pita.postMessage("seek:"+seconds);
+		this.xdmSocket.postMessage("seek:"+seconds);
 	}
 }
 SeriaPlayerClass.elements = new Array();
@@ -239,7 +238,7 @@ function SeriaPlayer(key) {
 		sp.element = el;
 		sp.dispatchEvent('_initialize');
 	}
-	if(SeriaPlayerClass.allIndex==0) {
+	if(SeriaPlayerClass.allIndex==0) { // Load the easyXDM.min.js script only once
 /*
 importJs('http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js', 'easyXDM', function() {
 			var scripts = document.getElementsByTagName('script');
@@ -252,8 +251,10 @@ importJs('http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.m
 });
 */
 
-		LazyLoader.load('http://ebs.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js', function() {
-			var scripts = document.getElementsByTagName('script');
+		LazyLoader.load('http://static.seriatv.com/seria/components/SERIA_VideoPlayer/js/easyXDM.min.js', function() {
+			// When the lazy loader finishes, initialize each of the videos
+
+//NIU			var scripts = document.getElementsByTagName('script');
 			for(var i in SeriaPlayerClass.allReady) {
 				if(typeof SeriaPlayerClass.elements[i] == 'string') 
 					SeriaPlayerClass.allReady[i](document.getElementById(SeriaPlayerClass.elements[i]));

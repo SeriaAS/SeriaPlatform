@@ -115,7 +115,8 @@
 
 	function getBestFlashVideoSource($videoSources)
 	{
-//		return "http://streaming.seria.net/vod/smil:seriatv;".substr($_SERVER['SERVER_NAME'],0,1).";".$_SERVER['SERVER_NAME'].";files;seriawebtv;".$id.";alt;streams.smil/manifest.f4m";
+		if($_SERVER['HTTP_HOST'] == "test.seriatv.com")
+			return "http://streaming.seria.net/vod/smil:seriatv;".substr($_SERVER['SERVER_NAME'],0,1).";".$_SERVER['SERVER_NAME'].";files;seriawebtv;".$id.";alt;streams.smil/manifest.f4m";
 		foreach($videoSources as $i => $source)
 		{
 			if(strpos($source['src'], "rtmp") === false) {
@@ -170,6 +171,7 @@
 	$flashVars = array(
 		'autoplay' => (isset($_GET['autoplay']) ? 'true' : 0),
 		'autoPlay' => (isset($_GET['autoPlay']) ? 'true' : 0),
+		'scaleMode' => (isset($_GET['scaleMode']) ? $_GET['scaleMode'] : 'letterbox'),
 		'backgroundColor' => $backgroundColor,
 		'controlBarMode' => (isset($_GET['hideControls']) ? 'none' : 0),
 		'src' => $flashVideoSource,
@@ -244,6 +246,13 @@
 					jQuery('#fallback').html(html);
 				}
 			}
+			var forceHtml = false;
+			var ua = navigator.userAgent.toLowerCase();
+			var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
+			if(isAndroid) {
+				forceHtml = true;
+			}
+
 			var forceHtml = false;
 			var ua = navigator.userAgent.toLowerCase();
 			var isAndroid = ua.indexOf("android") > -1; //&& ua.indexOf("mobile");
@@ -329,6 +338,7 @@
 						else if
 						(
 							navigator.userAgent.match(/android/i) ||				// Android mobile devices
+							navigator.userAgent.match(/Windows Phone/i) ||				// Windows phone
 							(jQuery.browser.msie && jQuery.browser.version>=9) ||			// Microsoft Internet Explorer 9
 							(jQuery.browser.webkit && /chrome/i.test(navigator.userAgent)) ||	// Google Chrome
 							(jQuery.browser.webkit && /safari/i.test(navigator.userAgent))		// Safari
@@ -399,12 +409,12 @@
 						}
 						else if(jQuery.browser.opera)
 						{ // generic solution where browser auto detects
-							jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser."); ?>");
+							jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser. Code: 32"); ?>");
 			//alert('opera ' + jQuery.browser.version);
 						}
 						else if(jQuery.browser.firefox)
 						{
-							jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser."); ?>");
+							jQuery('#fallback').html("<?php echo _t("I was unable to find a suitable video format for you. Install Adobe Flash player or upgrade your browser. Code:45"); ?>");
 			//alert('firefox ' + jQuery.browser.version);
 						}
 						else
@@ -573,7 +583,7 @@ try {
 							';
 							break;
 						default :
-							echo 'alert("Unknown Call-To-Action: "'.$onComplete['type'].');';
+							//echo 'alert("Unknown Call-To-Action: "'.$onComplete['type'].');';
 							break;
 					}
 				?>
@@ -728,7 +738,6 @@ try {
 							}
 					}
 				} catch (e) {
-					alert(e);
 				}
 			}
 
@@ -737,6 +746,7 @@ try {
 				stateChangeInterval = setInterval(checkStateChanged, 1000);
 			});
 			$(window).unload(function() {
+				registerSeenMap();
 				$('#flash').remove();
 			});
 		</script>
@@ -778,7 +788,7 @@ echo '
 			echo "
 			<!--[if IE]>
 			<object id='flash' name='flashobject' classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000' width='100%' height='100%'>
-	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled. Code: 23")."</div>
 				<param name='movie' value='".$swfRoot."'></param>
 				<param name='allowFullscreen' value='true'></param>
 				<param name='wmode' value='".$wmode."'></param>
@@ -788,7 +798,7 @@ echo '
 			<![endif]-->
 			<!--[if !IE]>-->
 			<object id='flash' type='application/x-shockwave-flash' data='".$swfRoot."' width='100%' height='100%'>
-	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled. Code: 19")."</div>
 			<param name='flashvars' value='".$flashVars."'></param>
 			<param name='allowscriptaccess' value='always'></param>
 			<param name='wmode' value='".$wmode."'></param>
@@ -798,7 +808,7 @@ echo '
 	";
 		} else {
 			echo "
-	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled.")."</div>
+	<div id='fallback' style='color:#fff;font-family:Arial,sans-serif;width:100%;height:100%;padding:20px;-moz-box-sizing:border-box;box-sizing:border-box;'>"._t("Unable to play video. Your browser does not support Adobe Flash and has Javascript disabled. Code: 11")."</div>
 	";
 		}
 

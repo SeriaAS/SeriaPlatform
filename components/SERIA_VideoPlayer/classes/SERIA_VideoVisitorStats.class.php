@@ -15,6 +15,7 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 			'displayField' => 'video',
 			'fields' => array(
 				'video' => array('SERIA_Video required', _t('Video')),
+				'objectKey' => array('integer', _t("ObjectKey")),
 				'euid' => array('integer required', _t('External Unique Identifier')),
 				'seenMap' => array('text required', _t('SeenMap')),
 				'createdDate' => 'createdDate',
@@ -25,25 +26,36 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 		);
 	}
 
+	protected static $queryTime;
+
 	public static function apiQuery($params)
 	{
-		if(!(strpos($params['objectKey'], ",") === false) && !(strpos($params['videoId'], "," === false))) {
+		if(date('Y-m-d')>'2012-11-15')
+			self::$queryTime = microtime(true) + 14;
+		else
+			self::$queryTime = microtime(true) + 14;
+
+		if(isset($params['objectKey']) && isset($params['videoId']))
+			throw new SERIA_Exception('Can\'t query on both objectKey and videoId in same request', SERIA_Exception::INCORRECT_USAGE);
+		if(isset($params['objectKey']) && strpos($params['objectKey'], ",")!==false) {
 			$allStats = array();
-			if(isset($params['objectKey'])) {
-				foreach(explode(",", $params['objectKey']) as $objectKey) {
-					$qArray = $params;
-					$qArray['objectKey'] = $objectKey;
-					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
-				}
-				return $allStats;
-			} else if(isset($params['videoId'])) {
-				foreach(explode(",", $params['videoId']) as $objectKey) {
-					$qArray = $params;
-					$qArray['objectKey'] = $objectKey;
-					$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
-				}
-				return $allStats;
+			$keys = array_unique(explode(",", $params['objectKey']));
+			foreach($keys as $objectKey) {
+				$qArray = $params;
+				$qArray['objectKey'] = $objectKey;
+				$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
+				if(microtime(true)>self::$queryTime) throw new SERIA_Exception("Query too slow, please optimize your query.");
 			}
+			return $allStats;
+		} else if(isset($params['videoId']) && strpos($params['videoId'], ",")!==false) {
+			$allStats = array();
+			foreach(array_unique(explode(",", $params['videoId'])) as $videoId) {
+				$qArray = $params;
+				$qArray['videoId'] = $videoId;
+				$allStats[] = SERIA_VideoVisitorStats::getStatistics($qArray);
+				if(microtime(true)>self::$queryTime) throw new SERIA_Exception("Query too slow, please optimize your query.");
+			}
+			return $allStats;
 		} else {
 			return SERIA_VideoVisitorStats::getStatistics($params);
 		}
@@ -62,16 +74,27 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 			),
 		);
 
+
 		if(!isset($params['euid']) && !isset($params['videoId']) && !isset($params['objectKey']))
 			throw new SERIA_Exception("EUID Required");
-
 
 		if(isset($params['videoId'])) {
 			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
 			$videostats->where('video=:vid', array('vid' => $params['videoId']));
 		} else if(isset($params['objectKey'])) {
 			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
-			$obj = SERIA_NamedObjects::getInstanceByPublicId($params['objectKey'], 'SERIA_Video');
+			try {
+				$obj = SERIA_NamedObjects::getInstanceByPublicId($params['objectKey'], 'SERIA_Video');
+			} catch (SERIA_Exception $e) {
+				$e = new SERIA_Exception("Object key ".$params['objectKey']." not found", 404);
+				$e->extra = array(
+					'objectKey' => $params['objectKey'],
+				);
+				$result = array();
+				$result[] = array('status' => 'error', 'code' => 'Object not found', 'data' => $params['objectKey']);
+				return $result;
+				throw $e;
+			}
 			$videostats->where('video=:vid', array('vid' => $obj->get("id")));
 		} else {
 			$videostats = SERIA_Meta::all('SERIA_VideoVisitorStats');
@@ -90,6 +113,23 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 			foreach($videostats as $videostat) {
 				if(in_array($videostat->get("euid"), $euidArray)) {
 					$seenMap = $videostat->get("seenMap");
+					$aggSeenMap = $seenMap;
+
+					$b = "";
+					if(strpos($seenMap, ",") !== false) {
+						$p = explode(",", $seenMap); // 
+						foreach($p as $i => $t) {
+							if($_SERVER["REMOTE_ADDR"] == "178.255.151.46") {
+//								var_dump($p);die();
+							}
+							if($t>0) {
+								$b.="1";
+							} else {
+								$b.="0";
+							}
+						}
+						$seenMap = $b;
+					}
 					$seenMap[0] = 1; // Hack, all seenmaps begin with 0
 					$strc = substr_count($seenMap, 1);
 					$percFloat = ($strc/strlen($seenMap));
@@ -107,7 +147,8 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 						'objectKey' => $objectKey,
 						'title' => $videostat->get("video")->get("title"),
 						'euid' => $videostat->get("euid"),
-						'seenMap' => $seenMap,
+						'seenMap' => $b,
+						'aggSeenMap' => $aggSeenMap,
 						'timesLoaded' => $viewCount,
 						'percentSeen' => $percentSeen,
 						'proportionSeen' => round($percFloat, 4),
@@ -123,6 +164,24 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 			$result = array();
 			foreach($videostats as $videostat) {
 				$seenMap = $videostat->get("seenMap");
+				$aggSeenMap = $seenMap;
+
+				$b = "";
+				if(strpos($seenMap, ",") !== false) {
+					$p = explode(",", $seenMap); // 
+					foreach($p as $i => $t) {
+						if($_SERVER["REMOTE_ADDR"] == "178.255.151.46") {
+//							var_dump($p);die();
+						}
+						if($t>0) {
+							$b.="1";
+						} else {
+							$b.="0";
+						}
+					}
+					$seenMap = $b;
+				}
+
 				$seenMap[0] = 1; // Hack, all seenmaps begin with 0
 				$strc = substr_count($seenMap, 1);
 				$percFloat = ($strc/strlen($seenMap));
@@ -141,7 +200,8 @@ class SERIA_VideoVisitorStats extends SERIA_MetaObject implements SERIA_IApiAcce
 					'objectKey' => $objectKey,
 					'title' => $videostat->get("video")->get("title"),
 					'euid' => $videostat->get("euid"),
-					'seenMap' => $seenMap,
+					'seenMap' => $b,
+					'aggSeenMap' => $aggSeenMap,
 					'timesLoaded' => $viewCount,
 					'percentSeen' => $percentSeen,
 					'proportionSeen' => round($percFloat, 4),

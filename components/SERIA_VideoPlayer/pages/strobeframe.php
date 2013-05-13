@@ -54,9 +54,10 @@
 
 	function getBestFlashVideoSource($videoSources, $id)
 	{
-		if($_SERVER['HTTP_HOST'] == "dna.seriatv.com")
+		if($_SERVER['HTTP_HOST'] == "dna.seriatv.com") {
 			return urlencode("rtmp://live.istribute.com/live/dna1");
-//			return urlencode("http://dna.seriatv.com/dnamanifest.f4m");
+			return urlencode("http://dna.seriatv.com/dnamanifest.f4m?r=42");
+}
 		foreach($videoSources as $i => $source)
 		{
 			if(strpos($source['src'], "rtmp") === false) {
@@ -108,16 +109,19 @@
 	}
 	if($isLive) {
 		$flashVars = array(
+			'autoplay' => (isset($_GET['autoplay']) ? 'true' : 0),
+			'autoPlay' => (isset($_GET['autoPlay']) ? 'true' : 0),
 			'src' => $flashVideoSource,
 			'poster' => $vd['previewImage'],
 			'bufferTime' => 10,
 			'initialBufferTime' => 2,
+			'__r' => mt_rand(10000,99999)
 //			'scaleMode' => 'letterbox'
 		);
 	} else {
 		$flashVars = array(
-			'autoplay' => (isset($_GET['autoplay']) ? 1 : 0),
-			'autoPlay' => (isset($_GET['autoPlay']) ? 1 : 0),
+			'autoplay' => (isset($_GET['autoplay']) ? 'true' : 0),
+			'autoPlay' => (isset($_GET['autoPlay']) ? 'true' : 0),
 			'backgroundColor' => $backgroundColor,
 			'hideControls' => (isset($_GET['hideControls']) ? 1 : 0),
 			'src' => $flashVideoSource,

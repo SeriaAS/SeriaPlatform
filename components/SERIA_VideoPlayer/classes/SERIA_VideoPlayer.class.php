@@ -27,7 +27,7 @@
 
 		public function getIFrameUrl($width="100%",$height="100%", $options = NULL, $preventRandom = false) {
 
-			$newPlayer = array('dna.seriatv.com', 'test.seriatv.com', 'bodo.seriatv.com', 'ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com', 'ebs.seriatv.com.dev.seria.net', 'tibe.seriatv.com');
+			$newPlayer = array('dna.seriatv.com', 'nso.seriatv.com', 'transatlanticexpedition.seriatv.com', 'test.seriatv.com', 'bodo.seriatv.com', 'ebs.seriatv.com', 'webcast.seriatv.com', 'hegnar.seriatv.com', 'hoyre.seriatv.com', 'custom.seriatv.com', 'ebs.seriatv.com.dev.seria.net', 'tibe.seriatv.com');
 
 			foreach($newPlayer as $domain)
 			{
