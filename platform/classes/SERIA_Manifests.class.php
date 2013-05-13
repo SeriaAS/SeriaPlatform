@@ -659,8 +659,14 @@ class SERIA_Manifests {
 		}
 		$namespaces[$namespace]['recursive']++;
 		foreach ($paths as $path) {
-			require($path."/component.php");
 			$bn = basename($path);
+			if ($loaded[$bn]) {
+				if ($loaded[$bn] != $path)
+					die('A component with the same name has been loaded from a different path: '.$loaded[$bn].'!='.$path);
+				continue; /* The component has already been loaded */
+			}
+			$loaded[$bn] = $path;
+			require($path."/component.php");
 			if(function_exists($bn.'Init'))
 			{
 				$namespaces[$namespace]['callbacks'][] = $bn.'Init';
