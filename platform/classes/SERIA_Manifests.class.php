@@ -28,6 +28,16 @@ class SERIA_Manifests {
 		return self::$_manifests;
 	}
 
+	public static function getReflectorClass($className)
+	{
+		static $reflectors = array();
+
+		if (isset($reflectors[$className]))
+			return $reflectors[$className];
+		else
+			return ($reflectors[$className] = new ReflectionClass($className));
+	}
+
 	/**
 	*	This method processes manifest classes that are declared
 	*	for each component and application. It updates the database structure
@@ -80,7 +90,7 @@ class SERIA_Manifests {
 		$reflectors = array();
 		foreach($classNames as $className)
 		{
-			$reflector = $reflectors[$className] = new ReflectionClass($className);
+			$reflector = $reflectors[$className] = self::getReflectorClass($className);
 			$serial = $reflector->getConstant('SERIAL');
 			if(!$serial)
 				throw new SERIA_Exception('The manifest class "'.$className.'" does not specify the SERIAL constant as a positive integer.');
@@ -645,9 +655,9 @@ class SERIA_Manifests {
 		$postpone = false; /* Postponing of manifest-processing due to recusive additions (dependencies) to the namespace */
 
 		if (isset($namespaces[$namespace])) {
-			if ($namespace[$namespace]['recursive'])
+			if ($namespaces[$namespace]['recursive'])
 				$postpone = true; /* force postponing of the manifest-processing */
-			else if (!$namespace[$namespace]['postponed'])
+			else if (!$namespaces[$namespace]['postponed'])
 				throw new SERIA_Exception('Loading of components in this namespace ('.$namespace.') twice causes the manifest-processing to overwrite its version-tracking. Sorry!');
 		} else {
 			$namespaces[$namespace] = array(
@@ -659,6 +669,7 @@ class SERIA_Manifests {
 		}
 		$namespaces[$namespace]['recursive']++;
 		foreach ($paths as $path) {
+			$componentDir = dirname($path);
 			$bn = basename($path);
 			if ($loaded[$bn]) {
 				if ($loaded[$bn] != $path)
@@ -684,7 +695,28 @@ class SERIA_Manifests {
 
 			if(class_exists($bn."Manifest", false))
 			{
-				$namespaces[$namespace]['manifests'][] = $bn."Manifest";
+				$manifest = $bn."Manifest";
+				$namespaces[$namespace]['manifests'][] = $manifest;
+
+				/*
+				 * Resolve dependencies..
+				 */
+				$reflector = self::getReflectorClass($manifest);
+				try {
+					$dependencies = $reflector->getStaticPropertyValue('dependencies');
+					if ($dependencies) {
+						$loadDependencies = array();
+						foreach ($dependencies as $dependency) {
+							$dependencyDir = $componentDir.'/'.$dependency;
+							$componentFile = $dependencyDir.'/component.php';
+							if (!file_exists($componentFile))
+								throw new SERIA_Exception('Component '.$dn.' depends on '.$dependency.' ('.$dependencyDir.') which cannot be loaded (file not found: component.php)');
+							$loadDependencies[] = $dependencyDir;
+						}
+						self::loadComponents($namespace, $loadDependencies);
+					}
+				} catch (ReflectionException $e) {
+				}
 			}
 		}
 		if (!$postpone) {
