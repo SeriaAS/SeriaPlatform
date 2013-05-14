@@ -1,6 +1,25 @@
 <?php
 
-SERIA_Base::addClassPath(dirname(__FILE__)."/classes/*.class.php");
+/**
+ *
+ *
+ * @author Jan-Espen Pettersen
+ * @package SAPI
+ *
+ */
+class AuthprovidersManifest
+{
+	const SERIAL = 1;
+	const NAME = 'Authproviders';
+
+	public static $classPaths = array(
+		'classes/*.class.php',
+	);
+	public static $dependencies = array(
+		'MultiSession',
+		'SAPI'
+	);
+}
 
 function AuthprovidersInit()
 {
