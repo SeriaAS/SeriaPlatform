@@ -12,7 +12,26 @@
  * )
  */
 
-SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/UserRoles/classes/*.class.php');
+
+/**
+ *
+ *
+ * @author Frode Boerli
+ * @package SERIA_Outboard
+ *
+ */
+class UserRolesManifest
+{
+	const SERIAL = 1;
+	const NAME = 'UserRoles';
+
+	public static $classPaths = array(
+			'classes/*.class.php',
+	);
+	public static $dependencies = array(
+			'SERIA_Mvc_Compat'
+	);
+}
 
 function UserRolesInit() {
 	UserRoles::boot();
