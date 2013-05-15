@@ -17,7 +17,7 @@
  *
  *
  * @author Frode Boerli
- * @package SERIA_Outboard
+ * @package UserRoles
  *
  */
 class UserRolesManifest
