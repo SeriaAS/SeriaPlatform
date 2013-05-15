@@ -1,6 +1,25 @@
 <?php
-	SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/SERIA_Outboard/classes/*.class.php');
-	SERIA_Base::addClassPath(SERIA_ROOT.'/seria/components/SERIA_Outboard/sapi/*.class.php');
+
+	/**
+	 *
+	 *
+	 * @author Frode Boerli
+	 * @package SERIA_Outboard
+	 *
+	 */
+	class SERIA_OutboardManifest
+	{
+		const SERIAL = 1;
+		const NAME = 'SERIA_Outboard';
+	
+		public static $classPaths = array(
+			'classes/*.class.php',
+			'sapi/*.class.php'
+		);
+		public static $dependencies = array(
+			'SAPI'
+		);
+	}
 
 	function SERIA_OutboardInit()
 	{
