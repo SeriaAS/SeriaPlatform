@@ -584,7 +584,7 @@ try {
 							break;
 						case 'callback' :
 							echo '
-								socket.postMessage("callback:'.addslashes($onComplete['data']).'");
+								socket.postMessage("callback:'.addslashes(json_encode(array('callback' => $onComplete['data']))).'");
 							';
 							break;
 						default :

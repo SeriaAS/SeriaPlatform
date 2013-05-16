@@ -184,7 +184,7 @@ SeriaPlayerClass.prototype = {
 		} else if(message.indexOf('time:')===0) {
 			this.currentTime = parseInt(message.substring(5));
 		} else if(message.indexOf('callback:')===0) {
-			eval(message.substring(9));
+			this.dispatchEvent('callback', message.substring(9));
 		} else if(message.indexOf('duration:')===0) {
 			this.duration = parseInt(message.substring(9));
 		} else this.dispatchEvent('message', message);
