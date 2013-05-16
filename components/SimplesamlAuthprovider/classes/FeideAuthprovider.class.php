@@ -113,7 +113,8 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'email',
 					'firstName',
 					'lastName',
-					'displayName'
+					'displayName',
+					'feideRoles'
 				)
 			),
 			'metadata' => array(
