@@ -2,9 +2,15 @@
 
 class SERIA_GenericAuthproviderLogin
 {
+	const LOGGED_IN_HOOK = 'SERIA_GenericAuthproviderLogin::LOGGED_IN_HOOK';
+
 	public function getIdentityPropertyName()
 	{
 		return 'authprovidersUser:';
+	}
+	public function loggedIn($providerClass, $authproviderId, $params, $attributes)
+	{
+		SERIA_Hooks::dispatch(SERIA_GenericAuthproviderLogin::LOGGED_IN_HOOK, $providerClass, $authproviderId, $params, $attributes);
 	}
 	public function login($providerClass, $authproviderId, $params, $attributes, $guestLogin)
 	{
@@ -73,6 +79,7 @@ class SERIA_GenericAuthproviderLogin
 			$ref = new SERIA_UserAuthenticationProviders($user);
 			$ref->setProvider($providerClass, $attributes['unique'], $email, $params);
 			SERIA_Base::user($user);
+			$this->loggedIn($providerClass, $authproviderId, $params, $attributes);
 			return;
 		}
 		if (isset($params['safeEmail']) && $params['safeEmail'] && $attributes['email']) {
@@ -106,6 +113,7 @@ class SERIA_GenericAuthproviderLogin
 				$ref = new SERIA_UserAuthenticationProviders($user);
 				$ref->setProvider($providerClass, $attributes['unique'], $attributes['email'], $params);
 				SERIA_Base::user($user);
+				$this->loggedIn($providerClass, $authproviderId, $params, $attributes);
 				return;
 			}
 		}

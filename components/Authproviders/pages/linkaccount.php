@@ -156,6 +156,8 @@ if (sizeof($_POST)) {
 			SERIA_Authproviders::loadProviders($providerClass);
 			$providerObj = SERIA_Authproviders::getProvider($authproviderId);
 			SERIA_Components::getComponent('seria_authproviders')->loggedInByProvider($providerObj);
+			$loginManager = new SERIA_GenericAuthproviderLogin();
+			$loginManager->loggedIn($providerClass, $authproviderId, $params, $attributes);
 			$state->terminate('continue');
 			die();
 		}
@@ -215,6 +217,9 @@ if (isset($_GET['linked']) && $_GET['linked']) {
 		$list[] = $unique;
 	$propertylist->set($identityPropertyName.$authproviderId.'_list', $list);
 	$propertylist->save();
+
+	$loginManager = new SERIA_GenericAuthproviderLogin();
+	$loginManager->loggedIn($providerClass, $authproviderId, $params, $attributes);
 
 	SERIA_Base::redirectTo(SERIA_Url::current()->setParam('linked', 'done')->__toString());
 	die();
