@@ -183,14 +183,16 @@ SeriaPlayerClass.prototype = {
 			this.dispatchEvent(message.substring(6));
 		} else if(message.indexOf('time:')===0) {
 			this.currentTime = parseInt(message.substring(5));
+		} else if(message.indexOf('callback:')===0) {
+			eval(message.substring(9));
 		} else if(message.indexOf('duration:')===0) {
-			this.duration = parseInt(message.subsring(9));
+			this.duration = parseInt(message.substring(9));
 		} else this.dispatchEvent('message', message);
 	},	// WHEN THE IFRAME SENDS A MESSAGE
 	on_initialize: function() {
 		var info = SERIA_VideoPlayerUrls[this.objectKey];
 		var self = this;
-		this.xmdSocket = new easyXDM.Socket({
+		this.xdmSocket = new easyXDM.Socket({
 			remote: SERIA_VideoPlayerUrls[this.objectKey],
 
 			container: this.element,

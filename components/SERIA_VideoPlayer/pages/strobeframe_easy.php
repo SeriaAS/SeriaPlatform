@@ -582,6 +582,11 @@ try {
 								top.location.href = "'.$onComplete['data'].'";
 							';
 							break;
+						case 'callback' :
+							echo '
+								socket.postMessage("callback:'.addslashes($onComplete['data']).'");
+							';
+							break;
 						default :
 							//echo 'alert("Unknown Call-To-Action: "'.$onComplete['type'].');';
 							break;
