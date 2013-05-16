@@ -93,13 +93,15 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'lastName' => '',
 					'displayName' => '',
 					'email' => '',
+					'feideRoles' => array(),
 				),
 				'load' => array(
 					'unique' => $this->getUniqueSourceKey(),
 					'email' => array('mail', 0),
 					'firstName' => array('givenName', 0),
 					'lastName' => array('sn', 0),
-					'displayName' => array('cn', 0)
+					'displayName' => array('cn', 0),
+					'feideRoles' => 'eduPersonAffiliation'
 				),
 				'combinations' => array(
 				),
