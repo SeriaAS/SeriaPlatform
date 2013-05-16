@@ -34,8 +34,18 @@ $init = array(
 );
 foreach ($init as $name => $value)
 	$user->set($name, $value);
-foreach ($attributes as $name => $value)
-	$user->set($name, $value);
+$userFields = array(
+	"firstName", 
+	"lastName",
+	"displayName",
+	"username",
+	"password",
+	"email"
+);
+foreach ($attributes as $name => $value) {
+	if (in_array($name, $userFields))
+		$user->set($name, $value);
+}
 
 class AuthprovidersCreateUserForm extends SERIA_Form
 {
