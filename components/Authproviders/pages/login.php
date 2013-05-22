@@ -2,9 +2,16 @@
 
 require(dirname(__FILE__).'/../../../main.php');
 
-if (isset($_GET['continue']))
-	$continue = $_GET['continue'];
-else
+$vars = $_GET;
+if (isset($vars['continue'])) {
+	$continue = $vars['continue'];
+	unset($vars['continue']);
+} else
 	$continue = SERIA_HTTP_ROOT;
 
-SERIA_Base::redirectTo(SAPI_ExtauthUser::loginUrl($continue));
+$url = new SERIA_Url(SAPI_ExtauthUser::loginUrl($continue));
+
+foreach ($vars as $name => $value)
+	$url->setParam($name, $value);
+
+SERIA_Base::redirectTo($url->__toString());
