@@ -647,7 +647,7 @@ class SERIA_Manifests {
 	 * @param string $namespace The manifest namespace.
 	 * @param array $paths The paths to the components.
 	 */
-	public function loadComponents($namespace, array $paths)
+	public static function loadComponents($namespace, array $paths)
 	{
 		static $loaded = array();
 		static $namespaces = array();
