@@ -16,6 +16,7 @@ class AuthprovidersManifest
 		'classes/*.class.php',
 	);
 	public static $dependencies = array(
+		'SERIA_Html', /* meta-templates */
 		'MultiSession',
 		'SAPI'
 	);
