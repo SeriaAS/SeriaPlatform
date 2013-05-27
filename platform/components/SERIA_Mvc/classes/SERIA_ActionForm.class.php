@@ -14,15 +14,22 @@
 		protected $_data = array();
 		protected $_prefix = '';
 		protected $_state;
-		protected $_errorTemplate = '%MESSAGE%';
-		protected $_noError = '';
+		protected $_errorTemplate = '%MESSAGE%';	// String returned when calling $form->error('fieldname') and there is an error
+		protected $_noError = '';			// String returned when calling $form->error('fieldname') and there is no error
 
 		/**
 		*	Construct a form object for allowing users to perform actions.
 		*
-		*	@param mixed $p1	Either form specification identical in format to the 'fields' section of the array returned by SERIA_Meta::Meta(),
-		*				or a SERIA_MetaObject classname
-		*	@param array $p2=false	Array of fieldnames to import, required when importing from an object.
+		*	Usage 1:
+		*	__construct($id, $metaObject, $fieldNames)
+		*	@param $id		An ID to use when rendering the form
+		*	@param $metaObject	An instance of a MetaObject to be edited
+		*	@param $fields		An array of field names to allow editing on
+		*
+		*	Usage 2:
+		*	__construct($id, $fieldSpec)
+		*	@param $id		An ID to use when rendering the form
+		*	@param $fieldSpec	A field specification as the fields returned by MetaObject::Spec()
 		*/
 		function __construct($id, $p1=NULL, array $p2=NULL)
 		{
