@@ -159,6 +159,29 @@
 			return $res;
 		}
 
+		public static function validateSubset($metaObjectClass, $fields, $values) {
+			if(is_object($values)) {
+				$vals = array();
+				foreach($fields as $fieldName)
+					$vals[$fieldName] = $values->$fieldName;
+				$values = $vals;
+			}
+			$o = new $metaObjectClass();
+			foreach($fields as $fieldName)
+				$o->set($fieldName, !empty($values[$fieldName]) ? $values[$fieldName] : NULL);
+			if(!($errors = self::validate($o, TRUE)))
+				return FALSE;
+
+			$result = array();
+			foreach($fields as $fieldName) {
+				if(isset($errors[$fieldName])) $result[$fieldName] = $errors[$fieldName];
+			}
+
+			if(sizeof($result)==0)
+				return FALSE;
+			return $result;
+		}
+
 
 		/**
 		*	Validate field by field a SERIA_MetaObject, by accessing its row.
@@ -1010,7 +1033,7 @@
 			{ // table does not exist
 				if($e->getCode()==="42S02")
 				{
-					SERIA_Base::db()->exec('CREATE TABLE '.$spec['table'].' ('.implode(',', $schema).', PRIMARY KEY('.$spec['primaryKey'].')) ENGINE InnoDB DEFAULT CHARSET utf8');
+					SERIA_Base::db()->exec('CREATE TABLE '.$spec['table'].' ('.implode(',', $schema).', PRIMARY KEY('.$spec['primaryKey'].')) DEFAULT CHARSET utf8');
 					return true;
 				}
 				throw $e;
