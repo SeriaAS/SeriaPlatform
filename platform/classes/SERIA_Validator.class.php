@@ -246,16 +246,19 @@ class SERIA_Validator
 					break;
 				case self::REQUIRED_CHARS:
 					$found = false;
-					foreach($rule[1] as $char)
+
+					$l = mb_strlen($rule[1]);
+					for($i = 0; $i < $l; $i++)
 					{
-						if(mb_strpos($value, $char)!==false)
+						if(mb_strpos($value, mb_substr($rule[1], $i, 1))!==false)
 						{
 							$found = true;
 							break;
 						}
 					}
-					if(!$found)
+					if(!$found) {
 						return isset($rule[2]) ? $rule[2] : _t("Must include at least one of these characters: %CHARS%", array('CHARS' => implode('', $rule[2])));
+					}
 					break;
 				case self::META_UNIQUE:
 					if(!$extra)
