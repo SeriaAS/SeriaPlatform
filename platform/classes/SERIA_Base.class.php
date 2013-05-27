@@ -754,21 +754,33 @@ $trace
 
 		static function guid($key = '')
 		{
-			$maxTries = 10;
-			$guid = 1 + SERIA_Base::db()->query("SELECT MAX(guid) FROM {guids}", array())->fetch(PDO::FETCH_COLUMN, 0);
-			while($maxTries--)
-			{
-				try {
-					$retv = SERIA_Base::db()->exec("INSERT INTO {guids} (guid, `key`) VALUES (:guid, :key)", array('guid' => $guid, 'key' => $key));
-					if($retv)
-						return $guid;
-					$guid += ($maxTries>5 ? 1 : mt_rand(0, 4));
-				} catch (PDOException $e) {
-					$retv = 0;
+			try {
+				$maxTries = 10;
+				$guid = 1 + SERIA_Base::db()->query("SELECT MAX(guid) FROM {guids}", array())->fetch(PDO::FETCH_COLUMN, 0);
+				while($maxTries--)
+				{
+					try {
+						if(SERIA_COMPATIBILITY >= 3) {
+							$retv = SERIA_Base::db()->exec("INSERT INTO {guids} (guid) VALUES (:guid)", array('guid' => $guid));
+						} else {
+							$retv = SERIA_Base::db()->exec("INSERT INTO {guids} (guid, `key`) VALUES (:guid, :key)", array('guid' => $guid, 'key' => $key));
+						}
+						if($retv)
+							return $guid;
+						$guid += ($maxTries>5 ? 1 : mt_rand(0, 4));
+					} catch (PDOException $e) {
+						$retv = 0;
+					}
 				}
+			} catch(PDOException $e) {
+				if($e->getCode() == '42S02') {
+					if(SERIA_COMPATIBILITY >= 3) {
+						self::db()->exec('CREATE TABLE {guids} (guid INTEGER, PRIMARY KEY(guid)) CHARACTER SET utf8 COLLATE utf8_general_ci');
+						return self::guid();
+					}
+				}
+				throw $e;
 			}
-
-			throw new SERIA_Exception("Unable to create a new GUID (".$key.").");
 		}
 
 		/**
