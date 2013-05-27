@@ -64,22 +64,6 @@ if(version_compare(PHP_VERSION, '5.2.5', '<')) { require($dirname.'/platform/com
 if(version_compare(PHP_VERSION, '5.3', '<')) { require($dirname.'/platform/compatability/php-5.3.php'); }
 
 /**
- * 	When a page is generated through a proxy server, the proxy server usually adds special headers so that
- *	we can see the user on the other side of the proxy.
- */
-if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
-{
-	$_SERVER['HTTP_X_FORWARDED_BY'] = $_SERVER['REMOTE_ADDR'];
-	$_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
-}
-if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
-{
-        $_SERVER['HTTP_X_FORWARDED_FROM'] = $_SERVER['HTTP_HOST'];
-        $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
-}
-
-
-/**
  *	Load the configuration file for Seria Platform
  */
 
@@ -101,6 +85,31 @@ else
  *	For constants not defined in the configuration file, config_defaults.php sets default values.
  */
 require($dirname.'/platform/config_defaults.php');
+
+/**
+ * 	When a page is generated through a proxy server, the proxy server usually adds special headers so that
+ *	we can see the user on the other side of the proxy.
+ */
+if(SERIA_COMPATIBILITY < 3) {
+	if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+	{
+		$_SERVER['HTTP_X_FORWARDED_BY'] = $_SERVER['REMOTE_ADDR'];
+		$_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+	}
+	if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
+	{
+	        $_SERVER['HTTP_X_FORWARDED_FROM'] = $_SERVER['HTTP_HOST'];
+	        $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
+	}
+}
+
+/**
+ *	Seria Platform requires PHP 5.3 or newer
+ */
+if(SERIA_COMPATIBILITY >= 3 && version_compare(PHP_VERSION, '5.3', '<')) {
+	die("Seria Platform requires PHP version 5.3 or newer");
+}
+
 
 /**
  *	The SERIA_Base and SERIA_Hooks classes are used before the autoloader is defined.
@@ -147,10 +156,14 @@ if(defined('SERIA_CACHE_BACKEND')) // The SERIA_Cache class location is defined 
 }
 
 /**
+ *	Deprecated
+ *
  *	SERIA_ActiveRecord may pregenerate classes. This adds these classes to the autoloader.
  */
-if (!SERIA_DEBUG && !SERIA_INSTALL) {
-	SERIA_Base::addClassPath(SERIA_DYNAMICCLASS_ROOT . '/*.activerecord.php');
+if(SERIA_COMPATIBILITY < 3) {
+	if (!SERIA_DEBUG && !SERIA_INSTALL) {
+		SERIA_Base::addClassPath(SERIA_DYNAMICCLASS_ROOT . '/*.activerecord.php');
+	}
 }
 
 /**
@@ -200,20 +213,24 @@ function seria_autoload($class) {
 	}
 
 	// deprecated classes special case
-	if(file_exists($filename = SERIA_ROOT.'/seria/platform/classes/deprecated/'.$class.'.class.php')) {
-		SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::WARNING, _t('Using deprecated class %CLASS%. If the system is updated, the class might become unavailable.', array('CLASS' => $class)));
-		$GLOBALS['seria']['classmtimes'][$class] = filemtime($filename);
-		return require($filename);
+	if(SERIA_COMPATIBILITY < 3) {
+		if(file_exists($filename = SERIA_ROOT.'/seria/platform/classes/deprecated/'.$class.'.class.php')) {
+			SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::WARNING, _t('Using deprecated class %CLASS%. If the system is updated, the class might become unavailable.', array('CLASS' => $class)));
+			$GLOBALS['seria']['classmtimes'][$class] = filemtime($filename);
+			return require($filename);
+		}
 	}
 
 	// Widgets (6 => constant length of word "Widget")
-	if (($str = substr($class, strlen($class) - 6, 6)) == 'Widget') {
-		$name = substr($class, 0, strlen($class) - 6);
-		list($widgetClassName, $widgetPath) = SERIA_Widget::loadWidgetClass($name);
-		if ($widgetClassName == $class) {
-			return true;
-		} else {
-			throw new SERIA_Exception('Widget ' . $name . '(' . $class . ') not found');
+	if(SERIA_COMPATIBILITY < 3) {
+		if (($str = substr($class, strlen($class) - 6, 6)) == 'Widget') {
+			$name = substr($class, 0, strlen($class) - 6);
+			list($widgetClassName, $widgetPath) = SERIA_Widget::loadWidgetClass($name);
+			if ($widgetClassName == $class) {
+				return true;
+			} else {
+				throw new SERIA_Exception('Widget ' . $name . '(' . $class . ') not found');
+			}
 		}
 	}
 
@@ -222,14 +239,16 @@ function seria_autoload($class) {
 	// "if" expression is to prevent __autoload call loop if
 	// SERIA_ActiveRecordInterfaceHandler is not available (it should be
 	// available all time)
-	if ($class != 'SERIA_ActiveRecordInterfaceHandler') {
-		try {
-			return SERIA_ActiveRecordInterfaceHandler::autoloadHandler($class);
-		} catch (Exception $exception) {
-			if (SERIA_DEBUG) {
-				SERIA_Base::debug('Unable to load Active Record class ' . $class . ': ' . $exception->getMessage());
+	if(SERIA_COMPATIBILITY < 3) {
+		if ($class != 'SERIA_ActiveRecordInterfaceHandler') {
+			try {
+				return SERIA_ActiveRecordInterfaceHandler::autoloadHandler($class);
+			} catch (Exception $exception) {
+				if (SERIA_DEBUG) {
+					SERIA_Base::debug('Unable to load Active Record class ' . $class . ': ' . $exception->getMessage());
+				}
+				throw $exception;
 			}
-			throw $exception;
 		}
 	}
 	return false;
@@ -242,7 +261,11 @@ spl_autoload_register('seria_autoload');
  *	injection attacks. However, since this also can lead to poor progrmming style, we have decided
  *	to always remove injection.
  */
-if(function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
+if(SERIA_COMPATIBILITY >= 3) {
+	if(function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
+		die("Seria Platform does not support magic quotes");
+	}
+} else if(function_exists("get_magic_quotes_gpc") && get_magic_quotes_gpc()) {
 	if(SERIA_DEBUG) SERIA_Base::debug('<strong>Fallback for GET/POST/COOKIE in effect. Please do not use magic quotes - fake security.</strong>');
 	require_once(SERIA_ROOT."/seria/platform/compatability/gpc.php");
 }
@@ -275,27 +298,29 @@ if(file_exists(SERIA_ROOT.'/seria.php'))
  *	code and inject a copyright tag in the head and more.
  */
 //ob_start();
-ob_start(array('SERIA_Template','outputHandler'));
+if(SERIA_COMPATIBILITY >= 3) {
+	ob_start(array('SERIA_Template','outputHandler'));
+}
 
+if(SERIA_COMPATIBILITY < 3) {
 /**
  * Set javascript variables that may be used by libraries on the client side
  */
-$platformVars = array(
-	'HTTP_ROOT' => SERIA_HTTP_ROOT,
-	'HTTP_CACHED_ROOT' => SERIA_CACHED_HTTP_ROOT,
-	'SERVER_TIMESTAMP' => time(),
-	'SESSION_NAME' => session_name(),
-	'SESSION_ID' => session_id(),
-	'HTTP_REFERER' => (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '')
-);
-if (!$seria_options['skip_authentication'] && !$seria_options['skip_session']) {
-	$platformVars['IS_LOGGED_IN'] = (SERIA_Base::isLoggedIn()?true:false);
-	$platformVars['USER_ID'] = (SERIA_Base::user() ? SERIA_Base::user()->get('id') : false);
-} else {
-	$platformVars['IS_LOGGED_IN'] = false;
-	$platformVars['USER_ID'] = false;
-}
-
+	$platformVars = array(
+		'HTTP_ROOT' => SERIA_HTTP_ROOT,
+		'HTTP_CACHED_ROOT' => SERIA_CACHED_HTTP_ROOT,
+		'SERVER_TIMESTAMP' => time(),
+		'SESSION_NAME' => session_name(),
+		'SESSION_ID' => session_id(),
+		'HTTP_REFERER' => (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '')
+	);
+	if (!$seria_options['skip_authentication'] && !$seria_options['skip_session']) {
+		$platformVars['IS_LOGGED_IN'] = (SERIA_Base::isLoggedIn()?true:false);
+		$platformVars['USER_ID'] = (SERIA_Base::user() ? SERIA_Base::user()->get('id') : false);
+	} else {
+		$platformVars['IS_LOGGED_IN'] = false;
+		$platformVars['USER_ID'] = false;
+	}
 /**
  *	Hook: platform_js_vars
  *
@@ -303,11 +328,10 @@ if (!$seria_options['skip_authentication'] && !$seria_options['skip_session']) {
  *	variable. The $platformVars variable is passed by reference, so that you can modify it directly from your
  *	hook listener.
  */
-SERIA_Hooks::dispatch('platform_js_vars', $platformVars);
-$platformVarsScript = '<script type="text/javascript">
-	var SERIA_VARS = '.SERIA_Lib::toJSON($platformVars).'
-</script>';
-SERIA_Template::headPrepend('VARS', $platformVarsScript);
+	SERIA_Hooks::dispatch('platform_js_vars', $platformVars);
+	$platformVarsScript = '<script type="text/javascript">var SERIA_VARS = '.SERIA_Lib::toJSON($platformVars).'</script>';
+	SERIA_Template::headPrepend('VARS', $platformVarsScript);
+}
 
 /**
  * In case maintain.php is not executed, this extra check is performed:
@@ -341,10 +365,12 @@ function force_maintain_now()
  * Help with installation. If the file SERIA_PRIV_ROOT/SERIA_PLATFORM.php exists, it will be included by config_defaults.php and this file will
  * set some variables in $GLOBALS['seria_install']. If $GLOBALS['seria_install'] is not set, then include the install script here.
  */
-if(!isset($GLOBALS['seria_install']))
-{
-	require_once(SERIA_ROOT.'/seria/includes/install.php');
-	die();
+if(SERIA_COMPATIBILITY < 3) {
+	if(!isset($GLOBALS['seria_install']))
+	{
+		require_once(SERIA_ROOT.'/seria/includes/install.php');
+		die();
+	}
 }
 
 if(!SERIA_AUTOMAINTAIN_DISABLED && ((((SERIA_INSTALL||SERIA_DEBUG) && mt_rand(0,4)==0) || (mt_rand(0,99)==0)) && basename($_SERVER['SCRIPT_NAME'])!=='maintain.php'))

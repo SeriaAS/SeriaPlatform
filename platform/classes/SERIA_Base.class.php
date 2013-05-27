@@ -205,6 +205,9 @@
 			require_once(SERIA_ROOT."/seria/platform/pages/$f.php");
 		}
 
+		/**
+		*	Connect to the primary database server
+		*/
 		static function db($setDB=false)
 		{
 			static $db = false;
@@ -668,7 +671,7 @@ $trace
 			} catch (PDOException $e) {
 				if($e->getCode() == '42S02')
 				{ // the table does not exist, create it
-					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8');
+					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) DEFAULT CHARSET=utf8');
 					return (SERIA_Base::db()->exec($sql, $data, true) ? true : false);
 				}
 				throw $e;
@@ -693,7 +696,7 @@ $trace
 			} catch (PDOException $e) {
 				if($e->getCode() == '42S02')
 				{ // the table does not exist, create it
-					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8');
+					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) DEFAULT CHARSET=utf8');
 					return (SERIA_Base::db()->exec($sql, $data, true) ? true : false);
 				}
 				else if($e->getCode() == '23000')
@@ -733,7 +736,7 @@ $trace
 			} catch (PDOException $e) {
 				if($e->getCode() == '42S02')
 				{ // the table does not exist, create it
-					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) ENGINE=InnoDB DEFAULT CHARSET=utf8');
+					self::db()->exec('CREATE TABLE {params} (name VARCHAR(100) PRIMARY KEY, value TEXT) DEFAULT CHARSET=utf8');
 					return (SERIA_Base::db()->exec($sql, $data, true) ? true : false);
 				}
 				throw $e;

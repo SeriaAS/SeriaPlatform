@@ -1,8 +1,8 @@
 <?php
+die("OK");
 	/**
 	 *	CONNECT TO DATABASE
 	 */
-
 	function seria_databaseConnect() {
 		try {
 			if(class_exists('PDO') && !defined('DISABLE_PDO')) {

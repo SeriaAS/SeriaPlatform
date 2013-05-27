@@ -45,6 +45,7 @@ $gui = new SERIA_Gui(_t('Seria Maintain Script'));
 //ob_implicit_flush(true);
 
 function run_search_maintain($fromIndexer = false) {
+	if(SERIA_COMPATIBILITY >= 3) return;
 	try
 	{
 		if(start_maintain("search_maintain", SERIA_INSTALL||SERIA_DEBUG?1:60))
@@ -63,6 +64,7 @@ function run_search_maintain($fromIndexer = false) {
 }
 
 function run_payment_maintain() {
+	if(SERIA_COMPATIBILITY >= 3) return;
 	try
 	{
 		if(start_maintain("payment_maintain", SERIA_INSTALL||SERIA_DEBUG?1:60))
@@ -82,6 +84,7 @@ function run_payment_maintain() {
 
 
 function run_articles_maintain() {
+	if(SERIA_COMPATIBILITY >= 3) return;
 	try
 	{
 		if(start_maintain("articles_maintain", SERIA_INSTALL||SERIA_DEBUG?1:60))
@@ -146,7 +149,8 @@ function run_async_maintain() {
 function run_maintains() {
 	// If running in install mode, first try to install base database tables to be able to proceed if database is empty
 	if (SERIA_INSTALL) {
-		require_once(SERIA_ROOT . '/seria/platform/install/base.php');
+		if(SERIA_COMPATIBILITY < 3)
+			require_once(SERIA_ROOT . '/seria/platform/install/base.php');
 	}
 	
 	/**
@@ -162,7 +166,7 @@ function run_maintains() {
 	 */
 	try
 	{
-		if(start_maintain("install_maintain", SERIA_INSTALL?1:60))
+		if(SERIA_COMPATIBILITY < 3) if(start_maintain("install_maintain", SERIA_INSTALL?1:60))
 		{
 			include(dirname(__FILE__)."/maintain/install_maintain.php");
 			SERIA_Base::debug("Install maintain: ".install_maintain());
@@ -179,7 +183,7 @@ function run_maintains() {
 	
 	try
 	{
-		if(start_maintain("install_maintain2", SERIA_INSTALL?1:60))
+		if(SERIA_COMPATIBILITY < 3) if(start_maintain("install_maintain2", SERIA_INSTALL?1:60))
 		{
 			include(dirname(__FILE__)."/maintain/install_maintain2.php");
 			SERIA_Base::debug("Install maintain 2: ".install_maintain2());
@@ -200,13 +204,14 @@ function run_maintains() {
 	 */
 	try
 	{
-		$maintainName = 'files_maintain';
-		
-		if(start_maintain($maintainName, SERIA_INSTALL||SERIA_DEBUG?1:60))
-		{
-			include(dirname(__FILE__)."/maintain/" . $maintainName . ".php");
-			SERIA_Base::debug("Files maintain: ".files_maintain());
-			stop_maintain($maintainName);
+		if(SERIA_COMPATIBILITY < 3) {
+			$maintainName = 'files_maintain';
+			if(start_maintain($maintainName, SERIA_INSTALL||SERIA_DEBUG?1:60))
+			{
+				include(dirname(__FILE__)."/maintain/" . $maintainName . ".php");
+				SERIA_Base::debug("Files maintain: ".files_maintain());
+				stop_maintain($maintainName);
+			}
 		}
 	}
 	catch (Exception $e)
@@ -216,9 +221,12 @@ function run_maintains() {
 		throw $e;
 	}
 	
-	run_search_maintain();
-	run_articles_maintain();
-	run_payment_maintain();
+	if(SERIA_COMPATIBILITY < 3) {
+		run_search_maintain();
+		run_articles_maintain();
+		run_payment_maintain();
+	}
+
 	run_janitor_maintain();
 	run_maintain_hooks();
 	run_async_maintain();
@@ -233,7 +241,7 @@ function run_maintain_hooks() {
 		SERIA_MAINTAIN_30_MINUTES_HOOK => 60 * 30,
 		SERIA_MAINTAIN_1_HOUR_HOOK => 60 * 60
 	);
-	
+
 	foreach ($hooks as $name => $timelimit) {
 		if (SERIA_Base::getParam($key = 'seria_maintain_hook_' . $name, true) < (time() - $timelimit)) {
 			SERIA_Base::setParam($key, time());

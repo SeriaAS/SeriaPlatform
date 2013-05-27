@@ -23,6 +23,9 @@
 	defined('SERIA_DB_PASSWORD') || define('SERIA_DB_PASSWORD', '');
 	defined('SERIA_DB_PORT') || define('SERIA_DB_PORT', '3306');
 	defined('SERIA_DB_TYPE') || define('SERIA_DB_TYPE', 'mysql');
+
+	defined('SERIA_MYSQL_ENGINE') || define('SERIA_MYSQL_ENGINE', 'InnoDB');
+
 	/*DEPRECATED*/ defined('SERIA_DB_DSN') || define('SERIA_DB_DSN', SERIA_DB_TYPE.':host='.SERIA_DB_HOST.';port='.(defined('SERIA_DB_PORT')?SERIA_DB_PORT:'3306').';dbname='.SERIA_DB_NAME);
 	
 	defined('SERIA_TIMEZONE') || define('SERIA_TIMEZONE', 'Europe/Oslo');

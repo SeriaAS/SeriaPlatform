@@ -73,6 +73,7 @@
 		        try {
 	        	        if(class_exists('PDO') && !defined('DISABLE_PDO'))
 				{
+/*
 					if(isset($_GET['debug_db_connection'])) {
 						echo "<pre>";
 						$debug = debug_backtrace();
@@ -85,6 +86,7 @@ echo "</pre>";
 //						echo $debug['class'].' '.$debug['function'];
 //						die();
 					}
+*/
 		                        $this->_db = new PDO($this->dsn, $this->user, $this->pass);
 		                }
 				else
@@ -122,6 +124,8 @@ echo "</pre>";
 		                // MySQL must be told to operate in UTF-8 mode, and we tell it which timezone we work in
 		                $this->_db->exec("SET NAMES utf8");
 		                $this->_db->exec("SET time_zone = '".date("P")."'");
+				$this->_db->exec("SET storage_engine=".SERIA_MYSQL_ENGINE);
+
 				// Will prevent a lot of deadlocks, while preserving the possibility of rollback.
 				$this->_db->exec("SET TRANSACTION ISOLATION LEVEL READ COMMITTED");
 		        }

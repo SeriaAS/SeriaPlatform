@@ -69,7 +69,7 @@ class SERIA_Manifests {
 	*		);
 	*		public static $database = array(	// declares the database structure
 	*			'creates' => array(		// a list of create table statements. NOTE! Normally you simply modify this to alter your datamodel
-	*				'CREATE TABLE {mytable} (id INTEGER PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8',
+	*				'CREATE TABLE {mytable} (id INTEGER PRIMARY KEY) DEFAULT CHARSET=utf8',
 	*			),
 	*			'drops' => array(		// a list of tables to drop before parsing the 'creates'
 	*				2 => array(		// the serial number to perform this for
@@ -207,19 +207,19 @@ class SERIA_Manifests {
 			/**
 			*	Record known manifests, so that we can uninstall them if the class is deleted
 			*/
-			$db->exec("CREATE TABLE IF NOT EXISTS {manifests} (name VARCHAR(100) PRIMARY KEY) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$db->exec("CREATE TABLE IF NOT EXISTS {manifests} (name VARCHAR(100) PRIMARY KEY) DEFAULT CHARSET=utf8");
 			/**
 			*	Record database tables created by manifests, so that they can be deleted later, and we can detect if other manifests use the same table name
 			*/
-			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_tables} (name VARCHAR(100) PRIMARY KEY, manifestName VARCHAR(100)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_tables} (name VARCHAR(100) PRIMARY KEY, manifestName VARCHAR(100)) DEFAULT CHARSET=utf8");
 			/**
 			*	Record folders created by manifests, so that they can be deleted later
 			*/
-			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_folders} (id INTEGER PRIMARY KEY AUTO_INCREMENT, pathName VARCHAR(100), path VARCHAR(100), manifestName VARCHAR(100)) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_folders} (id INTEGER PRIMARY KEY AUTO_INCREMENT, pathName VARCHAR(100), path VARCHAR(100), manifestName VARCHAR(100)) DEFAULT CHARSET=utf8");
 			/**
 			*	Record updates of manifest serial numbers, so that we simply can keep track and possibly identify sources of problems
 			*/
-			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_logs} (id INTEGER PRIMARY KEY AUTO_INCREMENT, category VARCHAR(20), title VARCHAR(100), info BLOB, manifestName VARCHAR(100), serial INTEGER, targetSerial INTEGER) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+			$db->exec("CREATE TABLE IF NOT EXISTS {manifests_logs} (id INTEGER PRIMARY KEY AUTO_INCREMENT, category VARCHAR(20), title VARCHAR(100), info BLOB, manifestName VARCHAR(100), serial INTEGER, targetSerial INTEGER) DEFAULT CHARSET=utf8");
 			// Safety measure: make sure that manifestversions for this namespace must be updated some time, even if this fails
 			SERIA_Base::unsetParam('manifestversions:'.$namespace);
 			foreach($reflectors as $className => $reflection)
