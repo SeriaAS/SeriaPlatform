@@ -10,7 +10,7 @@
 
 		protected $_action;
 		protected $_method = "post";
-		protected $_spec; 
+		protected $_spec;
 		protected $_data = array();
 		protected $_prefix = '';
 		protected $_state;
@@ -62,6 +62,10 @@ $form->begin()."<table><thead>';
 			}
 		}
 
+		public function __get($name) {
+			return $this->get($name);
+		}
+
 		/**
 		*	Get a value from the current form
 		*/
@@ -87,6 +91,13 @@ $form->begin()."<table><thead>';
 				return $this->_data[$name];
 
 			return NULL;
+		}
+
+		/**
+		*	Return the specification for the form
+		*/
+		public function getSpec() {
+			return $this->_spec;
 		}
 
 		/**
