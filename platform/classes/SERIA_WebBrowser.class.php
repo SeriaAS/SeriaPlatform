@@ -7,6 +7,9 @@
 	class SERIA_WebBrowser
 	{
 		const INSTANCE_HOOK = 'SERIA_WebBrowser::__construct';
+		const METRICS_HOOK = 'SERIA_WebBrowser::METRICS_HOOK';
+
+		const METRIC_FETCH_TIME = 1; /* metric: array(method => ..., host => ..., path => ..., time => ...) */
 
 		// options
 		public $supportCookies = true;
@@ -507,6 +510,7 @@
 				SERIA_Base::debug('Opening connection to '.$tranport.' with transport '.$this->nextRequest['transport']);
 				$transport = $this->nextRequest['transport'].'://'.$transport;
 			}
+			$this->nextRequest['startMicrotime'] = microtime();
 			if(!($this->socket = fsockopen($transport, $this->nextRequest['port'], $errno, $errstr, $timeout))) {
 				$this->socket = null;
 				throw new SERIA_Exception('SERIA_WebBrowser could not connect: '.$errno.': '.$errstr);
@@ -622,6 +626,18 @@
 				$this->buffer_eof = true;
 				fclose($this->socket);
 				$this->socket = null;
+				$endMicrotime = microtime();
+				list($start_usec, $start_sec) = explode(' ', $this->currentRequest['startMicrotime']);
+				list($end_usec, $end_sec) = explode(' ', $endMicrotime);
+				$time = (float) $end_usec - (float) $start_usec;
+				$time = (float) $time + (float) ($end_sec - $start_sec);
+				$metrics = array(
+					'method' => $this->currentRequest['method'],
+					'host' => $this->currentRequest['host'],
+					'path' => $this->currentRequest['path'],
+					'time' => $time
+				);
+				SERIA_Hooks::dispatch(self::METRICS_HOOK, ($a = self::METRIC_FETCH_TIME), $metrics);
 			}
 			if ($buflen <= $bytes)
 				return $this->buffer;
