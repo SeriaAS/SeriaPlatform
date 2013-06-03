@@ -26,9 +26,20 @@ class SERIA_AnonymousVideoVisitorStats extends SERIA_MetaObject
 			)
 		);
 	}
+	/**
+	 * Dependency check for meta-class. If this fails then any query for this
+	 * meta-class will fail. This check should do class_exists on all  classes
+	 * that are referenced in the Meta-spec.
+	 */
+	public static function dependencyCheck()
+	{
+		return class_exists('SERIA_Video');
+	}
 
 	public static function maintainTemporaryVideoStats()
 	{
+		if (!self::dependencyCheck())
+			return; /* Missing dependencies, can't run this maintain-taks! */
 		$allStats = SERIA_Meta::all('SERIA_AnonymousVideoVisitorStats');
 
 		$counter = new SERIA_Counter('SeriaWebTVStatistics');
