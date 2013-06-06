@@ -2,6 +2,42 @@
 
 require(dirname(dirname(__FILE__)).'/main.php');
 
+if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN']) {
+	if (defined('XDM_AJAX_ACL')) {
+		$acl = XDM_AJAX_ACL;
+		$acl = explode(',', $acl);
+		foreach ($acl as &$allow)
+			$allow = trim($allow);
+		unset($allow);
+	} else {
+		$acl = array();
+	}
+	$origin = new SERIA_Url($_SERVER['HTTP_ORIGIN']);
+	$host = $origin->getHost();
+	$accepted = false;
+	foreach ($acl as $allow) {
+		if (substr($allow, 0, 1) != ".") {
+			if ($allow == $host) {
+				$accepted = true;
+				break;
+			}
+		} else {
+			$part = substr($host, -strlen($allow));
+			if ($part && $part == $allow) {
+				$accepted = true;
+				break;
+			}
+		}
+	}
+	if ($accepted) {
+		header('Access-Control-Allow-Origin: '.$origin->__toString());
+	} else {
+		header('Content-Type: application/json');
+		echo SERIA_Lib::toJSON(array('error' => 'Origin access denied!'));
+		die();
+	}
+}
+
 function SAPI_returnData($format, $result)
 {
 	switch ($format) {
