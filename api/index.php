@@ -31,6 +31,7 @@ if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN']) {
 	}
 	if ($accepted) {
 		header('Access-Control-Allow-Origin: '.$origin->__toString());
+		header('Access-Control-Allow-Credentials: true');
 	} else {
 		header('Content-Type: application/json');
 		echo SERIA_Lib::toJSON(array('error' => 'Origin access denied!'));
