@@ -298,7 +298,7 @@ if(file_exists(SERIA_ROOT.'/seria.php'))
  *	code and inject a copyright tag in the head and more.
  */
 //ob_start();
-if(SERIA_COMPATIBILITY >= 3) {
+if(SERIA_COMPATIBILITY < 3) {
 	ob_start(array('SERIA_Template','outputHandler'));
 }
 
