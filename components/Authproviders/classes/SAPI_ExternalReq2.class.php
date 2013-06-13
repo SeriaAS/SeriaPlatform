@@ -68,4 +68,8 @@ class SAPI_ExternalReq2 extends SAPI
 		} else
 			return array('loggedIn' => false);
 	}
+	public static function getBaseUrl()
+	{
+		return SERIA_HTTP_ROOT;
+	}
 }
