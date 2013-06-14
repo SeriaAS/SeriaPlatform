@@ -25,6 +25,7 @@ class SERIA_ExternalReq2ReturnPost
 		$data = array(
 			'loggedIn' => 1,
 			'openSessionToken' => $requestToken,
+			'roamAuthUrl' => SERIA_UserLoginXml::getUserXmlUrl(session_id())
 		);
 		if ($this->returnData !== null)
 			$data['returnData'] = $this->returnData;
