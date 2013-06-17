@@ -43,8 +43,6 @@
 			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders SSO delete user', array($this, 'ssoDeleteUser'), 'components/authproviders/ssodeleteuser');
 
 			if ($this->isEnabled()) {
-				SERIA_Hooks::listen('SERIA_Base::user', array($this, 'userObjectRequested'));
-				SERIA_Hooks::listen('SeriaPlatformBootComplete', array($this, 'platformBootComplete'));
 				SERIA_Hooks::listen('login', array($this, 'handleLogin'));
 				SERIA_Hooks::listen('guestLogin', array($this, 'handleGuestLogin'));
 				SERIA_Hooks::listen('SERIA_User::__construct', array('SERIA_Authproviders', 'userObjectHook'));
@@ -100,43 +98,6 @@
 			return SERIA_Base::getParam('seria_authproviders_mac_key'); 
 		}
 
-		/*
-		 * This is called on every page view except skip_*
-		 */
-		public function userObjectRequested($setUser)
-		{
-			static $firstCall = true;
-
-			/* This does also provide recursion protection */
-			if (!$firstCall)
-				return;
-			$firstCall = false;
-			if (sizeof($_POST) == 0 && $setUser !== NULL) {
-				if (SERIA_AuthenticationState::available()) {
-					$loginState = new SERIA_AuthenticationState();
-					if (!$loginState->exists('autoDiscovery'))
-						$loginState = false;
-				} else
-					$loginState = false;
-				if ($loginState || SERIA_Base::user() === false)
-					SERIA_Authproviders::automaticDiscovery();
-			}
-		}
-		public function platformBootComplete()
-		{
-			if (sizeof($_POST) == 0) {
-				if (SERIA_Base::user() !== false) {
-					if (($provider =& $this->loggedInByProvider())) {
-						SERIA_Base::debug('Calling automatic logout discovery..');
-						/*
-						 * Discover remote logout.
-						 */
-						$provider->automaticDiscovery();
-					} else
-						SERIA_Base::debug('Automatic logout discovery skipped..');
-				}
-			}
-		}
 		public function beforeLogout($user)
 		{
 			if (SERIA_DEBUG) {

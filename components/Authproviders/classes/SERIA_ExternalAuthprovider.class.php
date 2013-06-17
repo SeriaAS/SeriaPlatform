@@ -182,219 +182,307 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 		else
 			return false;
 	}
+	public function apiGet($baseUrl, $apiPath, $params=array(), $timeout=null)
+	{
+		$url = new SERIA_Url($baseUrl.'/seria/api/');
+		$url->setParam('apiPath', $apiPath);
+		foreach ($params as $name => $value)
+			$url->setParam($name, $value);
+		try {
+			$wb = new SERIA_WebBrowser();
+			if ($timeout !== null)
+				$wb->requestDataTimeout = $timeout;
+			$wb->navigateTo($url->__toString());
+			$data = $wb->fetchAll();
+		} catch (Exception $e) {
+			return null;
+		}
+		if ($wb->responseCode != 200)
+			return null;
+		$data = json_decode($data, true);
+		return $data;
+	}
+	public function getRemoteBaseUrl()
+	{
+		$canUse = null;
+		$tryBase = 'https://'.$this->getHostname();
+		$remoteBase = $this->apiGet($tryBase, 'SAPI_ExternalReq2/getBaseUrl', array(), 7);
+		if ($remoteBase) {
+			$remoteBase = new SERIA_Url($remoteBase);
+			if ($remoteBase->getHost() != $this->getHostname())
+				SERIA_Base::debug('WARNING: THE EXTERNAL AUTH SERVER HAS A DIFFERENT HOSTNAME IN BASE ('.$remoteBase->getHost().'!='.$this->getHostname().'), IGNORED!');
+			$canUse = $tryBase;
+			if (parse_url($remoteBase->__toString(), PHP_URL_SCHEME) == 'https')
+				return $tryBase;
+			else
+				SERIA_Base::debug('WARNING: TRIED HTTPS AS BASEURL TO EXTERNAL AUTH SERVER, REMOTE AND LOCAL BASEURL DO NOT MATCH! TRYING HTTP WITH FALLBACK TO HTTPS...');
+		}
+		$tryBase = 'http://'.$this->getHostname();
+		$remoteBase = $this->apiGet($tryBase, 'SAPI_ExternalReq2/getBaseUrl', array(), 7);
+		if ($remoteBase) {
+			$remoteBase = new SERIA_Url($remoteBase);
+			if ($remoteBase->getHost() != $this->getHostname()) {
+				if ($canUse !== null) {
+					SERIA_Base::debug('WARNING: THE EXTERNAL HTTP AUTH SERVER HAS A DIFFERENT HOSTNAME IN BASE ('.$remoteBase->getHost().'!='.$this->getHostname().'), CONFUSED! USING HTTPS');
+					return $canUse;
+				}
+				SERIA_Base::debug('WARNING: THE EXTERNAL HTTP AUTH SERVER HAS A DIFFERENT HOSTNAME IN BASE ('.$remoteBase->getHost().'!='.$this->getHostname().'), IGNORED!');
+			}
+			if (parse_url($remoteBase->__toString(), PHP_URL_SCHEME) != 'http') {
+				if ($canUse !== null) {
+					SERIA_Base::debug('WARNING: TRIED HTTPS AS BASEURL TO EXTERNAL AUTH SERVER, REMOTE AND LOCAL BASEURL DO NOT MATCH! CONFUSED! USING HTTPS');
+					return $canUse;
+				}
+				SERIA_Base::debug('WARNING: TRIED HTTPS AS BASEURL TO EXTERNAL AUTH SERVER, REMOTE AND LOCAL BASEURL DO NOT MATCH! IGNORED!');
+			}
+			return $tryBase;
+		}
+		SERIA_Base::debug('WARNING: CANNOT REACH EXTERNAL AUTH SERVER! ASSUMING HTTPS IN BASEURL');
+		return 'https://'.$this->getHostname();
+	}
+	public function getExternalReq2RequestForm($interactive, $guestLogin, $returnUrl, $abortUrl)
+	{
+		$state = new SERIA_AuthenticationState();
+		$state->assert();
+		$returnUrl = new SERIA_Url($returnUrl);
+		$returnUrl->setParam('returned', '1');
+		$baseUrl = $this->getRemoteBaseUrl();
+		$interactive = ($interactive ? 1 : 0);
+		$guestLogin = ($guestLogin ? 1 : 0);
+		$params = array(
+			'provider' => $this->getHostname(),
+			'auth_abort' => $abortUrl
+		);
+		$form = array(
+			'url' => $baseUrl.'/seria/components/Authproviders/pages/externalReq2.php?interactive='.$interactive.'&guest='.$guestLogin.'&auth_abort='.urlencode($abortUrl),
+			'data' => array(
+				/*'returnUrl' => $state->stampUrl(SERIA_Meta::manifestUrl('Authproviders', 'metaFinishExtAuth', $params))->__toString(),*/
+				'returnUrl' => $returnUrl->__toString(),
+				'returnData' => serialize(array(
+					'returnUrl' => $returnUrl->__toString()
+				))
+			)
+		);
+		return $form;
+	}
+	public function externalReq2ReturnPost($postData)
+	{
+		if (!isset($postData['loggedIn']) || !isset($postData['returnData']))
+			return false;
+		$returnData = unserialize($postData['returnData']);
+		$returnUrl = $returnData['returnUrl'];
+		if ($postData['loggedIn']) {
+			if (!isset($postData['openSessionToken']) || !isset($postData['roamAuthUrl']))
+				return false;
+			$openSessionToken = $postData['openSessionToken'];
+			$roamAuthUrl = $postData['roamAuthUrl'];
+			$postGetSession = array(
+				'url' => $this->getRemoteBaseUrl().'/seria/api/?apiPath=SAPI_ExternalReq2/getUserData',
+				'data' => array(
+					'requestToken' => $openSessionToken
+				)
+			);
+			$wb = new SERIA_WebBrowser();
+			$wb->navigateTo($postGetSession['url'], $postGetSession['data']);
+			$data = $wb->fetchAll();
+			$data = json_decode($data, true);
+			if ($data && isset($data['uid'])) {
+				$cp = array('uid', 'firstName', 'lastName', 'displayName', 'username', 'email', 'is_administrator', 'guestAccount');
+				$user_data = array();
+				foreach ($cp as $cpn) {
+					$user_data[$cpn] = $data[$cpn];
+					unset($data[$cpn]);
+				}
+				$safeEmails = $data['safeEmails'];
+				unset($data['safeEmails']);
+				$this->authenticateUser($user_data, $safeEmails, $roamAuthUrl);
+				return SERIA_Base::user();
+			} else
+				return false;
+		} else
+			return false;
+	}
+	/**
+	 * Do the authentication based on external data.
+	 *
+	 * @param $user_data array
+	 *         (
+	 *             [uid] => %
+	 *             [firstName] => %
+	 *             [lastName] => %
+	 *             [displayName] => %
+	 *             [username] => %
+	 *             [email] => %
+	 *             [is_administrator] => 0/1
+	 *             [guestAccount] => 0/1
+	 *         )
+	 * 
+	 * @param $safeEmails array
+	 *         (
+	 *             [0] => %
+	 *             [1] => %
+	 *         )
+	 * 
+	 * @param $remoteXml string Ex. http://auth%.%/seria/components/Authproviders/pages/userxml.php?id=%
+	 */
+	protected function authenticateUser($user_data, $safeEmails, $remoteXml)
+	{
+		/* Find the local user */
+		$user = $this->getUserObject($user_data['uid']);
+		if ($user === null) {
+			/*
+			 * Search for a match for safe email addresses, local <--> remote
+			 */
+			foreach ($safeEmails as $email) {
+				if (($user = SERIA_SafeEmailUsers::getUserByEmail($email)) !== null)
+					break;
+			}
+			if ($user !== null) {
+				/*
+				 * Mark this user for later..
+				 */
+				$plist = SERIA_PropertyList::createObject($user);
+				$plist->set('externalUser:'.$this->rpc->getHostname(), $user_data['uid']);
+				$plist->save();
+			}
+		}
+		if ($user !== null) {
+			/*
+			 * Ok.. We trust the remote server. Let's go ahead and set login successful..
+			 */
+			foreach ($safeEmails as $email)
+				SERIA_SafeEmailUsers::registerUserEmail($user, $email);
+			SERIA_Base::user($user);
+		} else {
+			/*
+			 * This is a new external login. For now we will just create a new user account,
+			 * in the future it should be possible to connect user accounts based on a secondary
+			 * login.
+			 */
+			$user = new SERIA_User();
+			$init = array(
+				'is_administrator' => 0,
+				'enabled' => 1,
+				'password_change_required' => 0,
+				'password' => 'local_blocked_random_'.sha1(mt_rand().mt_rand().mt_rand().mt_rand().mt_rand())
+			);
+			foreach ($init as $name => $value)
+				$user->set($name, $value);
+			$xferFields = array(
+				'firstName',
+				'lastName',
+				'displayName',
+				'email'
+			);
+			foreach ($xferFields as $xfer)
+				$user->set($xfer, $user_data[$xfer]);
+			if ($user_data['guestAccount'])
+				$access_level = 0;
+			else if ($user_data['is_administrator'])
+				$access_level = 2;
+			else
+				$access_level = 1;
+			$max_level = $this->get('accessLevel');
+			if ($access_level > $max_level)
+				$access_level = $max_level;
+			$user->set('guestAccount', ($access_level == 0 ? 1 : 0));
+			$user->set('is_administrator', ($access_level == 2 ? 1 : 0));
+			$user->set('username', $user_data['uid'].'@'.$this->rpc->getHostname());
+			try {
+				SERIA_Base::elevateUser(array($user, 'validate'));
+			} catch (SERIA_ValidationException $e) {
+				$errors = $e->getValidationErrors();
+				if (isset($errors['displayName'])) {
+					/* Display name conflict: try to resolve */
+					$genDisp = $user_data['displayName'].' at '.$this->rpc->getHostname();
+					$user->set('displayName', $genDisp);
+					try {
+						SERIA_Base::elevateUser(array($user, 'validate'));
+					} catch (SERIA_ValidationException $e) {
+						$errors = $e->getValidationErrors();
+						if (isset($errors['displayName'])) {
+							/* Second conflict, try a few more times to resolve this. */
+							$num = 0;
+							while (true) {
+								$user->set('displayName', $genDisp.' '.$num);
+								$valid = false;
+								try {
+									SERIA_Base::elevateUser(array($user, 'validate'));
+									$valid = true;
+								} catch (SERIA_ValidationException $e) {
+									$errors = $e->getValidationErrors();
+									if (!isset($errors['displayName']))
+										throw $e;
+									if ($num >= 10)
+										throw $e; /* No more tries */
+								}
+								if ($valid)
+									break;
+								$num++;
+							}
+						}
+					}
+				} else
+					throw $e;
+			}
+			if (SERIA_Base::elevateUser(array($user, 'save'))) {
+				/* Get a clean object, just to be sure. */
+				$uid = $user->get('id');
+				if (!$uid || !is_numeric($uid))
+					throw new SERIA_Exception('Unexpected invalid user-id');
+				$user = SERIA_User::createObject($uid);
+				if (!$user)
+					throw new SERIA_Exception('User-object nonex. or otherwise evaluating to false');
+				$plist = SERIA_PropertyList::createObject($user);
+				$plist->set('externalUser:'.$this->rpc->getHostname(), $user_data['uid']);
+				$plist->save();
+				foreach ($safeEmails as $email)
+					SERIA_SafeEmailUsers::registerUserEmail($user, $email);
+			} else
+				throw new SERIA_Exception('Failed to save user');
+			/* Finished. Let them go ahead.. */
+			SERIA_Base::user($user);
+		}
+		/*
+		 * Sync metadata with server
+		 */
+		$this->periodicUpdateUserMeta($user, 20);
+		$_SESSION['AUTHPROVIDERS_REMOTE_XML'] = $remoteXml;
+	}
 	public function authenticate($interactive=true, $reset=false, $guestLogin=false)
 	{
 		if (!$this->isAvailable())
 			throw new SERIA_Exception('External auth is not available for host (RPC configuration required): '.$this->get('remote'));
 		if(!session_id())
 			session_start();
-		$status = 0;
-		if (isset($_SESSION['remoteAuthenticationTokenService']) &&
-		    $_SESSION['remoteAuthenticationTokenService'] == $this->getProviderId() &&
-		    isset($_SESSION['remoteAuthenticationToken'])) {
-			/*
-			 * Check whether this is a returned session from the remote login.
-			 */
-			$token = $_SESSION['remoteAuthenticationToken'];
-			unset($_SESSION['remoteAuthenticationToken']); /* One-time use */
-			if (!$reset && isset($_GET['failure']))
-				return true;
-			if (!$reset && isset($_GET['code']))
-				$status = 1;
+		$state = new SERIA_AuthenticationState();
+		$state->assert();
+		if (isset($_GET['returned']) && $_GET['returned']) {
+			/* completed */
+			$this->externalReq2ReturnPost($_POST);
+			return true;
 		}
-		SERIA_Base::debug('(SERIA_ExternalAuthprovider:object)->authenticate(...): Reset: '.($reset ? 'On' : 'Off'));
-		SERIA_Base::debug('(SERIA_ExternalAuthprovider:object)->authenticate(...): Status: '.$status);
-		SERIA_Base::debug('(SERIA_ExternalAuthprovider:object)->authenticate(...): Token: '.$token);
-		switch ($status) {
-			case 0:
-				/* Stage I - Get an authentication token from the remote */
-				$token = $this->rpc->getToken();
-				$_SESSION['remoteAuthenticationTokenService'] = $this->getProviderId();
-				$_SESSION['remoteAuthenticationToken'] = $token;
-				/* redirect to login */
-				SERIA_Base::redirectTo(SERIA_ExternalAuthenticationAgent::getUrl($this, $this->rpc, $token, null, $interactive, $guestLogin));
-				die();
-				break;
-			case 1:
-				/* Stage II - Check whether the login was successful */
-				$status = $this->rpc->getStatus($token, $_GET['code']);
-				if ($status[0] == SERIA_ExternalAuthenticationAgent::STATUS_OK ||
-				    $status[0] == SERIA_ExternalAuthenticationAgent::STATUS_GUEST) {
-				    if ($status[0] == SERIA_ExternalAuthenticationAgent::STATUS_GUEST)
-				    	SERIA_Base::blockSystemAccess();
-					/*
-					 * Get the remote uid, and fetch user-data.
-					 */
-					$user_data = $this->rpc->getUserData($token);
-					/* Find the local user */
-					$user = $this->getUserObject($user_data['uid']);
-					$safeEmails = $this->rpc->getSafeEmailAddresses($user_data['uid']);
-					if ($user === null) {
-						/*
-						 * Search for a match for safe email addresses, local <--> remote
-						 */
-						foreach ($safeEmails as $email) {
-							if (($user = SERIA_SafeEmailUsers::getUserByEmail($email)) !== null)
-								break;
-						}
-						if ($user !== null) {
-							/*
-							 * Mark this user for later..
-							 */
-							$plist = SERIA_PropertyList::createObject($user);
-							$plist->set('externalUser:'.$this->rpc->getHostname(), $user_data['uid']);
-							$plist->save();
-						}
-					}
-					if ($user !== null) {
-						/*
-						 * Ok.. We trust the remote server. Let's go ahead and set login successful..
-						 */
-						foreach ($safeEmails as $email)
-							SERIA_SafeEmailUsers::registerUserEmail($user, $email);
-						SERIA_Base::user($user);
-					} else {
-						/*
-						 * This is a new external login. For now we will just create a new user account,
-						 * in the future it should be possible to connect user accounts based on a secondary
-						 * login.
-						 */
-						$user = new SERIA_User();
-						$init = array(
-							'is_administrator' => 0,
-							'enabled' => 1,
-							'password_change_required' => 0,
-							'password' => 'local_blocked_random_'.sha1(mt_rand().mt_rand().mt_rand().mt_rand().mt_rand())
-						);
-						foreach ($init as $name => $value)
-							$user->set($name, $value);
-						$xferFields = array(
-							'firstName',
-							'lastName',
-							'displayName',
-							'email'
-						);
-						foreach ($xferFields as $xfer)
-							$user->set($xfer, $user_data[$xfer]);
-						if ($user_data['guestAccount'])
-							$access_level = 0;
-						else if ($user_data['is_administrator'])
-							$access_level = 2;
-						else
-							$access_level = 1;
-						$max_level = $this->get('accessLevel');
-						if ($access_level > $max_level)
-							$access_level = $max_level;
-						$user->set('guestAccount', ($access_level == 0 ? 1 : 0));
-						$user->set('is_administrator', ($access_level == 2 ? 1 : 0));
-						$user->set('username', $user_data['uid'].'@'.$this->rpc->getHostname());
-						try {
-							SERIA_Base::elevateUser(array($user, 'validate'));
-						} catch (SERIA_ValidationException $e) {
-							$errors = $e->getValidationErrors();
-							if (isset($errors['displayName'])) {
-								/* Display name conflict: try to resolve */
-								$genDisp = $user_data['displayName'].' at '.$this->rpc->getHostname();
-								$user->set('displayName', $genDisp);
-								try {
-									SERIA_Base::elevateUser(array($user, 'validate'));
-								} catch (SERIA_ValidationException $e) {
-									$errors = $e->getValidationErrors();
-									if (isset($errors['displayName'])) {
-										/* Second conflict, try a few more times to resolve this. */
-										$num = 0;
-										while (true) {
-											$user->set('displayName', $genDisp.' '.$num);
-											$valid = false;
-											try {
-												SERIA_Base::elevateUser(array($user, 'validate'));
-												$valid = true;
-											} catch (SERIA_ValidationException $e) {
-												$errors = $e->getValidationErrors();
-												if (!isset($errors['displayName']))
-													throw $e;
-												if ($num >= 10)
-													throw $e; /* No more tries */
-											}
-											if ($valid)
-												break;
-											$num++;
-										}
-									}
-								}
-							} else
-								throw $e;
-						}
-						if (SERIA_Base::elevateUser(array($user, 'save'))) {
-							/* Get a clean object, just to be sure. */
-							$uid = $user->get('id');
-							if (!$uid || !is_numeric($uid))
-								throw new SERIA_Exception('Unexpected invalid user-id');
-							$user = SERIA_User::createObject($uid);
-							if (!$user)
-								throw new SERIA_Exception('User-object nonex. or otherwise evaluating to false');
-							$plist = SERIA_PropertyList::createObject($user);
-							$plist->set('externalUser:'.$this->rpc->getHostname(), $user_data['uid']);
-							$plist->save();
-							foreach ($safeEmails as $email)
-								SERIA_SafeEmailUsers::registerUserEmail($user, $email);
-						} else
-							throw new SERIA_Exception('Failed to save user');
-						/* Finished. Let them go ahead.. */
-						SERIA_Base::user($user);
-					}
-					/*
-					 * Sync metadata with server
-					 */
-					$this->periodicUpdateUserMeta($user, 20);
-					$_SESSION['AUTHPROVIDERS_REMOTE_XML'] = $status[1];
-					$_SESSION['AUTHPROVIDERS_REMOTE_SID'] = $status[2];
-					$cookieName = 'logindiscovery'.sha1($this->rpc->getHostname());
-					if (isset($_COOKIE[$cookieName])) {
-						if ($_COOKIE[$cookieName] == $status[3]) {
-							$_SESSION['authproviders_external_discovery_latest'] = $status[3];
-							SERIA_Base::debug('Autodiscovery is enabled for this session. (success)');
-						} else {
-							SERIA_Base::debug('WARNING: COOKIE CONTENT CHANGED DURING LATE LOGIN PROCESS! found \''.$_COOKIE[$cookieName].'\', but expected \''.$status[3].'\'');
-							/*
-							 * Record this in session, if this happens twice within 300 seconds (5 minutes) then
-							 * give up cookie discovery. This avoids redirecting clients back and forth and never
-							 * succeeding to login permanently. (Mixed with autodiscovery, redirects for re-login
-							 * at next page view.)
-							 */
-							$ts = time();
-							if (isset($_SESSION['authproviders_external_discovery_unexpected_change_ts'])) {
-								$ts_check = $_SESSION['authproviders_external_discovery_unexpected_change_ts'];
-								if ($ts_check > ($ts - 300)) {
-									SERIA_Base::debug('Authproviders: ERROR: AUTODISCOVERY FAILURE, SOMETHING IS MODIFYING OR BLOCKING CHANGE TO DISCOVERY COOKIE!');
-									SERIA_Base::debug('Authproviders: DISABLED AUTODISCOVERY FOR THIS SESSION!');
-									if (isset($_SESSION['authproviders_external_discovery_latest'])) {
-										$_SESSION['authproviders_external_discovery_latest'] = null;
-										unset($_SESSION['authproviders_external_discovery_latest']);
-									}
-								} else
-									$_SESSION['authproviders_external_discovery_latest'] = $status[3];
-							}
-							$_SESSION['authproviders_external_discovery_unexpected_change_ts'] = $ts;
-						}
-					} else {
-						SERIA_Base::debug('External authprovider did not find a discovery cookie. Autodiscovery disabled.');
-					}
-					SERIA_PersistentExternalAuthentication::authenticatedExternally();
-				} else if ($status[0] == SERIA_ExternalAuthenticationAgent::STATUS_FAILED) {
-					/*
-					 * Unset the discovery cookie.
-					 */
-					$cookieName = 'logindiscovery'.sha1($this->rpc->getHostname());
-					$_COOKIE[$cookieName] = 'failure';
-				} else {
-					SERIA_Base::debug('ERROR: Authentication status code is not known: '.$status[0].' (Update me!)');
-					SERIA_Base::debug('Can\'t authenticate due to protocol error!');
-				}
-				if (isset($_GET['return']) && $_GET['return'])
-					return $_GET['return'];
-				return true; /* We have successfully gone through the procedure, SERIA_Base tells the login status */
+		$backtome = SERIA_Authproviders::getHandshakeReturnUrl($provider, $interactive, $guestLogin);
+		$state->set('guestLogin', $guestLogin);
+		$state->set('interactive', $interactive);
+		$backtome = $state->stampUrl($backtome);
+		$params = array('e' => $this->getHostname(), 'u' => SERIA_AuthenticationState::shortenUrl($backtome), 'i' => $interactive, 'g' => $guestLogin);
+		$compressed = base64_encode(gzcompress(json_encode($params), 9));
+		$partLen = 255;
+		$partNum = 0;
+		$params = array();
+		while ($compressed) {
+			if (strlen($compressed) > $partLen) {
+				$part = substr($compressed, 0, $partLen);
+				$compressed = substr($compressed, $partLen);
+			} else {
+				$part = $compressed;
+				$compressed = '';
+			}
+			$params['c'.$partNum] = $part;
+			$partNum++;
 		}
+		SERIA_Base::redirectTo($state->stampUrl(SERIA_Meta::manifestUrl('Authproviders', 'metaStartExtAuth', $params)));
 	}
 	public static function automaticDiscoveryPreCheck()
 	{
