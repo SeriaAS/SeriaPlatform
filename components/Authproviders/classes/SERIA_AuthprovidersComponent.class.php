@@ -65,6 +65,10 @@
 			 * Clean up login-provider info at delete:
 			 */
 			SERIA_Hooks::listen(SERIA_User::DELETE_HOOK, array('SERIA_UserAuthenticationProvider', 'deletingUser'));
+			/*
+			 * Clean up user-xml at user delete.
+			 */
+			SERIA_Hooks::listen(SERIA_User::AFTER_DELETE_HOOK, array('SERIA_UserLoginXml', 'cleanupSids'));
 		}
 		public function guiEmbed($gui)
 		{

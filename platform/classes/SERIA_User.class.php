@@ -6,7 +6,8 @@
 			$_db;
 
 		const DELETE_HOOK = 'SERIA_User::DELETE_HOOK';
-
+		const AFTER_DELETE_HOOK = 'SERIA_User::AFTER_DELETE_HOOK';
+		
 		public function offsetExists($name)
 		{
 			return isset($this->_row[$name]);
@@ -362,6 +363,7 @@
 			 * Finally delete the user:
 			 */
 			SERIA_Base::db()->exec('DELETE FROM {users} WHERE id = :id', array('id' => $user->get('id')));
+			SERIA_Hooks::dispatch(self::AFTER_DELETE_HOOK, $user);
 		}
 
 		/**

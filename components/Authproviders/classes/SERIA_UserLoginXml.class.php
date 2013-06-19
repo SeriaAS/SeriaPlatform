@@ -121,6 +121,18 @@ class SERIA_UserLoginXml
 		}
 		return array();
 	}
+	public static function revokeUserXml(SERIA_User $deleteUser)
+	{
+		SERIA_Base::debug('Cleaning up SID-XML-files..');
+		$sids = self::getAllSids();
+		foreach ($sids as $sid) {
+			$data = self::getParsedXml($sid);
+			if ($data && isset($data['uid']) && $data['uid'] != $deleteUser->get('id'))
+				continue;
+			SERIA_Base::debug('XML for '.$sid.' revoked..');
+			self::deleteUserXml($sid);
+		}
+	}
 	public static function cleanupSids()
 	{
 		SERIA_Base::debug('Cleaning up SID-XML-files..');
@@ -131,7 +143,7 @@ class SERIA_UserLoginXml
 				if ($sess->getUser() === false) {
 					/*
 					 * Logged out on this session
-					 */
+					*/
 					SERIA_Base::debug('Removing roam XML for session '.$sid);
 					self::deleteUserXml($sid);
 					continue;
