@@ -5,7 +5,7 @@ if (!defined('SERIA_HTTP_ROOT')) {
 	SERIA_Template::disable();
 }
 
-$supportedSiteTypes = array('test', 'drupal');
+$supportedSiteTypes = array('test', 'drupal', 'seriaplatform');
 
 if (isset($_GET['siteType']))
 	$siteType = $_GET['siteType'];
@@ -113,6 +113,53 @@ globalSsoByJsRequesterData = [];
 						jQuery.ajax(
 							{
 								'url': '/seriaauth/ssoidentity',
+								'async': true,
+								'data': {
+									'roamauthurl': '',
+									'userChange': data.userChange
+								},
+								'type': 'POST',
+								'dataType': 'text',
+								'success': function (data, textStatus, jqXHR) {
+									if (typeof JSON === 'object' && typeof JSON.parse === 'function')
+										data = JSON.parse(data);
+									else
+										eval('data = '+data+';');
+									if (data.reload)
+										location.reload(true);
+								}
+							}
+						);
+					}
+				<?php
+				break;
+				case 'seriaplatform':
+				?>
+					if (data.loggedIn) {
+						jQuery.ajax(
+							{
+								'url': '/?route=seria/Authproviders/metaSsoIdentity',
+								'async': true,
+								'data': {
+									'roamauthurl': data.userXml,
+									'userChange': data.userChange
+								},
+								'type': 'POST',
+								'dataType': 'text',
+								'success': function (data, textStatus, jqXHR) {
+									if (typeof JSON === 'object' && typeof JSON.parse === 'function')
+										data = JSON.parse(data);
+									else
+										eval('data = '+data+';');
+									if (data.reload)
+										location.reload(true);
+								}
+							}
+						);
+					} else {
+						jQuery.ajax(
+							{
+								'url': '/?route=seria/Authproviders/metaSsoIdentity',
 								'async': true,
 								'data': {
 									'roamauthurl': '',
