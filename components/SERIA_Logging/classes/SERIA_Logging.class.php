@@ -25,7 +25,7 @@
 			$dirs = glob(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/*', GLOB_ONLYDIR); /* Gives an array of dates */
 			foreach($dirs as $dir)
 			{
-				$files = glob($dir.'/*.gz');
+				$files = glob($dir.'/*.gz'); /***/
 				foreach($files as $file)
 				{
 					$if = gzopen($file, 'rb');
@@ -112,6 +112,15 @@
 						'YmdH:'.date('YmdH', $ts),
 					), $usedBandwidth);
 
+					$countLine = true;
+					if(intval($lineArray[5]) == 206) {
+						if(strpos($lineArray[9], "bytes=0" === 0) { // If code is 206 (segment download), only count first segment as hit
+							$countLine = true;
+						} else {
+							$countLine = false;
+							fwrite($fp_invalid, $lineToRecord);
+						}
+					}
 					$path = substr($lineArray[1], 4, strpos($lineArray[1], " ", 4)-4);
 					if(($p = strpos($path, '?')) !== false) {
 						$path = substr($path, 0, $p);
