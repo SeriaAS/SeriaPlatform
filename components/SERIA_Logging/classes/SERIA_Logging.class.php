@@ -84,6 +84,7 @@
 					$lineArray[1] = getAndRemoveFirstQuotePair($lineToRecord); // REQUEST
 					$lineArray[2] = getAndRemoveFirstQuotePair($lineToRecord); // REFERER
 					$lineArray[3] = getAndRemoveFirstQuotePair($lineToRecord); // USER AGENT
+					$lineArray[4] = getAndRemoveFirstQuotePair($lineToRecord);
 
 					$lineInfo = explode(" ", $lineToRecord);
 					$firstParam = $lineInfo[0];
@@ -113,24 +114,26 @@
 					), $usedBandwidth);
 
 					$countLine = true;
-					if(intval($lineArray[5]) == 206) {
-						if(strpos($lineArray[9], "bytes=0" === 0) { // If code is 206 (segment download), only count first segment as hit
+					if(intval($lineInfo[6]) == 206) {
+						if($lineArray[4] == "bytes=0-1") { // If code is 206 (segment download), only count first segment as hit
 							$countLine = true;
 						} else {
 							$countLine = false;
-							fwrite($fp_invalid, $lineToRecord);
 						}
 					}
+
 					$path = substr($lineArray[1], 4, strpos($lineArray[1], " ", 4)-4);
 					if(($p = strpos($path, '?')) !== false) {
 						$path = substr($path, 0, $p);
 					}
-					$hitCounter->add(array(
-						'p:'.$path,
-						'Ym/p:'.date('Ym', $ts).$path,
-						'Ymd/p:'.date('Ymd', $ts).$path,
-						'YmdH/p:'.date('YmdH', $ts).$path,
-					));
+					if($countLine) {
+						$hitCounter->add(array(
+							'p:'.$path,
+							'Ym/p:'.date('Ym', $ts).$path,
+							'Ymd/p:'.date('Ymd', $ts).$path,
+							'YmdH/p:'.date('YmdH', $ts).$path,
+						));
+					}
 				}
 				if(ftell($fp_invalid)>0)
 				{
