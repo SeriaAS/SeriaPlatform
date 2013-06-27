@@ -77,6 +77,9 @@
 
 				$fpz = gzopen(SERIA_PRIV_ROOT.'/SERIA_Logging/processed/'.date('Y-m-d').'/'.basename($fileToProcess).'.gz', 'w9');
 				$fp_invalid = fopen(SERIA_PRIV_ROOT.'/SERIA_Logging/invalid/'.basename($fileToProcess).'.invalid', 'a+');
+				$uniqueIpRegister = array();
+				$uniqueHashRegister = array();
+
 				while(!feof($fp)) {
 					$lineToRecord = fgets($fp, 4096);
 					gzwrite($fpz, $lineToRecord); 
@@ -114,9 +117,23 @@
 					), $usedBandwidth);
 
 					$countLine = true;
-					if(intval($lineInfo[6]) == 206) {
-						if($lineArray[4] == "bytes=0-1") { // If code is 206 (segment download), only count first segment as hit
+					if(($lineInfo[6] == 206) && $lineArray[4] == NULL) {
+						if($uniqueIpRegister[$lineInfo[0].$lineArray[1]] == true) continue;
+
+						$uniqueIpRegister[$lineInfo[0].$lineArray[1]] = true;
+					} else if(intval($lineInfo[6]) == 206) {
+						$minuteArr = explode(":",$lineInfo[3]);
+						$lineMinute = $minuteArr[2];
+
+						// $lineArray[4] is always "bytes=x-y", get the first bytesum
+						$firstByte = substr($lineArray[4], 6, strpos($lineArray[4], "-")-6);
+
+						// Create a unique hash based on the information we have
+						$countHash = md5($lineInfo[0]."-".$minuteArr[2]."-".$lineArray[1]."-".floor($firstByte/10));
+
+						if(!$uniqueHashRegister[$countHash]) { // If code is 206 (segment download), only count first segment as hit
 							$countLine = true;
+							$uniqueHashRegister[$countHash] = true;
 						} else {
 							$countLine = false;
 						}
