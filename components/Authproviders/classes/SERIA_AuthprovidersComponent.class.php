@@ -43,6 +43,7 @@
 			SERIA_Router::instance()->addRoute('Authproviders', 'Authproviders SSO delete user', array($this, 'ssoDeleteUser'), 'components/authproviders/ssodeleteuser');
 
 			if ($this->isEnabled()) {
+				SERIA_Hooks::listen('SeriaPlatformBootComplete', array($this, 'platformBootComplete'));
 				SERIA_Hooks::listen('login', array($this, 'handleLogin'));
 				SERIA_Hooks::listen('guestLogin', array($this, 'handleGuestLogin'));
 				SERIA_Hooks::listen('SERIA_User::__construct', array('SERIA_Authproviders', 'userObjectHook'));
@@ -100,6 +101,22 @@
 		public static function getMacKey()
 		{
 			return SERIA_Base::getParam('seria_authproviders_mac_key'); 
+		}
+
+		public function platformBootComplete()
+		{
+			if (sizeof($_POST) == 0) {
+				if (SERIA_Base::user() !== false) {
+					if (($provider =& $this->loggedInByProvider())) {
+						SERIA_Base::debug('Calling automatic logout discovery..');
+						/*
+						 * Discover remote logout.
+						 */
+						$provider->automaticDiscovery();
+					} else
+						SERIA_Base::debug('Automatic logout discovery skipped..');
+				}
+			}
 		}
 
 		public function beforeLogout($user)
