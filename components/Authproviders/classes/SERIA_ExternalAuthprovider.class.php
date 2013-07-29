@@ -41,6 +41,7 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 			if ($provider->getHostname() == $hostname)
 				return $provider;
 		}
+		return null;
 	}
 
 	public function getHostname()
@@ -127,7 +128,16 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 		$remoteId = $this->getUserRemoteId($user);
 		if ($remoteId === false)
 			return;
-		$sync = $this->rpc->updateUserMeta($remoteId, $meta = $user->getAllMetaExtended());
+		try {
+			$sync = $this->rpc->updateUserMeta($remoteId, $meta = $user->getAllMetaExtended());
+		} catch (Exception $e) {
+			/*
+			 * 'No such user' errors can occur if the user has been incompletely deleted.
+			 * It should only occcur in case of database restores which do not agree about
+			 * the deletion from the auth-server.
+			 */
+			return;
+		}
 		$m = array();
 		foreach ($meta as $data) {
 			$m[$data['name']] = array(
@@ -239,6 +249,17 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 		}
 		SERIA_Base::debug('WARNING: CANNOT REACH EXTERNAL AUTH SERVER! ASSUMING HTTPS IN BASEURL');
 		return 'https://'.$this->getHostname();
+	}
+	public static function getSsoScripts()
+	{
+		SERIA_Authproviders::loadProviders('SERIA_ExternalAuthprovider');
+		$scripts = array();
+		$providers = SERIA_Authproviders::getProviders();
+		foreach ($providers as &$provider) {
+			if ($provider instanceof SERIA_ExternalAuthprovider)
+				$scripts[] = $provider->getRemoteBaseUrl().'/?route=components/authproviders/ssobyjs&siteType=seriaplatform';
+		}
+		return $scripts;
 	}
 	public function getExternalReq2RequestForm($interactive, $guestLogin, $returnUrl, $abortUrl)
 	{
@@ -448,6 +469,7 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 		 */
 		$this->periodicUpdateUserMeta($user, 20);
 		$_SESSION['AUTHPROVIDERS_REMOTE_XML'] = $remoteXml;
+		$_SESSION['SERIA_Authproviders_xmlsso_XMLUrl'] = $remoteXml;
 	}
 	public function authenticate($interactive=true, $reset=false, $guestLogin=false)
 	{
@@ -497,6 +519,21 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 		return false;
 	}
 
+	protected function revalidateJsSso($url)
+	{
+		$ok = false;
+		if ($url) {
+			$user = RoamAuthprovider::findUserByRoamAuthUrl($url);
+			if ($user) {
+				$ok = $user->get('id') == SERIA_Base::user()->get('id');
+			}
+		}
+		if (!$ok) {
+			$component = SERIA_Components::getComponent('seria_authproviders');
+			$component->loggedInByProvider(null);
+			SERIA_Base::user(NULL);
+		}
+	}
 	protected function autoCalledWithLogin()
 	{
 		SERIA_PersistentExternalAuthentication::externalAuthenticationRefresh($this);
@@ -504,39 +541,18 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 	public function automaticDiscovery()
 	{
 		if ($this->isAvailable()) {
-			$cookieName = 'logindiscovery'.sha1($this->rpc->getHostname());
-			if (isset($_COOKIE[$cookieName])) {
-				if (SERIA_Base::user() !== false) {
-					SERIA_Base::debug('Automatic logout discovery with cookie..');
-					if (!isset($_SESSION['authproviders_external_discovery_latest'])) {
-						SERIA_Base::debug('Authproviders: Warning: Autodiscovery is disabled (propably missing or failing cookie)');
+			if (SERIA_Base::user() !== false) {
+				if (isset($_SESSION['SERIA_Authproviders_xmlsso_XMLUrl'])) {
+					$this->revalidateJsSso($_SESSION['SERIA_Authproviders_xmlsso_XMLUrl']);
+				} else {
+					SERIA_Base::debug('Automatic logout discovery without cookie..');
+					if (isset($_SESSION['authproviders_external_discovery_latest'])) {
+						SERIA_Base::debug('Lost login cookie. Checking with the auth whether actually logged out.');
+						SERIA_PersistentExternalAuthentication::forceExternalAuthenticationRefresh($this);
 						return false;
 					}
-					if ($_COOKIE[$cookieName] == $_SESSION['authproviders_external_discovery_latest']) {
-						$this->autoCalledWithLogin();
-						return false;
-					} else {
-						SERIA_Base::debug('Logging out because of logout cookie, or updated login cookie.');
-						/* Logged out externally: detach provider and log out local */
-						$component = SERIA_Components::getComponent('seria_authproviders');
-						$component->loggedInByProvider(null);
-						SERIA_Base::user(NULL); /* log out */
-						return false;
-					}
-				} else if (substr($_COOKIE[$cookieName], 0, 5) == 'auto:') {
-					/*
-					 * Login
-					 */
-					return true; /* Whohoo! */
+					$this->autoCalledWithLogin();
 				}
-			} else if (SERIA_Base::user() !== false) {
-				SERIA_Base::debug('Automatic logout discovery without cookie..');
-				if (isset($_SESSION['authproviders_external_discovery_latest'])) {
-					SERIA_Base::debug('Lost login cookie. Checking with the auth whether actually logged out.');
-					SERIA_PersistentExternalAuthentication::forceExternalAuthenticationRefresh($this);
-					return false;
-				}
-				$this->autoCalledWithLogin();
 			}
 		}
 		return false;
