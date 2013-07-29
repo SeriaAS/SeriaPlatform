@@ -53,6 +53,18 @@ class RoamAuthprovider implements SERIA_IAuthprovider
 	{
 		return SERIA_Base::user() ? true : false;
 	}
+	public function findExternalAuthproviderByRoamAuthData($simpleUserData)
+	{
+		if (!isset($simpleUserData['hostname']))
+			return null;
+		$hostname = $simpleUserData['hostname'];
+		SERIA_Authproviders::loadProviders('SERIA_ExternalAuthprovider');
+		$provider = SERIA_ExternalAuthprovider::getProviderByHostname($hostname);
+		if ($provider)
+			return $provider;
+		else
+			return null;
+	}
 	public function findUserByRoamAuthData($simpleUserData)
 	{
 		/*
@@ -166,7 +178,7 @@ class RoamAuthprovider implements SERIA_IAuthprovider
 	{
 		$cache = self::cache();
 		if(!($xmlData = $cache->get('xmldata:'.$authUrl))) {
-			$cache->set('xmldata:'.$authUrl, $xmlData = file_get_contents($authUrl));
+			$cache->set('xmldata:'.$authUrl, $xmlData = file_get_contents($authUrl), 30);
 		}
 		$simpleUserData = SERIA_UserLoginXml::parseXml($xmlData);
 		if ($simpleUserData) {
