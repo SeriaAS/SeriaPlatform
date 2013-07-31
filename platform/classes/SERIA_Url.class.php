@@ -234,6 +234,11 @@
 			return $this;
 		}
 
+		public function getPath() {
+			$parsed = parse_url($this->_url);
+			return $parsed['path'];
+		}
+
 		/**
 		*	Navigate up one folder. Unsets all query params and fragment.
 		*	@return SERIA_Url
