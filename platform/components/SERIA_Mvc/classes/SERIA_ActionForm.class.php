@@ -110,7 +110,7 @@ $form->begin()."<table><thead>';
 			else if($this->_method === 'get' && isset($_GET['SAFI']))
 				$id = $_GET['SAFI'];
 			else $id = NULL;
-			return $this->id == $id;
+			return $this->id === $id; // '' == NULL is true, so must use strict check.
 		}
 
 		/**
@@ -225,7 +225,7 @@ $form->begin()."<table><thead>';
 		*/
 		public function field($name, array $attributes=NULL)
 		{
-			$legal = array('style','class','title','id');
+			$legal = array('style','class','title','id','autocomplete','placeholder');
 			foreach($attributes as $key => $val)
 			{
 				if(!in_array($key, $legal))
@@ -460,7 +460,7 @@ $form->begin()."<table><thead>';
 				'type' => 'password',
 				'id' => $this->_prefix.$name,
 				'name' => $this->_prefix.$name,
-				'value' => ($this->get($name)? $this->validationData !== NULL && isset($this->validationData[$name]) ? $this->validationData[$name]: '{__PW_HERE__}' : ''),
+				'value' => ($this->get($name) ? $this->validationData !== NULL && isset($this->validationData[$name]) ? $this->validationData[$name]: '{__PW_HERE__}' : ''),
 				'class' => 'password'.($this->hasError($name)?' ui-state-error':''),
 			));
 		}
@@ -520,6 +520,9 @@ $form->begin()."<table><thead>';
 			return $this;
 		}
 
+		/**
+		*	Render an error message using $this->_errorTemplate
+		*/
 		public function error($name)
 		{
 			if($this->errors !== false && isset($this->errors[$name]))
