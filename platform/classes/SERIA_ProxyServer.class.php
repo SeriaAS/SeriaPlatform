@@ -3,8 +3,14 @@
 	 *	Class for handling proxy servers that work in front of Seria Platform.
 	 */
 	class SERIA_ProxyServer {
+		protected static $proxyLogId = 0;
 		protected static $cacheLim = null;
 		protected static $expireTime = null;
+
+		protected static function proxyLog($message) {
+			if(SERIA_DEBUG)
+				header("X-Proxy-".(self::$proxyLogId++).": ".$message);
+		}
 
 		/**
 		 *
@@ -13,6 +19,7 @@
 		 */
 		public static function init()
 		{
+			self::proxyLog('init');
 			$ttl = 60;
 			header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
 			header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
@@ -26,6 +33,7 @@
 		 */
 		public static function private_init()
 		{
+			self::proxyLog('private-init');
 			$ttl = 60;
 			header("Cache-Control: private, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
 			header("Pragma: no-cache");
@@ -40,6 +48,7 @@
 		 * Sends headers that informs the proxy server to never cache this page.
 		 */
 		public static function noCache() {
+			self::proxyLog('noCache');
 	                header("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0");
 	                header("Pragma: no-cache");
 	                header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
@@ -58,6 +67,8 @@
 		 */
 		public static function privateCache($ttl=60)
 		{
+			self::proxyLog("privateCache($ttl)");
+
 			if (self::$cacheLim == 'nocache' ||
 			    (self::$cacheLim == 'private' && self::$expireTime < $ttl)) {
 				/*
@@ -98,6 +109,7 @@
 		 */
 		public static function publicCache($ttl=60)
 		{
+			self::proxyLog("publicCache($ttl)");
 			if ($ttl !== null) {
 				if (self::$expireTime !== null)
 					$shorterTtl = ($ttl < self::$expireTime);
