@@ -216,7 +216,7 @@ class SERIA_Validator
 				case self::COUNTRYCODE:
 					$dictionary = SERIA_Dictionary::getDictionary('iso-3166');
 					if(!isset($dictionary[$value]))
-						return isset($rule[1]) ? $rule[1] : _t("No such country code.");
+						return isset($rule[1]) ? $rule[1] : _t("No such country code as '%code%'.", array('code' => $value));
 					break;
 				case self::MIN_VALUE:
 					if($value < $rule[1])
