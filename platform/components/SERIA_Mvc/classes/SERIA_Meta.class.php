@@ -134,7 +134,7 @@
 			{
 				if($errors!==false)
 					throw new SERIA_ValidationException('Validation errors', $errors);
-				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->insert($row);
+				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->insert($row);
 			}
 			else
 			{
@@ -150,7 +150,7 @@
 					if ($errors)
 						throw new SERIA_ValidationException('Validation errors', $errors);
 				}
-				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'])->update($row[$spec['primaryKey']], $row);
+				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->update($row[$spec['primaryKey']], $row);
 			}
 			$instance->MetaBackdoor('update_row', $row);
 
@@ -348,7 +348,7 @@
 				$spec['primaryKey'] = 'id';
 
 			if(!isset($spec['shardBy']))
-				$spec['shardBy'] = false;
+				$spec['shardBy'] = NULL;
 
 			if(!isset($spec['fields'][$spec['primaryKey']]))
 			{
@@ -755,6 +755,26 @@
 							array(SERIA_Validator::TIMEZONE),
 						)),
 						"values" => new SERIA_TimezoneDictionary(),
+					);
+				case "latitude" :
+					return array(
+						'fieldtype' => 'text',
+						'type' => 'float',
+						'validator' => new SERIA_Validator(array(
+							array(SERIA_Validator::FLOAT),
+							array(SERIA_Validator::MIN_VALUE, -90),
+							array(SERIA_Validator::MAX_VALUE, 90),
+						)),
+					);
+				case "longitude" :
+					return array(
+						'fieldtype' => 'text',
+						'type' => 'float',
+						'validator' => new SERIA_Validator(array(
+							array(SERIA_Validator::FLOAT),
+							array(SERIA_Validator::MIN_VALUE, -180),
+							array(SERIA_Validator::MAX_VALUE, 180),
+						)),
 					);
 				case "duration" :
 					return array(
