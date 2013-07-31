@@ -41,7 +41,6 @@
 
 	if(!($seria_options['skip_session']) && (isset($_GET[get_cfg_var('session.name')]) || isset($_COOKIE[get_cfg_var('session.name')])))
 	{ // session has not explicitly been stopped, and a session id seem to exist in either COOKIE or GET
-
 		// the session is sent trough GET-variable, possibly from a Flash or Silverlight application.
 		if(!empty($_GET[get_cfg_var('session.name')]))
 			session_id($_GET[get_cfg_var('session.name')]);
@@ -52,9 +51,11 @@
 		}
 		else
 		{ // no caching
-			seria_headers_privatecache_init();
+			if(SERIA_COMPATIBILITY<3) seria_headers_privatecache_init();
 		}
+$t = microtime(TRUE);
 		session_start();
+header("X-Seria-Sessions-Start-Time: ".(microtime(TRUE)-$t));
 	}
 	else if((isset($_POST) && sizeof($_POST)>0) || (isset($_FILES) && sizeof($_FILES)>0))
 	{ // never cache this page, since it contains $_POST or $_FILES
