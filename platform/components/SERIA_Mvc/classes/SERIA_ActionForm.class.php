@@ -210,7 +210,7 @@ $form->begin()."<table><thead>';
 			{
 				$spec = SERIA_Meta::_getSpec($spec);
 				$spec = $spec['fields'][$name];
-			}
+			} else $spec = SERIA_Meta::parseFieldSpec($spec);
 
 			if($this->_spec === NULL)
 				$this->_spec = array();

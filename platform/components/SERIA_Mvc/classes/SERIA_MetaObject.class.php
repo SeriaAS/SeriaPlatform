@@ -71,14 +71,17 @@
 		}
 
 		// if $spec is provided, I will not try to fetch the spec myself
+		/**
+		*	Return the field specification for the primary key of this table
+		*/
 		public static function MetaField($spec=NULL)
 		{
 			$className = get_called_class();
 			if($spec===$null)
 			{
-				if ($className != 'SERIA_MetaObject')
-					$spec = SERIA_Meta::_getSpec($className);
-				else
+				if ($className != 'SERIA_MetaObject') {
+					return SERIA_Meta::_getSpec($className, TRUE);
+				} else
 					$spec = array();
 			}
 			if(isset($spec['caption']))

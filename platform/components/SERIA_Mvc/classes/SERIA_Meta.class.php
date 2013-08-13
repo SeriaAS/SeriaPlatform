@@ -1,4 +1,5 @@
 <?php
+set_time_limit(3);
 	/**
 	*	Todo:
 	*	- LOAD		OK
@@ -284,8 +285,9 @@
 		/**
 		*	The Fluent API is deprecated. For smooth transition to Meta API, the Meta API supports Fluent objects.
 		*/
-		protected static function _getSpecFromFluent($item)
+		protected static function _getSpecFromFluent($item, $onlyPrimaryKey=FALSE)
 		{
+//FRODE
 			$res = array();
 			if(is_object($item))
 			{
@@ -303,22 +305,168 @@
 			return $res;
 		}
 
+		public static function parseFieldSpec($fieldSpec, &$entireSpec=NULL) {
+			if(!is_array($fieldSpec)) {	// 'createdBy', 'createdDate' etc
+				return self::_parseFieldSpecSpecial($fieldSpec, $entireSpec);
+			} else if(isset($fieldSpec[0])) { // array('address required', _t("Address Label"))
+				return self::_parseFieldSpecSimple($fieldSpec, $entireSpec);
+			} else {
+				return self::_parseFieldSpecFull($fieldSpec, $entireSpec);
+			}
+		}
+
+		protected static function _parseFieldSpecFull($fieldSpec, &$entireSpec=NULL) {
+			if(isset($fieldSpec['class']))
+			{
+				if(in_array('SERIA_IMetaField', class_implements($fieldSpec['class'])))
+				{
+					if ($fieldSpec['class'] == $item)
+						$info = call_user_func(array($fieldSpec['class'], 'MetaField'), $spec);
+					else
+						$info = call_user_func(array($fieldSpec['class'], 'MetaField'));
+					foreach($info as $k => $v)
+					{
+						$fieldSpec[$k] = $v;
+					}
+				}
+			}
+			return $fieldSpec;
+		}
+
+		protected static function _parseFieldSpecSimple($fieldSpec, &$entireSpec=NULL) {
+			$tokens = explode(" ", trim($fieldSpec[0]));
+			$res = self::_getMappedFieldSpec($tokens[0], $fieldSpec);
+			unset($tokens[0]);
+
+			if(isset($res['class']))
+			{
+				if(in_array('SERIA_IMetaField', class_implements($res['class'])))
+				{
+					if($res['class'] == $item)
+						$fieldclass_info = call_user_func(array($res['class'], 'MetaField'), $entireSpec);
+					else
+						$fieldclass_info = call_user_func(array($res['class'], 'MetaField'));
+					foreach($fieldclass_info as $k => $v)
+					{
+						$res[$k] = $v;
+					}
+				}
+			}
+
+			foreach($tokens as $token) if(isset($token))
+			{
+				switch(strtolower($token))
+				{
+					case 'unique' :
+						$res['validator']->addRule(array(SERIA_Validator::META_UNIQUE));
+						break;
+					case 'required' :
+						$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
+						break;
+					default :
+						if(substr(strtolower($token), 0, 7)==="unique(")
+						{
+							$name = substr($token, 7, strpos($token, ")")-7);
+							if(isset($entireSpec['fields'][$name]))
+							{
+								$res['validator']->addRule(array(SERIA_Validator::META_UNIQUE, NULL, $name));
+								break;
+							}
+							else
+							{
+								throw new SERIA_Exception("Unknown column '".$name."' in UNIQUE spec for column '".$tokens[1]."'.");
+							}
+						}
+						throw new SERIA_Exception("Unknown token in field spec '".$token."'");
+						break;
+				}
+			}
+
+			if(!isset($fieldSpec[1]))
+				throw new SERIA_Exception("Caption not specified in field spec for '$key' in class '$className'. Expected array('<type> [required]','<caption>').");
+
+			$res['caption'] = $fieldSpec[1];
+
+			if(isset($fieldSpec[2]) && is_array($fieldSpec[2]))
+			{
+				foreach($fieldSpec[2] as $k => $v)
+					$res[$k] = $v;
+			}
+
+			return $res;
+		}
+
+		protected static function _parseFieldSpecSpecial($fieldSpec, &$entireSpec=NULL) {
+			/*
+			 * Split info in tokens by any whitespace (regex any-whitespace=\s).
+			 */
+			$tokens = preg_split("/[\\s]+/", $fieldSpec);
+			if (!$tokens)
+				throw new SERIA_Exception('No type or spec of field '.$key.' specified!');
+			$specialName = array_shift($tokens);
+			switch($specialName)
+			{
+				case "createdBy" : case "modifiedBy" :
+					$res = self::_getMappedFieldSpec('SERIA_User');
+					$res['caption'] = ($specialName==='createdBy' ? _t("Registered by") : _t('Modified by'));
+					$res['special'] = $specialName;
+					return $res;
+				case "createdDate" : case "modifiedDate" :
+					$res = self::_getMappedFieldSpec('datetime');
+					$res['caption'] = ($specialName==='createdDate' ? _t("Created date") : _t('Last modified date'));
+					$res['special'] = $specialName;
+					if ($tokens) {
+						foreach ($tokens as $token) {
+							if ($token == 'sortable')
+								$res['sortable'] = true;
+						}
+					}
+					return $res;
+				case "isEnabled" :
+					$res = self::_getMappedFieldSpec('boolean');
+					$res['caption'] = _t("Enabled");
+					$res['special'] = $specialName;
+					return $res;
+				case "parent":
+					// try to identify the primary key spec here, without causing a loop
+					$res = array(
+						"type" => self::$_primaryKeySpecs[$item],
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::META_OBJECT, $item))),
+						"class" => $item,
+						"caption" => _t("Parent"),
+						"special" => $specialName,
+					);
+					if ($tokens) {
+						foreach ($tokens as $token) {
+							if($token=='required')
+							{
+								$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
+							}
+						}
+					}
+					return $res;
+				default :
+					throw new SERIA_Exception("Unknown special type '$fieldSpec'.");
+			}
+			throw new Exception("Unable to parse special field '$fieldSpec'");
+		}
+
 		/**
 		*	Method for internal usage within SERIA_Meta. Get field specification for any SERIA_MetaObject
 		*
 		*	@param var $item	Classname or instance of a SERIA_MetaObject
 		*/
-		public /*package*/ static function _getSpec($item)
+		public /*package*/ static function _getSpec($item, $onlyPrimaryKey=FALSE)
 		{
 			if(is_object($item))
-				return self::_getSpec(get_class($item));
+				return self::_getSpec(get_class($item), $onlyPrimaryKey);
 
 			if(!class_exists($item))
 			{
-				throw new SERIA_Exception('No such outboard class "'.$item.'"');
+				throw new SERIA_Exception('No such SERIA_MetaObject class "'.$item.'"');
 			}
 
-			if(isset(self::$_specCache[$item]))
+			if(!$onlyPrimaryKey && isset(self::$_specCache[$item]))
 			{
 				return self::$_specCache[$item];
 			}
@@ -329,13 +477,26 @@
 
 				if(is_subclass_of($item, 'SERIA_FluentObject') || in_array('SERIA_IFluentObject', class_implements($item)))
 				{
-					return self::_getSpecFromFluent($item);
+					return self::_getSpecFromFluent($item, $onlyPrimaryKey);
 				}
 
 				throw new SERIA_Exception('Class "'.$item.'" must extend SERIA_MetaObject');
 			}
 
 			$spec = call_user_func(array($item, 'Meta'));
+
+			if($onlyPrimaryKey) { // Prevents loops by not inspecting other fields in the target type
+				$primaryKeyName = isset($spec['primaryKey']) ? $spec['primaryKey'] : 'id';
+				$caption = isset($spec['caption']) ? $spec['caption'] : "No caption specified for '$item'";
+				if(isset($spec['fields'][$primaryKeyName])) {
+					$spec = $spec['fields'][$primaryKeyName];
+				} else {
+					$spec = 'primarykey';
+				}
+				$spec = self::parseFieldSpec(array($spec, $caption));
+				self::$_primaryKeySpecs[$item] = $spec['type'];
+				return $spec;
+			}
 
 			// REWRITE SPEC TO SUPPORT TEMPLATES FOR FIELDS ETC.
 
@@ -361,140 +522,16 @@
 			{
 				if(!is_array($info))
 				{ // $spec['fields']['myField'] = 'createdBy';
-					/*
-					 * Split info in tokens by any whitespace (regex any-whitespace=\s).
-					 */
-					$tokens = preg_split("/[\\s]+/", $info);
-					if (!$tokens)
-						throw new SERIA_Exception('No type or spec of field '.$key.' specified!');
-					$specialName = array_shift($tokens);
-					switch($specialName)
-					{
-						case "createdBy" : case "modifiedBy" :
-							$spec['fields'][$key] = self::_getMappedFieldSpec('SERIA_User');
-							$spec['fields'][$key]['caption'] = ($specialName==='createdBy' ? _t("Registered by") : _t('Modified by'));
-							$spec['fields'][$key]['special'] = $specialName;
-							break;
-						case "createdDate" : case "modifiedDate" :
-							$spec['fields'][$key] = self::_getMappedFieldSpec('datetime');
-							$spec['fields'][$key]['caption'] = ($specialName==='createdDate' ? _t("Created date") : _t('Last modified date'));
-							$spec['fields'][$key]['special'] = $specialName;
-							if ($tokens) {
-								foreach ($tokens as $token) {
-									if ($token == 'sortable')
-										$spec['fields'][$key]['sortable'] = true;
-								}
-							}
-							break;
-						case "isEnabled" :
-							$spec['fields'][$key] = self::_getMappedFieldSpec('boolean');
-							$spec['fields'][$key]['caption'] = _t("Enabled");
-							$spec['fields'][$key]['special'] = $specialName;
-							break;
-						case "parent":
-							// try to identify the primary key spec here, without causing a loop
-							$res = array(
-								"type" => self::$_primaryKeySpecs[$item],
-								"validator" => new SERIA_Validator(array(array(SERIA_Validator::META_OBJECT, $item))),
-								"class" => $item,
-								"caption" => _t("Parent"),
-								"special" => $specialName,
-							);
-							if ($tokens) {
-								foreach ($tokens as $token) {
-									if($token=='required')
-									{
-										$res['validator']->addRule(array(SERIA_Validator::REQUIRED));
-									}
-								}
-							}
-							$spec['fields'][$key] = $res;
-							break;
-						default :
-							throw new SERIA_Exception("Unknown special type '$info'.");
-					}
+					$spec['fields'][$key] = self::parseFieldSpec($info, $spec);
+
 				}
 				else if(isset($info[0]))
 				{ // $spec['fields']['myField'] = array('name required', _t('Name:'));
-					$tokens = explode(" ", trim($info[0]));
-					$spec['fields'][$key] = self::_getMappedFieldSpec($tokens[0], $info);
-					unset($tokens[0]);
-
-
-					if(isset($spec['fields'][$key]['class']))
-					{
-						if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$key]['class'])))
-						{
-							if($spec['fields'][$key]['class'] == $item)
-								$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
-							else
-								$fieldclass_info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'));
-							foreach($fieldclass_info as $k => $v)
-							{
-								$spec['fields'][$key][$k] = $v;
-							}
-						}
-					}
-
-					foreach($tokens as $token)
-					if(isset($token))
-					{
-						switch(strtolower($token))
-						{
-							case 'unique' :
-								$spec['fields'][$key]['validator']->addRule(array(SERIA_Validator::META_UNIQUE));
-								break;
-							case 'required' :
-								$spec['fields'][$key]['validator']->addRule(array(SERIA_Validator::REQUIRED));
-								break;
-							default :
-								if(substr(strtolower($token), 0, 7)==="unique(")
-								{
-									$name = substr($token, 7, strpos($token, ")")-7);
-									if(isset($spec['fields'][$name]))
-									{
-										$spec['fields'][$key]['validator']->addRule(array(SERIA_Validator::META_UNIQUE, NULL, $name));
-										break;
-									}
-									else
-									{
-										throw new SERIA_Exception("Unknown column '".$name."' in UNIQUE spec for column '".$tokens[1]."'.");
-									}
-								}
-								throw new SERIA_Exception("Unknown token in field spec '".$token."'");
-								break;
-						}
-					}
-
-					if(!isset($info[1]))
-						throw new SERIA_Exception("Caption not specified in field spec for '$key' in class '$className'. Expected array('<type> [required]','<caption>').");
-
-					$spec['fields'][$key]['caption'] = $info[1];
-
-					if(isset($info[2]) && is_array($info[2]))
-					{
-						foreach($info[2] as $k => $v)
-							$spec['fields'][$key][$k] = $v;
-					}
+					$spec['fields'][$key] = self::parseFieldSpec($info, $spec);
 				}
 				else
 				{
-					$spec['fields'][$key] = $info;
-
-					if(isset($spec['fields'][$key]['class']))
-					{
-						if(in_array('SERIA_IMetaField', class_implements($spec['fields'][$key]['class'])))
-						{
-							if ($spec['fields'][$key]['class'] == $item)
-								$info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'), $spec);
-							else
-								$info = call_user_func(array($spec['fields'][$key]['class'], 'MetaField'));
-							foreach($info as $k => $v)
-							{
-								$spec['fields'][$key][$k] = $v;
-							}
-						}
-					}
+					$spec['fields'][$key] = self::parseFieldSpec($info, $spec);
 				}
 			}
 
@@ -617,7 +654,7 @@
 					);
 				case "password" :
 					return array(
-						"fieldtype" => "text",
+						"fieldtype" => "password",
 						"type" => "varchar(50)",
 						"validator" => new SERIA_Validator(array(
 							array(SERIA_Validator::MIN_LENGTH, 5),
