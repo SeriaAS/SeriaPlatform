@@ -61,7 +61,7 @@
 			// Initialize counters
 			$bandwidthCounter = new SERIA_Counter(self::BANDWIDTH_NS);
 			$hitCounter = new SERIA_Counter(self::HITS_NS);
-			$filesInQueue = glob(SERIA_PRIV_ROOT.'/SERIA_Logging/incoming/*'); /**/
+			$filesInQueue = array_slice(glob(SERIA_PRIV_ROOT.'/SERIA_Logging/incoming/*'), 0, 1000);
 			foreach($filesInQueue as $fileToProcess) {
 				/**
 				* Read a logfile, structure the line and put it in an array. if the read is successful - use seria_counter
@@ -127,9 +127,9 @@
 
 						// $lineArray[4] is always "bytes=x-y", get the first bytesum
 						$firstByte = substr($lineArray[4], 6, strpos($lineArray[4], "-")-6);
-
+						if($firstByte>10) continue;
 						// Create a unique hash based on the information we have
-						$countHash = md5($lineInfo[0]."-".$minuteArr[2]."-".$lineArray[1]."-".floor($firstByte/10));
+						$countHash = md5($lineInfo[0]."-".$minuteArr[2]."-".$lineArray[1]);
 
 						if(!$uniqueHashRegister[$countHash]) { // If code is 206 (segment download), only count first segment as hit
 							$countLine = true;
