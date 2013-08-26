@@ -352,7 +352,6 @@ set_time_limit(3);
 					}
 				}
 			}
-
 			foreach($tokens as $token) if(isset($token))
 			{
 				switch(strtolower($token))
@@ -562,6 +561,7 @@ set_time_limit(3);
 					return array(
 						"fieldtype" => "hidden",
 						"type" => "integer unsigned",
+						"validator" => new SERIA_Validator(array()),
 					);
 				case "seed" : // A seed that can be used in encryption - for example to perform one way encryption of a password
 					return array(
@@ -870,13 +870,14 @@ set_time_limit(3);
 						"class" => 'SERIA_MetaObject',
 					);
 				case "enum" :
-					if(!isset($info[2]) || !isset($info[2]['values']) || !isset($info[2]['type']))
-						throw new SERIA_Exception("The 'enum' type requires 'values' and 'type' to be specified as an associative array in third parameter.");
+					if(!isset($info[2]) || !isset($info[2]['values'])) {
+						throw new SERIA_Exception("The 'enum' type requires 'values' to be specified as an associative array in third parameter array('values'=>array()).");
+					}
 
 					return array(
 						"fieldtype" => "select",
 						"values" => $info[2]['values'],
-						"type" => $info[2]['type'],
+						"type" => isset($info[2]['type']) ? $info[2]['type'] : 'varchar(200)',
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::ONE_OF, array_keys($info[2]['values'])))),
 					);
 				default :
