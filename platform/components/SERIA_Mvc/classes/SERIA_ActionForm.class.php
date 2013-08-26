@@ -214,6 +214,7 @@ $form->begin()."<table><thead>';
 
 			if($this->_spec === NULL)
 				$this->_spec = array();
+
 			$this->_spec[$name] = $spec;
 			if($value!==NULL) $this->_data[$name] = $value;
 			return $this;
@@ -225,12 +226,14 @@ $form->begin()."<table><thead>';
 		*/
 		public function field($name, array $attributes=NULL)
 		{
-			$legal = array('style','class','title','id','autocomplete','placeholder');
+/*
+			$legal = array('style','class','title','id','autocomplete','placeholder','onfocus','onblur', );
 			foreach($attributes as $key => $val)
 			{
 				if(!in_array($key, $legal))
 					unset($attributes[$key]);
 			}
+*/
 			if(!isset($this->_spec[$name]))
 				throw new SERIA_Exception('No such field "'.$name.'".');
 
@@ -349,10 +352,17 @@ $form->begin()."<table><thead>';
 			), $caption);
 		}
 
-		public function select($name, array $attributes=NULL, $values=NULL)
+		/**
+		*	@param $name		Fieldname
+		*	@parem $attributes	Extra attributes to place on the <select> element
+		*	@param $values		Key=>Value map of available choices. If NULL, will use values from spec if they exists.
+		*	@param $blankChoice	Show a blank choice (should be FALSE if an initial value is provided on a required field)
+		*/
+		public function select($name, array $attributes=NULL, $values=NULL, $blankChoice=TRUE)
 		{
 			$currentValue = ($this->get($name) ? $this->get($name) : NULL);
-			$options = array("<option></option>");
+			if($blankChoice)
+				$options = array("<option></option>");
 			if($values!==NULL)
 			{
 				foreach($values as $key => $value)
@@ -386,7 +396,6 @@ $form->begin()."<table><thead>';
 					$options[] = '<option value="'.htmlspecialchars($key).'"'.($currentValue!==NULL && $key==$currentValue?' selected="selected"':'').'>'.htmlspecialchars($value).'</option>';
 				}
 			}
-
 			return self::renderTag('select', $attributes, array(
 				'id' => $this->_prefix.$name,
 				'name' => $this->_prefix.$name,
