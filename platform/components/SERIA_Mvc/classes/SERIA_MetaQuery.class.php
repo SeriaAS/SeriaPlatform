@@ -27,6 +27,55 @@
 
 		}
 
+		/**
+		*	If you have a many-to-many relationship between two tables, this function will help you
+		*	filter. Simply call:
+		*
+		*	$all = SERIA_Meta::all('User')->via('Membership', $club);
+		*
+		*	$all will now contain Users mentioned in Membership, optionally filtered by $club.
+		*
+		*	WARNING: At most 5000 ids from the joining table will be inspected.
+		*/
+		public function via($className, $value=NULL) {
+			if(!class_exists($className))
+				throw new SERIA_Exception($className.' does not exist! (Plural/singular mistake?)');
+			if(!is_subclass_of($className, 'SERIA_MetaObject'))
+				throw new SERIA_Exception($className.' must extend the SERIA_MetaObject class.');
+			if(!($value instanceof SERIA_MetaObject))
+				throw new SERIA_Exception('Value['.get_class($value).'] does not extend SERIA_MetaObject.');
+
+			$viaSpec = SERIA_Meta::_getSpec($className);
+
+			$fromField = NULL;
+			$fromClass = $this->className;
+			$toField = NULL;
+			if($value===NULL)
+				$toClass = NULL;
+			else
+				$toClass = get_class($value);
+
+			foreach($viaSpec['fields'] as $name => $info) {
+				if(isset($info['class'])) {
+					if($info['class'] === $fromClass)
+						$fromField = $name;
+					if($info['class'] === $toClass)
+						$toField = $name;
+				}
+			}
+			$data = new SERIA_DbData($viaSpec['table'], $viaSpec['primaryKey'], $viaSpec['shardBy'], $fromField);
+			if($toField)
+				$data->where($toField.'='.$value->MetaBackdoor('get_key'));
+			$values = array();
+			foreach($data as $row) $values[] = $row[$fromField];
+
+			if(isset($values[0]))
+				$this->where($this->spec['primaryKey'].' IN ('.implode(",", $values).')');
+			else
+				$this->where('1=0'); // Make sure no rows are found
+			return $this;
+		}
+
 		function __clone()
 		{
 			$this->_data = clone $this->_data;
