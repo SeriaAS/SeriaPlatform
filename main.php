@@ -22,7 +22,6 @@
  *
  *	@package SeriaPlatform
  */
-
 // Debugger
 function seria_debugger()
 {
@@ -62,6 +61,21 @@ if(!isset($seria_options['cache_expire'])) $seria_options['cache_expire'] = 0;
 $dirname = dirname(__FILE__);
 if(version_compare(PHP_VERSION, '5.2.5', '<')) { require($dirname.'/platform/compatability/php-5.2.5.php'); }
 if(version_compare(PHP_VERSION, '5.3', '<')) { require($dirname.'/platform/compatability/php-5.3.php'); }
+
+/**
+ * 	When a page is generated through a proxy server, the proxy server usually adds special headers so that
+ *	we can see the user on the other side of the proxy.
+ */
+if(isset($_SERVER['HTTP_X_FORWARDED_FOR']))
+{
+	$_SERVER['HTTP_X_FORWARDED_BY'] = $_SERVER['REMOTE_ADDR'];
+	$_SERVER['REMOTE_ADDR'] = $_SERVER['HTTP_X_FORWARDED_FOR'];
+}
+if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
+{
+        $_SERVER['HTTP_X_FORWARDED_FROM'] = $_SERVER['HTTP_HOST'];
+        $_SERVER['HTTP_HOST'] = $_SERVER['HTTP_X_FORWARDED_HOST'];
+}
 
 /**
  *	Load the configuration file for Seria Platform
@@ -165,7 +179,6 @@ if(SERIA_COMPATIBILITY < 3) {
 		SERIA_Base::addClassPath(SERIA_DYNAMICCLASS_ROOT . '/*.activerecord.php');
 	}
 }
-
 /**
  *	Where to search for classes. Modules might add more classpaths. * identifies the classname part.
  */
@@ -206,6 +219,7 @@ function seria_autoload($class) {
 		if(file_exists($filename = str_replace("*", $class, $path))) {
 			seria_debugger_notice('Autoloading "'.$filename.'"');
 			$GLOBALS['seria']['classmtimes'][$class] = filemtime($filename);
+
 			$result = require($filename);
 			SERIA_Hooks::dispatch('seria_autoload', $class, $filename, $result);
 			return $result;
@@ -395,7 +409,6 @@ SERIA_Hooks::dispatch(SERIA_PLATFORM_BOOT_COMPLETE_HOOK);
 */
 // seria platform http root url info
 $seria_spui = parse_url(rtrim(SERIA_HTTP_ROOT, '/'));
-
 if(empty($seria_spui['path']))
 { // SERIA_HTTP_ROOT is configured as top level on this domain
 	$seria_path = $_SERVER['SCRIPT_NAME'];
