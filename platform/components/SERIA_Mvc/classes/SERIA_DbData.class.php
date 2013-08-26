@@ -10,16 +10,17 @@
 		protected $rsOffset = NULL; /* The base index of the rs table */
 		protected $offset = 0;
 
-		public function __construct($table, $primaryKey, $shardBy=NULL)
+		public function __construct($table, $primaryKey, $shardBy=NULL, $select='*')
 		{
 			if(empty($primaryKey)) throw new Exception('Primary key is required param number two');
 			$this->table = $table;
 			$this->primaryKey = $primaryKey;
 			$this->shardBy = $shardBy;
+			$this->select = $select;
 		}
-		public static function table($table, $primaryKey, $shardBy=NULL)
+		public static function table($table, $primaryKey, $shardBy=NULL, $select='*')
 		{
-			return new SERIA_DbData($table, $primaryKey, $shardBy);
+			return new SERIA_DbData($table, $primaryKey, $shardBy, $select);
 		}
 
 		/**
@@ -141,7 +142,7 @@
 			}
 			return $sql;
 		}
-		private function loadData($loadOffset)
+		private function loadData($loadOffset, $select='*')
 		{
 			if ($this->start == 0 && $this->length === NULL) {
 				$this->start = $loadOffset;
@@ -151,16 +152,16 @@
 				$setLimitToNull = false;
 				$loadOffset = 0;
 			}
-			$sql = $this->buildSQL();
+			$sql = $this->buildSQL($select);
 			$cacheKey = md5(serialize(array($sql, $this->args)));
 			if(!($this->rs = $this->_cacheGet($cacheKey))) { // It is not in cache
 
-				$this->rs = SERIA_Base::db()->query($sql = $this->buildSQL(), $this->args)->fetchAll(PDO::FETCH_ASSOC);
+				$this->rs = SERIA_Base::db()->query($sql, $this->args)->fetchAll(PDO::FETCH_ASSOC);
 				if(!isset($this->rs[5])) { // There are less than 5 rows in this result, so let's cache it!
 					$this->_cacheSet($cacheKey, $this->rs);
 				}
-
 			}
+
 			$this->rsOffset = $loadOffset;
 			if ($setLimitToNull) {
 				$this->start = 0;
@@ -173,10 +174,10 @@
 		function current()
 		{
 			if($this->rs===NULL)
-				$this->loadData($this->offset);
+				$this->loadData($this->offset, $this->select);
 			else if ($this->start == 0 && $this->length == NULL) {
 				if ($this->offset < $this->rsOffset || $this->offset >= ($this->rsOffset + self::QUERY_ROW_LIMIT))
-					$this->loadData($this->offset);
+					$this->loadData($this->offset, $this->select);
 			}
 			if(!isset($this->rs[$this->offset - $this->rsOffset]))
 				return false;
