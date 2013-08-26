@@ -21,8 +21,43 @@
 		{
 			return new SERIA_DbData($table, $primaryKey, $shardBy);
 		}
-		public function count()
-		{
+
+		/**
+		*	Get the cache object instance
+		*/
+		protected $_cache;
+		protected function _cache() {
+			if(!$this->_cache) {
+				$this->_cache = new SERIA_Cache('SDbData_'.$this->table);
+			}
+			return $this->_cache;
+		}
+
+		/**
+		*	Get a row from cache
+		*/
+		protected function _cacheGet($id) {
+			$res = $this->_cache()->get($this->_cache->get('generation').'_'.$id);
+			return $res;
+		}
+
+		/**
+		*	Set a row to cache
+		*/
+		protected function _cacheSet($id, $row) {
+//SERIA_Base::db()->dbLog("_cacheSet(".$this->table.", $id)");
+			return $this->_cache()->set($this->_cache->get('generation').'_'.$id, $row, 10);
+		}
+
+		/**
+		*	Increment cache generation so that all caches are void
+		*/
+		protected function _cacheClean() {
+			SERIA_Base::db()->dbLog("_cacheClean(".$this->table.", $id)");
+			$this->_cache()->set('generation', microtime(TRUE), 1800);
+		}
+
+		public function count() {
 			$sql = $this->buildSQL('COUNT(`'.$this->primaryKey.'`)');
 			return intval(SERIA_Base::db()->query($sql, $this->args)->fetch(PDO::FETCH_COLUMN, 0));
 		}
@@ -49,6 +84,7 @@
 			$sql .= implode('`,`', $fieldNames).'`) VALUES (';
 			$sql .= implode(',', $fieldKeys).')';
 
+			$this->_cacheClean();
 			return SERIA_Base::db()->exec($sql, $values);
 		}
 
@@ -70,6 +106,7 @@
 			$sql .= implode(',', $parts);
 			$sql .= ' WHERE `'.$this->primaryKey.'`=:sdbdatakey';
 			$values[':sdbdatakey'] = $primaryKey;
+			$this->_cacheClean();
 			return SERIA_Base::db()->exec($sql, $values);
 		}
 
@@ -114,7 +151,16 @@
 				$setLimitToNull = false;
 				$loadOffset = 0;
 			}
-			$this->rs = SERIA_Base::db()->query($this->buildSQL(), $this->args)->fetchAll(PDO::FETCH_ASSOC);
+			$sql = $this->buildSQL();
+			$cacheKey = md5(serialize(array($sql, $this->args)));
+			if(!($this->rs = $this->_cacheGet($cacheKey))) { // It is not in cache
+
+				$this->rs = SERIA_Base::db()->query($sql = $this->buildSQL(), $this->args)->fetchAll(PDO::FETCH_ASSOC);
+				if(!isset($this->rs[5])) { // There are less than 5 rows in this result, so let's cache it!
+					$this->_cacheSet($cacheKey, $this->rs);
+				}
+
+			}
 			$this->rsOffset = $loadOffset;
 			if ($setLimitToNull) {
 				$this->start = 0;

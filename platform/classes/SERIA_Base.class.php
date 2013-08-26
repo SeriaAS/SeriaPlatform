@@ -531,7 +531,10 @@ $trace
 					{
 						try
 						{
-							$user = SERIA_Fluent::load('SERIA_User', $_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
+							if(!($user = self::coreCache('SERIA_User:'.$_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]))) {
+								$user = SERIA_Fluent::load('SERIA_User', $_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX]);
+								self::coreCache('SERIA_User:'.$_SESSION[SERIA_PREFIX.'_USERID'.SERIA_SESSION_SUFFIX], serialize($user), 3);
+							} else $user = unserialize($user);
 						}
 						catch (SERIA_NotFoundException $e)
 						{

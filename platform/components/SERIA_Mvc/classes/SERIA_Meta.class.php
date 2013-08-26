@@ -706,7 +706,7 @@ set_time_limit(3);
 					return array(
 						"fieldtype" => "textarea",
 						"type" => "text",
-						"validator" => new SERIA_Validator(array(array(SERIA_Validator::MAX_LENGTH, 20000))),
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::MAX_LENGTH, 200000))),
 					);
 				case "html" :
 					return array(
@@ -1060,7 +1060,7 @@ set_time_limit(3);
 						$newRow[$name] = $row[$name];
 					}
 				}
-				else 
+				else
 				{
 					if($name == $spec['primaryKey'])
 						$newRow[$name] = $row[$name];
