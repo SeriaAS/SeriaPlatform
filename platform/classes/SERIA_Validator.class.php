@@ -368,7 +368,7 @@ class SERIA_Validator
 					$parts = explode("/", str_replace('\\', '/', $value));
 					foreach($parts as $part)
 						if(empty($part))
-							return isset($rule[1]) ? $rule[1] : _t("Problem with path delimiters.");
+							return isset($rule[1]) ? $rule[1] : _t("Problem with path delimiters in %PATH%.", array('PATH' => $value));
 					$l = strlen($illegalChars);
 					foreach($parts as $part)
 					{
