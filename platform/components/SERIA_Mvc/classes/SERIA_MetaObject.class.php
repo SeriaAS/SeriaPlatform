@@ -612,6 +612,13 @@
 
 			$query = SERIA_Meta::all($class);
 
+			if (isset($params['length'])) {
+				if (isset($params['start']))
+					$query->limit(intval($params['start']), intval($params['length']));
+				else
+					$query->limit(intval($params['length']));
+			}
+
 			foreach ($params as $name => $value) {
 				if (in_array($name, $fields))
 					$query->where($name.' = :'.$name, array($name => $value));
@@ -619,8 +626,12 @@
 			$res = array();
 			foreach ($query as $obj) {
 				$arr = array();
-				foreach ($fields as $field)
-					$arr[$field] = $obj->get($field);
+				foreach ($fields as $field) {
+					$value = $obj->get($field);
+					if ($value instanceof SERIA_MetaObject)
+						$value = SERIA_Meta::getReference($value);
+					$arr[$field] = $value;
+				}
 				$res[] = $arr;
 			}
 			return $res;
