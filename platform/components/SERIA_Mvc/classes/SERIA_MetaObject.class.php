@@ -1,5 +1,5 @@
 <?php
-	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField
+	abstract class SERIA_MetaObject implements SERIA_NamedObject, ArrayAccess, Countable, Iterator, SERIA_IMetaField, SERIA_IApiAccess
 	{
 		/**
 		 *
@@ -587,6 +587,44 @@
                 // public static function getElementApi($key, $options=NULL) // returns an array of key=>value pairs
                 // public static function putElementApi($key, $values, $options=NULL) // overwrite or create element, return true or false
                 // public static function deleteElementApi($key, $options=NULL) // delete an element, return true or throw an exception
+
+		/**
+		 * SERIA_IApiAccess method. Requires the MetaSelect and MetaFields methods to be overridden, for security reasons.
+		 * When overriding the methods, make sure that MetaSelect returns a query where part that ONLY returns the rows that
+		 * the current user is allowed to see and that MetaFields returns an array containing only the columns that the user
+		 * is allowed to see.
+		 */
+		public static function apiQuery($params)
+		{
+			$class = get_called_class();
+			$metaSelectReflect = new ReflectionMethod($class, 'MetaSelect');
+			if($metaSelectReflect->class != $class)
+				throw new SERIA_Exception('The "'.$class.'::MetaSelect"-method has not been overridden. You must apply security restrictions before this api can be made available. The method must return a where clause or NULL if you wish to make everything available to everybody.');
+			try {
+				$metaFieldsReflect = new ReflectionMethod($class, 'MetaFields');
+			} catch (ReflectionException $e) {
+				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
+			}
+			if($metaFieldsReflect->class != $class)
+				throw new SERIA_Exception('The "'.$class.'::MetaFields"-method has not been declared. You must apply security restrictions before this api can be made available. The method must return an array containing the field names the user is allowed to read or NULL if all fields should be available.');
+
+			$fields = call_user_func(array($class, 'MetaFields'), $options);
+
+			$query = SERIA_Meta::all($class);
+
+			foreach ($params as $name => $value) {
+				if (in_array($name, $fields))
+					$query->where($name.' = :'.$name, array($name => $value));
+			}
+			$res = array();
+			foreach ($query as $obj) {
+				$arr = array();
+				foreach ($fields as $field)
+					$arr[$field] = $obj->get($field);
+				$res[] = $arr;
+			}
+			return $res;
+		}
 
 		/**
 		*	SERIA_IApiAccess method. Requires the MetaSelect and MetaFields methods to be overridden, for security reasons.
