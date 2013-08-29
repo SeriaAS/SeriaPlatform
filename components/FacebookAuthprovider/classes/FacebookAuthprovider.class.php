@@ -178,7 +178,7 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 			$fb_user = $facebook->getUser();
 			if ($fb_user) {
 				$user_profile = $facebook->api('/me');
-				return $this->authenticatedExternally($this->getParameters(), $user_profile, $guestLogin);
+				return $this->authenticatedExternally($this->getParameters(), $user_profile, $guestLogin, $interactive);
 			} else {
 				if (SERIA_AuthenticationState::available()) {
 					$state = new SERIA_AuthenticationState();

@@ -145,7 +145,7 @@ class WindowsLiveAuthprovider extends SERIA_GenericAuthprovider
 			else
 				$attributes = false;
 			if ($attributes)
-				return $this->authenticatedExternally($this->getParameters(), $attributes, $guestLogin);
+				return $this->authenticatedExternally($this->getParameters(), $attributes, $guestLogin, $interactive);
 		}
 		if (isset($_GET['failed'])) {
 			$shortmsg = $_GET['failed'];

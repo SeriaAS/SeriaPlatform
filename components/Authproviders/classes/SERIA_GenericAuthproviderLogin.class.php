@@ -12,7 +12,7 @@ class SERIA_GenericAuthproviderLogin
 	{
 		SERIA_Hooks::dispatch(SERIA_GenericAuthproviderLogin::LOGGED_IN_HOOK, $providerClass, $authproviderId, $params, $attributes);
 	}
-	public function login($providerClass, $authproviderId, $params, $attributes, $guestLogin)
+	public function login($providerClass, $authproviderId, $params, $attributes, $guestLogin, $interactive)
 	{
 		if (!$attributes['unique'])
 			throw new SERIA_Exception('I need the unique attribute to be able to distinguish between users.');
@@ -117,6 +117,8 @@ class SERIA_GenericAuthproviderLogin
 				return;
 			}
 		}
+		if (!$interactive)
+			return;
 		$state = new SERIA_AuthenticationState();
 		/*
 		 * Store the attributes.

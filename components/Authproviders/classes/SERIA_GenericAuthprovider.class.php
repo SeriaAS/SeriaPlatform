@@ -50,12 +50,12 @@ abstract class SERIA_GenericAuthprovider implements SERIA_IAuthprovider
 	{
 		return $attributes;
 	}
-	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin)
+	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin, $interactive)
 	{
 		$mgr = new SERIA_GenericAuthproviderLogin();
 		$mgr->login($class, $providerId, $params, $attributes, $guestLogin);
 	}
-	protected function authenticatedExternally($params, $attributes, $guestLogin)
+	protected function authenticatedExternally($params, $attributes, $guestLogin, $interactive)
 	{
 		$recvAttr = $attributes;
 		$mappings = $params['attributes'];
@@ -86,7 +86,7 @@ abstract class SERIA_GenericAuthprovider implements SERIA_IAuthprovider
 				SERIA_Base::debug($nam.' => '.serialize($val));
 			}
 		}
-		$this->callLoginManager(get_class($this), $this->getProviderId(), $params, $attributes, $guestLogin);
+		$this->callLoginManager(get_class($this), $this->getProviderId(), $params, $attributes, $guestLogin, $interactive);
 		return true; /* Success */
 	}
 

@@ -125,9 +125,11 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 			$params = $this->startSimplesaml();
 			$as = new SimpleSAML_Auth_Simple($params['authsource']);
 			if ($as->isAuthenticated()) {
-				return $this->authenticatedExternally($params, $as->getAttributes(), $guestLogin);
+				return $this->authenticatedExternally($params, $as->getAttributes(), $guestLogin, $interactive);
 			}
 			/* Login failed */
+			if (!$interactive)
+				return;
 			SERIA_Base::redirectTo(SERIA_HTTP_ROOT);
 			die();
 		}
@@ -135,6 +137,8 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 			/*
 			 * Returned with failure.
 			 */
+			if (!$interactive)
+				return;
 			$state = new SERIA_AuthenticationState();
 			$providerId = $this->getProviderId();
 			$url = new SERIA_Url(SERIA_HTTP_ROOT.'/seria/components/SimplesamlAuthprovider/pages/loginFailed.php');
@@ -165,9 +169,10 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 		$as = new SimpleSAML_Auth_Simple($params['authsource']);
 		$as->requireAuth(array(
 			'ReturnTo' => $url,
-			'ErrorURL' => $failureUrl
+			'ErrorURL' => $failureUrl,
+			'isPassive' => !$interactive
 		));
-		return $this->authenticatedExternally($params, $as->getAttributes(), $guestLogin);
+		return $this->authenticatedExternally($params, $as->getAttributes(), $guestLogin, $interactive);
 	}
 	public function logout()
 	{
