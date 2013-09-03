@@ -111,10 +111,10 @@ abstract class SimplesamlAuthprovider extends SERIA_GenericAuthprovider
 		SERIA_Base::debug('SimpleSAML is loaded and ready to receive calls..');
 		return $params;
 	}
-	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin)
+	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin, $interactive)
 	{
 		$mgr = new SimplesamlLoginManager();
-		$mgr->login($class, $providerId, $params, $attributes, $guestLogin);
+		$mgr->login($class, $providerId, $params, $attributes, $guestLogin, $interactive);
 	}
 	public function authenticate($interactive=true, $reset=false, $guestLogin=false)
 	{

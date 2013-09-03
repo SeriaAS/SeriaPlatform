@@ -153,10 +153,10 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 		}
 	}
 
-	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin) /* OK */
+	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin, $interactive) /* OK */
 	{
 		$mgr = new FacebookLoginManager();
-		$mgr->login($class, $providerId, $params, $attributes, $guestLogin);
+		$mgr->login($class, $providerId, $params, $attributes, $guestLogin, $interactive);
 	}
 
 	public function getFacebook()

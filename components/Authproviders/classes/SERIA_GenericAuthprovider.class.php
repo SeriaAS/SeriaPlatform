@@ -53,7 +53,7 @@ abstract class SERIA_GenericAuthprovider implements SERIA_IAuthprovider
 	protected function callLoginManager($class, $providerId, $params, $attributes, $guestLogin, $interactive)
 	{
 		$mgr = new SERIA_GenericAuthproviderLogin();
-		$mgr->login($class, $providerId, $params, $attributes, $guestLogin);
+		$mgr->login($class, $providerId, $params, $attributes, $guestLogin, $interactive);
 	}
 	protected function authenticatedExternally($params, $attributes, $guestLogin, $interactive)
 	{
