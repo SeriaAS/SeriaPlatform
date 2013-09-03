@@ -549,6 +549,7 @@ $trace
 							}
 							throw $e;
 						}
+						$_SESSION[SERIA_PREFIX.'_USERTIME'.SERIA_SESSION_SUFFIX] = time();
 					}
 				}
 				return $user;

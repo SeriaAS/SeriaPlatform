@@ -42,6 +42,7 @@ class OfflineSession
 			session_start();
 		$old = session_id();
 		session_write_close();
+		header('Set-Cookie: ');
 		session_id($sid);
 		session_start();
 		return $old;
@@ -75,6 +76,10 @@ class OfflineSession
 	public function clear($name)
 	{
 		unset($this->data[$name]);
+	}
+	public function clearAll()
+	{
+		$this->data = array();
 	}
 
 	public function save()

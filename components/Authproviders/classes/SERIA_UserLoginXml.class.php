@@ -140,6 +140,12 @@ class SERIA_UserLoginXml
 		foreach ($sids as $sid) {
 			$sess = new SeriaPlatformSession($sid);
 			try {
+				/*
+				 * We interfere with the timestamps on the session,
+				 * therefore we need to implement our own GC.
+				 */
+				$sess->sessionGC();
+
 				if ($sess->getUser() === false) {
 					/*
 					 * Logged out on this session
