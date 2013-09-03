@@ -40,6 +40,14 @@ class SERIA_GenericAuthproviderLogin
 		if (count($users) > 1)
 			SERIA_AuthproviderFault::recordFaultMessage(SERIA_AuthproviderFault::WARNING, 'One of our users of authprovider:'.$authproviderId.' has managed to get duplicate accounts.', array('attr' => $attributes, 'matches' => $users));
 		$user = SERIA_Base::user();
+		$state = new SERIA_AuthenticationState();
+
+		/*
+		 * Autolinking must be activated prior to calling the login system.
+		 */
+		if (!$state->exists('link:'.$providerClass) || !$state->get('link:'.$providerClass))
+			$user = false;
+
 		if (count($users) >= 1)
 			$user =& $users[0];
 		else if ($user) {
@@ -119,7 +127,6 @@ class SERIA_GenericAuthproviderLogin
 		}
 		if (!$interactive)
 			return;
-		$state = new SERIA_AuthenticationState();
 		/*
 		 * Store the attributes.
 		 */

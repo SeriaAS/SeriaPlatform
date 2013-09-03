@@ -122,17 +122,13 @@ class SAPI_UserAuthenticationProviders extends SAPI
 		}
 		SERIA_Authproviders::loadProviders();
 		$adds = array();
-		$providers = SERIA_Authproviders::getProviders();
-		foreach ($providers as $provider) {
-			if (!$provider->isEnabled($loginType) || !$provider->isAvailable())
+		$linkUrls = SERIA_Authproviders::getAllIdLinkUrls($returnUrl);
+		foreach ($linkUrls as $linkUrl) {
+			if (array_search($linkUrl['class'], $exists) !== false)
 				continue;
-			if (array_search(get_class($provider), $exists) !== false)
-				continue;
-			$url = new SERIA_Url(SERIA_Authproviders::getProviderUrl($provider, $returnUrl, SERIA_HTTP_ROOT.'/seria/components/Authproviders/pages/guestLogin.php'));
-			$url->setParam('auth_abort', $returnUrl);
 			$adds[] = array(
-				'class' => get_class($provider),
-				'url' => $url->__toString()
+				'class' => $linkUrl['class'],
+				'url' => $linkUrl['url']
 			);
 		}
 		return $adds;

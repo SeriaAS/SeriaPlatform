@@ -128,6 +128,34 @@ class SERIA_Authproviders
 		}
 		return $providers;
 	}
+	public static function getAllIdLinkUrls($continueUrl=false, $loginPage=false, $loginType=SERIA_IAuthprovider::LOGIN_GUEST)
+	{
+		if ($loginPage === false) {
+			if ($loginType == SERIA_IAuthprovider::LOGIN_SYSTEM)
+				$loginPage = SERIA_HTTP_ROOT.'/seria/platform/pages/login.php';
+			else if ($loginType == SERIA_IAuthprovider::LOGIN_GUEST)
+				$loginPage = SERIA_HTTP_ROOT.'/seria/components/Authproviders/pages/guestLogin.php';
+			else
+				throw new SERIA_Exception('No login page specified and unknown login-type.');
+		}
+		if (!is_a($loginPage, 'SERIA_Url'))
+			$loginPage = new SERIA_Url($loginPage);
+		if (!$continueUrl)
+			$continueUrl = SERIA_Url::current()->__toString();
+		self::loadProviders();
+		$providers = array();
+		foreach (self::getProviders() as $provider) {
+			if (!$provider->isEnabled($loginType) || !$provider->isAvailable())
+				continue;
+			$providers[$provider->getProviderId()] = array(
+				'class' => get_class($provider),
+				'name' => $provider->getName(),
+				'url' => SERIA_Meta::manifestUrl('Authproviders', 'metaIdLink', array('continue' => $continueUrl, 'loginPage' => $loginPage->__toString(), 'type' => $loginType, 'class' => get_class($provider), 'providerId' => $provider->getProviderId()))->__toString()
+			);
+			unset($provider);
+		}
+		return $providers;
+	}
 	public static function getCreators()
 	{
 		return self::$creators;
