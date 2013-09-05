@@ -274,6 +274,15 @@ set_time_limit(3);
 			$spec = self::_getSpec(get_class($instance));
 			if(empty($row[$spec['primaryKey']]))
 				throw new SERIA_Exception('This object is not stored in the database, thus it can\'t be deleted.');
+
+                        $className = get_class($instance);
+                        $spec = self::_getSpec($className);
+			$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->delete($row['id']);
+			if($res) {
+				$instance->MetaBackdoor('raise_event', self::AFTER_DELETE_EVENT);
+			}
+			return $res;
+
 			$res = SERIA_Base::db()->exec('DELETE FROM '.$spec['table'].' WHERE `'.$spec['primaryKey'].'`=:'.$spec['primaryKey'], $instance);
 			if($res)
 			{

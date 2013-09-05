@@ -107,8 +107,22 @@
 			$sql .= implode(',', $parts);
 			$sql .= ' WHERE `'.$this->primaryKey.'`=:sdbdatakey';
 			$values[':sdbdatakey'] = $primaryKey;
+			$res = SERIA_Base::db()->exec($sql, $values);
 			$this->_cacheClean();
-			return SERIA_Base::db()->exec($sql, $values);
+			return $res;
+		}
+
+		/**
+		*	Delete a row from the database by it's primary key.
+		*	@param mixed $primaryKey
+		*/
+		public function delete($primaryKey, $shardByValue=FALSE) {
+			if($this->shardBy && $shardByValue===FALSE)
+				throw new SERIA_Exception('Unable to delete this row, since you have not specified the "'.$this->shardBy.'" column as parameter two.');
+			$sql = 'DELETE FROM '.$this->table.' WHERE `'.$this->primaryKey.'`=:sdbdatakey';
+			$res = SERIA_Base::db()->exec($sql, array('sdbdatakey' => $primaryKey));
+			$this->_cacheClean();
+			return $res;
 		}
 
 		/**
