@@ -23,6 +23,9 @@ class SAPIManifest
 			'page' => 'SAPI/appkeys',
 		),
 	);
+	public static $dependencies = array(
+		'SERIA_Html' /* meta-templates */
+	);
 }
 
 function SAPIInit()
