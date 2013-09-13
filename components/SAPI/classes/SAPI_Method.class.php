@@ -14,6 +14,8 @@ class SAPI_Method
 		$this->method = $method;
 		if (!class_exists($this->class))
 			throw new SERIA_Exception('The class does not exist: '.$this->class);
+		if ($this->method === NULL)
+			throw new SERIA_Exception('Method is NULL.');
 		$parentClass = get_parent_class($this->class);
 		if ($parentClass != 'SAPI')
 			throw new SERIA_Exception('This is not a SAPI class: '.$this->class.($parentClass ? ' extends '.$parentClass : ''));

@@ -176,13 +176,19 @@ if ($authUser)
 	SERIA_Base::user($authUser, true);
 
 if (isset($get['apiPath']) && $get['apiPath']) {
-	$path = explode('/', $get['apiPath']);
-	unset($get['apiPath']);
-	if (count($path) == 2) {
-		$class = $path[0];
-		$method = $path[1];
-	} else
-		throw new SERIA_Exception('API path must be class/method');
+	if (strpos($get['apiPath'], '/') !== false) {
+		$path = explode('/', $get['apiPath']);
+		unset($get['apiPath']);
+		if (count($path) == 2) {
+			$class = $path[0];
+			$method = $path[1];
+		} else
+			throw new SERIA_Exception('API path must be class/method');
+	} else {
+		/* SERIA_Mvc rest api */
+		$class = $get['apiPath'];
+		$method = NULL;
+	}
 } else
 	throw new SERIA_Exception('API requires path');
 if (isset($get['apiReturn'])) {

@@ -56,7 +56,10 @@ class SAPI
 	 */
 	public static function post($class, $method, array $postParameters, array $getParameters = array())
 	{
-		$method = new SAPI_Method($class, $method);
+		if ($method !== NULL)
+			$method = new SAPI_Method($class, $method);
+		else
+			$method = new SAPI_SERIA_Mvc($class);
 		return $method->post($postParameters, $getParameters);
 	}
 	/**
@@ -68,7 +71,10 @@ class SAPI
 	 */
 	public static function get($class, $method, array $getParameters)
 	{
-		$method = new SAPI_Method($class, $method);
+		if ($method !== NULL)
+			$method = new SAPI_Method($class, $method);
+		else
+			$method = new SAPI_SERIA_Mvc($class);
 		return $method->get($getParameters);
 	}
 	/**
