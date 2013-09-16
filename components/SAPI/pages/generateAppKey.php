@@ -1,5 +1,11 @@
 <s:gui title="{'Generate app-key'|_t}">
 	<?php
+	SERIA_ProxyServer::nocache();
+
+	if (!isset($_GET['urltest'])) {
+		$currentUrl = SERIA_Url::current();
+		SERIA_Base::redirectTo($currentUrl->setParam('urltest', 1)->__toString());
+	}
 	if (isset($_GET['loginPath'])) {
 		if (!SERIA_Base::user()) {
 			$loginUrl = new SERIA_Url(SERIA_HTTP_ROOT);
