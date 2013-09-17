@@ -34,7 +34,7 @@ class SAPI
 			unset($params['apiHash']);
 			return $params;
 		} else
-			throw new SERIA_Exception('Bad hmac authentication! '.$message);
+			return false;
 	}
 	public static function isAuthenticatedMessage($params)
 	{
