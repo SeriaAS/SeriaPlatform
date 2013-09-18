@@ -593,6 +593,11 @@
 		 * When overriding the methods, make sure that MetaSelect returns a query where part that ONLY returns the rows that
 		 * the current user is allowed to see and that MetaFields returns an array containing only the columns that the user
 		 * is allowed to see.
+		 *
+		 * Special parameters:
+		 *  start: limit start
+		 *  length: limit length
+		 *  order: Ordering: either field (ASC) or -field (DESC)
 		 */
 		public static function apiQuery($params)
 		{
@@ -612,6 +617,15 @@
 
 			$query = SERIA_Meta::all($class);
 
+			if (isset($params['order'])) {
+				if (substr($params['order'], 0, 1) == '-') {
+					if (in_array(substr($params['order'], 1), $fields))
+						$query->order(substr($params['order'], 1).' DESC');
+				} else {
+					if (in_array($params['order'], $fields))
+						$query->order($params['order'].' ASC');
+				}
+			}
 			if (isset($params['length'])) {
 				if (isset($params['start']))
 					$query->limit(intval($params['start']), intval($params['length']));
