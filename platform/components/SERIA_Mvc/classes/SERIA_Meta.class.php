@@ -384,8 +384,20 @@ set_time_limit(3);
 							{
 								throw new SERIA_Exception("Unknown column '".$name."' in UNIQUE spec for column '".$tokens[1]."'.");
 							}
-						}
-						throw new SERIA_Exception("Unknown token in field spec '".$token."'");
+						} else if(substr(strtolower($token), 0, 7)==="minval(") {
+							$val = substr($token, 7, strpos($token, ")")-7);
+							$res['validator']->addRule(array(SERIA_VALIDATOR::MIN_VALUE, floatval($val)));
+						} else if(substr(strtolower($token), 0, 7)==="maxval(") {
+							$val = substr($token, 7, strpos($token, ")")-7);
+							$res['validator']->addRule(array(SERIA_VALIDATOR::MAX_VALUE, floatval($val)));
+						} else if(substr(strtolower($token), 0, 7)==="minlen(") {
+							$val = substr($token, 7, strpos($token, ")")-7);
+							$res['validator']->addRule(array(SERIA_VALIDATOR::MIN_LENGTH, intval($val)));
+						} else if(substr(strtolower($token), 0, 7)==="maxlen(") {
+							$val = substr($token, 7, strpos($token, ")")-7);
+							$res['validator']->addRule(array(SERIA_VALIDATOR::MAX_VALUE, intval($val)));
+						} else
+							throw new SERIA_Exception("Unknown token in field spec '".$token."'");
 						break;
 				}
 			}
@@ -614,6 +626,15 @@ set_time_limit(3);
 						"type" => "varchar(100)",
 						"validator" => new SERIA_Validator(array(
 							array(SERIA_Validator::MAX_LENGTH, 100),
+							array(SERIA_Validator::MIN_LENGTH, 1),
+						)),
+					);
+				case "string" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "varchar(250)",
+						"validator" => new SERIA_Validator(array(
+							array(SERIA_Validator::MAX_LENGTH, 250),
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
