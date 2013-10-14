@@ -277,7 +277,7 @@ set_time_limit(3);
 
                         $className = get_class($instance);
                         $spec = self::_getSpec($className);
-			$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->delete($row['id']);
+			$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->delete($row[$spec['primaryKey']]);
 			if($res) {
 				$instance->MetaBackdoor('raise_event', self::AFTER_DELETE_EVENT);
 			}
