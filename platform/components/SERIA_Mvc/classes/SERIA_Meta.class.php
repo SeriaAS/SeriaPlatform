@@ -513,7 +513,10 @@ set_time_limit(3);
 				} else {
 					$spec = 'primarykey';
 				}
-				$spec = self::parseFieldSpec(array($spec, $caption));
+				if (!is_array($spec))
+					$spec = self::parseFieldSpec(array($spec, $caption));
+				else
+					$spec = self::parseFieldSpec($spec);
 				self::$_primaryKeySpecs[$item] = $spec['type'];
 				return $spec;
 			}
