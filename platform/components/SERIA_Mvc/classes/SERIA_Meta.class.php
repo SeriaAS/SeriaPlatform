@@ -355,6 +355,17 @@ set_time_limit(3);
 						$fieldclass_info = call_user_func(array($res['class'], 'MetaField'), $entireSpec);
 					else
 						$fieldclass_info = call_user_func(array($res['class'], 'MetaField'));
+
+					/*
+					 * We are not loading in the class of the primary key of the target class.
+					 * The class is specified by this spec/definition and not the target class.
+					 */
+					if (isset($fieldclass_info['class']))
+						unset($fieldclass_info['class']);
+					/* Don't override the caption with the caption of the target class */
+					if (isset($res['caption']) && isset($fieldclass_info['caption']))
+						unset($fieldclass_info['caption']);
+
 					foreach($fieldclass_info as $k => $v)
 					{
 						$res[$k] = $v;
