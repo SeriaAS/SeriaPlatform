@@ -302,7 +302,7 @@
 						return $fullRow;
 					$updateRow = array();
 					foreach ($this->changedRow as $name => $changed) {
-						if ($changed && isset($fullRow[$name]))
+						if ($changed && array_key_exists($name, $fullRow))
 							$updateRow[$name] = $fullRow[$name];
 					}
 					if ($fullRow[$spec['primaryKey']])
