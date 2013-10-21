@@ -115,6 +115,13 @@ class SERIA_Manifests {
 				}
 			}
 			catch (ReflectionException $null) {}
+			try {
+				$hooks = $reflector->getStaticPropertyValue('listenHooks');
+				if ($hooks)
+					foreach ($hooks as $name => $callback)
+						SERIA_Hooks::listen($name, $callback);
+			}
+			catch (ReflectionException $null) {}
 		}
 		$currentHash = SERIA_Base::getParam('manifestversions:'.$namespace);
 		if($currentHash !== $hash)
