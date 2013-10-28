@@ -91,8 +91,14 @@ set_time_limit(3);
 			$rs = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->where($spec['primaryKey'].'=:key', array(':key' => $key), $shardValue);
 			if(isset($spec['selectWhere']))
 				$rs->where($spec['selectWhere']);
-			if($where = call_user_func(array($className, 'MetaSelect')))
-				$rs->where($where);
+			if($where = call_user_func(array($className, 'MetaSelect'))) {
+				if (is_string($where))
+					$rs->where($where);
+				else if (is_array($where))
+					$rs->where($where[0], $where[1]);
+				else
+					throw new SERIA_Exception('Invalid return value from MetaSelect');
+			}
 			$row = $rs->limit(1)->current();
 			if($row === false)
 				throw new SERIA_Exception($className.':'.$key.' not found', SERIA_Exception::NOT_FOUND);

@@ -21,7 +21,12 @@
 			{
 				if($whereTmp = call_user_func(array($className, 'MetaSelect')))
 				{
-					$this->where($whereTmp);
+					if (is_string($whereTmp))
+						$this->where($whereTmp);
+					else if (is_array($whereTmp))
+						$this->where($whereTmp[0], $whereTmp[1]);
+					else
+						throw new SERIA_Exception('Invalid return value from MetaSelect');
 				}
 			}
 
@@ -49,6 +54,11 @@
 				 */
 				$spec = SERIA_Meta::_getSpec($fieldSpec['class']);
 				return SERIA_Meta::all($fieldSpec['class'])->where($spec['primaryKey'].' IN ('.implode(',', $values).')');
+			} else if (isset($fieldSpec['class']) && $fieldSpec['class'] == 'SERIA_MetaObject') {
+				foreach ($values as &$value) {
+					$value = SERIA_Meta::getByReference($value);
+				}
+				return $values;
 			} else {
 				/*
 				 * Return an array of field values:
