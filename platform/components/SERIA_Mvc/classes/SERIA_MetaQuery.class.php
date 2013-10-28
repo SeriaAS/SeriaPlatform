@@ -53,7 +53,10 @@
 				 * Return a SERIA_MetaQuery with all objects for this field:
 				 */
 				$spec = SERIA_Meta::_getSpec($fieldSpec['class']);
-				return SERIA_Meta::all($fieldSpec['class'])->where($spec['primaryKey'].' IN ('.implode(',', $values).')');
+				if ($values)
+					return SERIA_Meta::all($fieldSpec['class'])->where($spec['primaryKey'].' IN ('.implode(',', $values).')');
+				else
+					return SERIA_Meta::all($fieldSpec['class'])->where('1=0');
 			} else if (isset($fieldSpec['class']) && $fieldSpec['class'] == 'SERIA_MetaObject') {
 				foreach ($values as &$value) {
 					$value = SERIA_Meta::getByReference($value);
