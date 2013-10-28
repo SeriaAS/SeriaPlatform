@@ -130,13 +130,21 @@
 		*/
 		public function where($where, $args = NULL, $shardByValue = NULL)
 		{
-			$this->rs = NULL;
-			$this->rsOffset = NULL;
-			$this->offset = 0;
+			$this->reload();
 			parent::where($where, $args);
 			if($shardByValue!==NULL)
 				$this->shardByValues[] = $shardByValue;
 			return $this;
+		}
+
+		/**
+		 * Set the select fields. Default '*'.
+		 * @param $select
+		 */
+		public function selectFields($select='*')
+		{
+			$this->reload();
+			$this->select = $select;
 		}
 
 		protected function buildSQL($select='*')
@@ -181,6 +189,12 @@
 				$this->start = 0;
 				$this->length = NULL;
 			}
+		}
+		public function reload()
+		{
+			$this->rs = NULL;
+			$this->rsOffset = NULL;
+			$this->offset = 0;
 		}
 
 		// ITERATOR

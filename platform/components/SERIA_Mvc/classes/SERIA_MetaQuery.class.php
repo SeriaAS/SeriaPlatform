@@ -28,6 +28,36 @@
 		}
 
 		/**
+		 * Get a collection of object values. If it is a SERIA_MetaObject field it'll
+		 * return a SERIA_MetaQuery, otherwise an array.
+		 *
+		 * @param $name
+		 */
+		public function get($name)
+		{
+			if (!isset($this->spec['fields'][$name]))
+				throw new SERIA_Exception('Field does not exist: '.$name);
+			$fieldSpec = $this->spec['fields'][$name];
+			$data = clone $this->_data;
+			$data->selectFields($name);
+			$values = array();
+			foreach($data as $row)
+				$values[] = $row[$name];
+			if (isset($fieldSpec['class']) && class_exists($fieldSpec['class']) && is_subclass_of($fieldSpec['class'], 'SERIA_MetaObject')) {
+				/*
+				 * Return a SERIA_MetaQuery with all objects for this field:
+				 */
+				$spec = SERIA_Meta::_getSpec($fieldSpec['class']);
+				return SERIA_Meta::all($fieldSpec['class'])->where($spec['primaryKey'].' IN ('.implode(',', $values).')');
+			} else {
+				/*
+				 * Return an array of field values:
+				 */
+				return $values;
+			}
+		}
+
+		/**
 		*	If you have a many-to-many relationship between two tables, this function will help you
 		*	filter. Simply call:
 		*
