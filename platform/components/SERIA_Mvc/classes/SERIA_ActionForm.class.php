@@ -92,6 +92,10 @@ $form->begin()."<table><thead>';
 
 			return NULL;
 		}
+		function setDefault($name, $value)
+		{
+			$this->_data[$name] = $value;
+		}
 
 		/**
 		*	Return the specification for the form
