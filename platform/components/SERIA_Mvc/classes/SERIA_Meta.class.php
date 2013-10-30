@@ -158,6 +158,19 @@ set_time_limit(3);
 						throw new SERIA_ValidationException('Validation errors', $errors);
 				}
 				$res = SERIA_DbData::table($spec['table'], $spec['primaryKey'], $spec['shardBy'])->update($row[$spec['primaryKey']], $row);
+				/*
+				 * Possible return values:
+				 * 0: No rows changed. Ok. (local and db match )
+				 * 1: One row changed. Ok.
+				 * FALSE: Error.
+				 *
+				 * I believe people expect this function to return TRUE/FALSE based on Ok/Error,
+				 * but to make as little change as possible I'll change just 0 to TRUE and
+				 * leave 1 (and FALSE) as before.
+				 * - J-E P
+				 */
+				if ($res === 0)
+					$res = TRUE;
 			}
 			$instance->MetaBackdoor('update_row', $row);
 
