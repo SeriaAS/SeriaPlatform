@@ -21,6 +21,10 @@
 			else $this->where = "(".$where.") AND (".$this->where.")";
 			return $this;
 		}
+		public function getWhere()
+		{
+			return array($this->where, $this->args);
+		}
 		final public function limit($a,$b = NULL) {
 			if($b === NULL)
 			{

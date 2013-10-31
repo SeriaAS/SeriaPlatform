@@ -32,6 +32,11 @@
 
 		}
 
+		public function getWhere()
+		{
+			return $this->_data->getWhere();
+		}
+
 		/**
 		 * Get a collection of object values. If it is a SERIA_MetaObject field it'll
 		 * return a SERIA_MetaQuery, otherwise an array.
