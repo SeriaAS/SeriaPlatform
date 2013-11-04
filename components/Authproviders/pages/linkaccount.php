@@ -46,6 +46,13 @@ foreach ($attributes as $name => $value) {
 	if (in_array($name, $userFields))
 		$user->set($name, $value);
 }
+/*
+ * Force safe-email to false if not avail. This has two effects
+ * 1. Shows the email-field to the user
+ * 2. Distrusts the email-adress supplied by the user.
+ */
+if (!isset($attributes['email']) || !$attributes['email'])
+	$params['safeEmail'] = FALSE;
 
 class AuthprovidersCreateUserForm extends SERIA_Form
 {
