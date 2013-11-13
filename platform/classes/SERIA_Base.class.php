@@ -205,9 +205,12 @@
 			require_once(SERIA_ROOT."/seria/platform/pages/$f.php");
 		}
 
-		/**
-		*	Connect to the primary database server
-		*/
+        /**
+         * Connect to the primary database server
+         *
+         * @param bool $setDB
+         * @return SERIA_DB
+         */
 		static function db($setDB=false)
 		{
 			static $db = false;
@@ -771,7 +774,7 @@ $trace
 						}
 						if($retv)
 							return $guid;
-						$guid += ($maxTries>5 ? 1 : mt_rand(0, 4));
+						$guid += ($maxTries>5 ? 1 : mt_rand(1, 10));
 					} catch (PDOException $e) {
 						$retv = 0;
 					}
