@@ -271,7 +271,7 @@ class SERIA_Validator
 					$row = $extra['object']->MetaBackdoor('get_row');
 					$key = $row[$pk];
 
-					$sql = 'SELECT 1 FROM '.$table.' WHERE '.$extra['field'].'=:value';
+					$sql = 'SELECT 1 FROM '.$table.' WHERE `'.$extra['field'].'`=:value';
 					$dbParams = array('value' => $value);
 
 					if($key)
