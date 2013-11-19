@@ -239,7 +239,14 @@
 			}
 		}
 
-		function query($statement, $params=NULL) {
+        /**
+         * @param $statement
+         * @param array $params
+         * @return PDOStatement
+         * @throws Exception
+         * @throws PDOException
+         */
+        function query($statement, $params=NULL) {
 			$this->rememberQuery('query', $statement, $params);
 			$this->autoCursorClose();
 //			$original = $statement;
