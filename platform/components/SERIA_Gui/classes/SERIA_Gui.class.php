@@ -223,7 +223,7 @@
 			$this->markActiveMenuItems();
 
 			$level = $this->getMenuItemsLevel($level);
-			foreach($level as $id => $item)
+			if($level) foreach($level as $id => $item)
 				if(!empty($item['active']))
 				{
 					return $item;
