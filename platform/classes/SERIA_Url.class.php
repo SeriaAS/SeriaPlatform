@@ -7,8 +7,8 @@
 		protected $_url;
 
 		/**
-		*	Provide the class with an absolute URL. Relative URLs have not been tested, and probably does not work yet.
-		*	@param string $url	An absolute URL
+		* Provide the class with an absolute URL. Relative URLs have not been tested, and probably does not work yet.
+		* @param string $url	An absolute URL
 		*/
 		public function __construct($url)
 		{
@@ -17,13 +17,18 @@
 			else $this->_url = $url;
 		}
 
-		/**
-		* Sign the URL using an arbitrary key that must be shared among those that will be able to sign urls.
-		* You may wish to look into SERIA_Fluent::all('SERIA_RpcClientKey') to find keys. It will also be wise
-		* to add an "expires" parameter that states a time stamp after which the URL should not work. Of course,
-		* you can add an application identifier to the url as well - and use that application identifier to figure
-		* out which key to use when checking that the URL is signed.
-		*/
+        /**
+         * Sign the URL using an arbitrary key that must be shared among those that will be able to sign urls.
+         * You may wish to look into SERIA_Fluent::all('SERIA_RpcClientKey') to find keys. It will also be wise
+         * to add an "expires" parameter that states a time stamp after which the URL should not work. Of course,
+         * you can add an application identifier to the url as well - and use that application identifier to figure
+         * out which key to use when checking that the URL is signed.
+         *
+         * @param string $key           The key to use for signing the URL
+         * @param string $paramName     The optional parameter name to use for signing the url. Default is 'sign'
+         * @param string $algorithm     Alternative algorithm to use, will use sha1 if unspecified.
+         * @return SERIA_Url
+         */
 		public function sign($key, $paramName='sign', $algorithm='sha1') {
 			$parsed = parse_url($this->_url);
 			$identifier = $parsed['path'];
@@ -35,9 +40,14 @@
 			return $this;
 		}
 
-		/**
-		* Check that the URL is signed using the specified key. Look at the comment for self::sign()
-		*/
+        /**
+         * Check that the URL is signed using the specified key. Look at the comment for self::sign()
+         *
+         * @param string $key           The key to use for signing the URL
+         * @param string $paramName     The optional parameter name to use for signing the url. Default is 'sign'
+         * @param string $algorithm     Alternative algorithm to use, will use sha1 if unspecified.
+         * @return bool
+         */
 		public function isSigned($key, $paramName='sign', $algorithm='sha1') {
 			$parsed = parse_url($this->_url);
 			if(empty($parsed['query']))
@@ -55,7 +65,13 @@
 			return $query[$paramName] === hash_hmac($algorithm, $identifier, $key);
 		}
 
-		public static function parse_str($str, &$query)
+        /**
+         * An implementation of parse_str that takes into account magic quotes.
+         *
+         * @param $str
+         * @param $query
+         */
+        public static function parse_str($str, &$query)
 		{
 			parse_str($str, $query);
 
@@ -80,10 +96,11 @@
 		}
 
 		/**
-		*	Set the fragment part of the query (after the #)
-		*	@param mixed $value		A string or an array to insert as fragment.
-		*	@return SERIA_Url
-		*/
+		 *	Set the fragment part of the query (after the #)
+         *
+		 *	@param mixed $value		A string or an array to insert as fragment.
+		 *	@return SERIA_Url
+		 */
 		public function setFragment($value)
 		{
 			$parsed = parse_url($this->_url);
@@ -93,9 +110,10 @@
 		}
 
 		/**
-		*	Remove the fragment part of the query (after the #)
-		*	@return SERIA_Url
-		*/
+		 *	Remove the fragment part of the query (after the #). This removes the entire fragment.
+         *
+		 *	@return SERIA_Url
+		 */
 		public function unsetFragment()
 		{
 			$parsed = parse_url($this->_url);
@@ -105,10 +123,11 @@
 		}
 
 		/**
-		*	Set the entire query (from the ? until the fragment #)
-		*	@param mixed $value		A string or an array to insert as fragment.
-		*	@return SERIA_Url
-		*/
+		 *	Set the entire query (from the ? until the fragment #)
+         *
+		 *	@param mixed $value		A string or an array to insert as fragment.
+		 *	@return SERIA_Url
+		 */
 		public function setQuery($value)
 		{
 			$parsed = parse_url($this->_url);
@@ -118,21 +137,23 @@
 		}
 
 		/**
-		*	Get the entire query part of the url (from the ? until the fragment #)
-		*	@return string
-		*/
-		public function getQuery($value)
+		 *	Get the entire query part of the url (from the ? until the fragment #)
+         *
+		 *	@return string
+		 */
+		public function getQuery()
 		{
 			return parse_url($this->_url, PHP_URL_QUERY);
 		}
 
 
 		/**
-		*	Add or replace a part of the query string
-		*	@param string $param		The name of the parameter to change
-		*	@param mixed $value		A string or an array to insert as value.
-		*	@return SERIA_Url
-		*/
+		 *	Add or replace a part of the query string
+         *
+		 *	@param string $param		The name of the parameter to change
+		 *	@param mixed $value		A string or an array to insert as value.
+		 *	@return SERIA_Url
+		 */
 		public function setParam($param, $value)
 		{
 			$parsed = parse_url($this->_url);
@@ -140,6 +161,7 @@
 				$query = array();
 			else
 				self::parse_str($parsed['query'], $query);
+
 			$query[$param] = $value;
 
 			$parsed['query'] = http_build_query($query, '', '&');
@@ -148,10 +170,11 @@
 		}
 
 		/**
-		*	Remove a parameter from the query string
-		*	@param string $param		The name of the parameter to remove
-		*	@return SERIA_Url
-		*/
+		 *	Remove a parameter from the query string
+         *
+		 *	@param string $param		The name of the parameter to remove
+		 *	@return SERIA_Url
+		 */
 		public function unsetParam($param)
 		{
 			$parsed = parse_url($this->_url);
@@ -166,9 +189,10 @@
 		}
 
 		/**
-		*	Removes all parameters from the query string
-		*	@return SERIA_Url
-		*/
+		 *	Removes all parameters from the query string
+         *
+		 *	@return SERIA_Url
+		 */
 		public function clearParams()
 		{
 			$parsed = parse_url($this->_url);
@@ -181,16 +205,20 @@
 			return $this;
 		}
 
-		/**
-		*	Alias of unsetParam
-		*/
+        /**
+         * Alias of unsetParam
+         *
+         * @param string $param
+         * @return SERIA_Url
+         */
 		public function removeParam($param) { return $this->unsetParam($param); }
 
 		/**
-		*	Set the hostname of the url
-		*	@param mixed $value		A string or an array to insert as value.
-		*	@return SERIA_Url
-		*/
+		 *	Set the hostname of the url
+         *
+		 *	@param mixed $value		A string or an array to insert as value.
+		 *	@return SERIA_Url
+		 */
 		public function setHost($value)
 		{
 			$parsed = parse_url($this->_url);
@@ -209,10 +237,11 @@
 		}
 
 		/**
-		*	Set the scheme of the url (http/https/rtmp etc)
-		*	@param mixed $value		A string or an array to insert as value.
-		*	@return SERIA_Url
-		*/
+		 *	Set the scheme of the url (http/https/rtmp etc)
+         *
+		 *	@param mixed $value		A string or an array to insert as value.
+		 *	@return SERIA_Url
+		 */
 		public function setScheme($value)
 		{
 			$parsed = parse_url($this->_url);
@@ -222,10 +251,11 @@
 		}
 
 		/**
-		*	Set the path of the url
-		*	@param string $value		A string to insert as value.
-		*	@return SERIA_Url
-		*/
+		 *	Set the path of the url
+         *
+		 *	@param string $value		A string to insert as value.
+		 *	@return SERIA_Url
+		 */
 		public function setPath($value)
 		{
 			$parsed = parse_url($this->_url);
@@ -234,15 +264,21 @@
 			return $this;
 		}
 
-		public function getPath() {
+        /**
+         * Returns the path section of the URL up until the query parameter and fragment
+         *
+         * @return mixed
+         */
+        public function getPath() {
 			$parsed = parse_url($this->_url);
 			return $parsed['path'];
 		}
 
 		/**
-		*	Navigate up one folder. Unsets all query params and fragment.
-		*	@return SERIA_Url
-		*/
+		 *	Navigate up one folder. Unsets all query params and fragment.
+         *
+		 *	@return SERIA_Url
+		 */
 		public function parent()
 		{
 			$parsed = parse_url($this->_url);
@@ -258,9 +294,10 @@
 		}
 
 		/**
-		*	Navigate to root path. Unsets all query params and fragment.
-		*	@return SERIA_Url
-		*/
+		 *	Navigate to root path. Unsets all query params and fragment.
+         *
+		 *	@return SERIA_Url
+		 */
 		public function root()
 		{
 			$parsed = parse_url($this->_url);
@@ -273,10 +310,11 @@
 		
 
 		/**
-		*	Parse out the value from the query string and return it.
-		*	@param string $param		The name of the parameter to remove
-		*	@return SERIA_Url
-		*/
+		 *	Parse out the value from the query string and return it.
+         *
+		 *	@param string $param		The name of the parameter to remove
+		 *	@return mixed
+		 */
 		public function getParam($param)
 		{
 			$parsed = parse_url($this->_url);
@@ -290,20 +328,19 @@
 		}
 
 		/**
-		*	When echoing this class, the URL will be displayed.
-		*/
+		 *	When echoing this class, the URL will be displayed.
+		 */
 		public function __toString()
 		{
 			return $this->_url;
 		}
 
 
-		/**
-		*	Return the URL for the current page, optionally add request parameters
-		*
-		*	@param array $query	GET-parameters to add to the current URL
-		*	@return string		Absolute URL
-		*/
+        /**
+         * Return the URL for the current page, optionally add request parameters
+         *
+         * @return SERIA_Url        Absolute URL
+         */
 		public static function current()
 		{
 			$ru = $_SERVER['REQUEST_URI'];
@@ -325,9 +362,10 @@
 		}
 
 		/**
-		*	Returns true if this request was performed with https
-		*	@return boolean
-		*/
+		 *	Returns true if this request was performed with https
+         *
+		 *	@return boolean
+		 */
 		public static function https()
 		{
 			if(empty($_SERVER['HTTPS']))
@@ -337,7 +375,13 @@
 			return true;
 		}
 
-		public static function buildUrl(array $parsed)
+        /**
+         * Builds a complete URL from a parsed URL, according to parse_url().
+         *
+         * @param array $parsed
+         * @return string
+         */
+        public static function buildUrl(array $parsed)
 		{
 			if(empty($parsed['scheme'])) $parsed['scheme'] = 'http';
 			if(empty($parsed['host'])) $parsed['host'] = $_SERVER['HTTP_HOST'];
