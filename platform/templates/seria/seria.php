@@ -279,12 +279,12 @@ $topMenu = $gui->getMenuItemsLevel(1);
 
 if($gui->getActiveMenuItemLevel(1))
 	unset($activeApp['active']);
-array_unshift($topMenu, $activeApp);
-
-$topMenu = array_values($topMenu);
 
 if($topMenu && sizeof($topMenu))
 {
+    array_unshift($topMenu, $activeApp);
+    $topMenu = array_values($topMenu);
+
 	$active = false;
 	foreach($topMenu as $index => $item)
 	{
