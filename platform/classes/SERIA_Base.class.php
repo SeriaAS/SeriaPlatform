@@ -762,11 +762,12 @@ $trace
 		static function guid($key = '')
 		{
 			try {
-				$maxTries = 10;
-				$guid = 1 + SERIA_Base::db()->query("SELECT MAX(guid) FROM {guids}", array())->fetch(PDO::FETCH_COLUMN, 0);
+				$maxTries = 100;
 				while($maxTries--)
 				{
 					try {
+						$guid = 1 + SERIA_Base::db()->query("SELECT MAX(guid) FROM {guids}", array())->fetch(PDO::FETCH_COLUMN, 0);
+
 						if(SERIA_COMPATIBILITY >= 3) {
 							$retv = SERIA_Base::db()->exec("INSERT INTO {guids} (guid) VALUES (:guid)", array('guid' => $guid));
 						} else {
@@ -774,7 +775,6 @@ $trace
 						}
 						if($retv)
 							return $guid;
-						$guid += ($maxTries>5 ? 1 : mt_rand(1, 10));
 					} catch (PDOException $e) {
 						$retv = 0;
 					}
