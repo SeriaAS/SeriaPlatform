@@ -705,6 +705,16 @@
 							array(SERIA_Validator::MIN_LENGTH, 1),
 						)),
 					);
+				case "mimetype":
+					return array(
+						'fieldtype' => 'text',
+						'type' => 'varchar(100)',
+						'validator' => new SERIA_Validator(array(
+							array(SERIA_Validator::MIN_LENGTH, 3),
+							array(SERIA_Validator::MAX_LENGTH, 100),
+							array(SERIA_Validator::INTERNET_MEDIA_TYPE),
+						)),
+					);
 				case "username" :
 					return array(
 						"fieldtype" => "text",
