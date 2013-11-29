@@ -203,6 +203,68 @@
 
 
 		/**
+		 * Get the standard field validator. Be aware of that custom validation may
+		 * exist in addition to the standard (MetaIsInvalid).
+		 *
+		 * @param $instance SERIA_MetaObject|string Instance of SERIA_MetaObject or class name.
+		 * @param $field string Field name.
+		 * @return SERIA_Validator
+		 * @throws SERIA_Exception
+		 */
+		public static function getFieldValidator($instance, $field)
+		{
+			$spec = self::_getSpec($instance);
+			if (isset($spec['fields']) && isset($spec['fields'][$field]))
+				$spec = $spec['fields'][$field];
+			else
+				throw new SERIA_Exception('Requested field '.$field.' not found!');
+			if (isset($spec['validator'])) {
+				assert($spec['validator'] instanceof SERIA_Validator);
+				return $spec['validator'];
+			} else
+				throw new SERIA_Exception('No validator for meta field '.$field.'!');
+		}
+
+		/**
+		 * Validate a single field value.
+		 *
+		 * @param $instance SERIA_MetaObject|string Instance of SERIA_MetaObject or class name.
+		 * @param $field string Field name.
+		 * @param $value mixed Value.
+		 * @return bool|string FALSE on success, otherwise an error message as a string.
+		 * @throws SERIA_Exception
+		 */
+		public static function validateField($instance, $field, $value)
+		{
+			/*
+			 * Make sure we don't do anything with the original object.
+			 * (Need to do a set-call here to run the custom validator)
+			 */
+			if (is_object($instance))
+				$instance = get_class($instance);
+
+			/*
+			 * The normal validator will let the custom errors override the
+			 * standard validation errors. So we check custom first, possibly
+			 * shorting the standard validation.
+			 */
+			if (!class_exists($instance) || !is_subclass_of($instance, 'SERIA_MetaObject'))
+				throw new SERIA_Exception('Cannot request a validator for a field of an object or class that is not a SERIA_MetaObject');
+			$instance = new $instance();
+			assert($instance instanceof SERIA_MetaObject);
+			$instance->set($field, $value);
+			$customErrors = $instance->MetaIsInvalid();
+			if (isset($customErrors[$field]))
+				return $customErrors[$field];
+
+			/*
+			 * If we have got no custom errors, try standard validation.
+			 */
+			$validator = static::getFieldValidator($instance, $field);
+			return $validator->isInvalid($value);
+		}
+
+		/**
 		*	Validate field by field a SERIA_MetaObject, by accessing its row.
 		*
 		*	@param SERIA_MetaObject $instance	Validate and return array of errors or boolean false.
