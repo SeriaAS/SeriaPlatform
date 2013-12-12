@@ -6,6 +6,10 @@
 	{
 		protected $_url;
 
+		const RELATIVE_TO_NONE = 0;
+		const RELATIVE_TO_SCHEME = 1;
+		const RELATIVE_TO_HOST = 2;
+
 		/**
 		* Provide the class with an absolute URL. Relative URLs have not been tested, and probably does not work yet.
 		* @param string $url	An absolute URL
@@ -123,6 +127,16 @@
 		}
 
 		/**
+		 * Get the url fragment.
+		 *
+		 * @return mixed
+		 */
+		public function getFragment()
+		{
+			return parse_url($this->_url, PHP_URL_FRAGMENT);
+		}
+
+		/**
 		 *	Set the entire query (from the ? until the fragment #)
          *
 		 *	@param mixed $value		A string or an array to insert as fragment.
@@ -237,6 +251,24 @@
 		}
 
 		/**
+		 * Get the user of the url
+		 * @return mixed
+		 */
+		public function getUser()
+		{
+			return parse_url($this->_url, PHP_URL_USER);
+		}
+
+		/**
+		 * Get the password of the url
+		 * @return mixed
+		 */
+		public function getPassword()
+		{
+			return parse_url($this->_url, PHP_URL_PASS);
+		}
+
+		/**
 		 *	Set the scheme of the url (http/https/rtmp etc)
          *
 		 *	@param mixed $value		A string or an array to insert as value.
@@ -325,6 +357,78 @@
 			if(!isset($parts[$param]))
 				return NULL;
 			return $parts[$param];
+		}
+
+		/**
+		 * Get the url relative to another url or two predefined formats.
+		 *
+		 * @param $relativeTo mixed|SERIA_Url The url that the resulting string is going to be relative to
+		 */
+		public function getRelativeTo($relativeTo=self::RELATIVE_TO_NONE)
+		{
+			$buildUrl = '';
+			if (((int) $relativeTo) === $relativeTo) {
+				switch ($relativeTo) {
+					case self::RELATIVE_TO_NONE:
+						$parsed = parse_url($this->_url);
+						return static::buildUrl($parsed);
+					case self::RELATIVE_TO_SCHEME:
+						$hostPart = $this->getHost();
+						if (($userPart = $this->getUser())) {
+							if (($passPart = $this->getPassword()))
+								$userPart = $userPart.':'.$passPart;
+							$hostPart = $userPart.'@'.$hostPart;
+						}
+						$buildUrl .= '//'.$hostPart;
+					case self::RELATIVE_TO_HOST:
+						$buildUrl .= $this->getPath();
+						if (($query = $this->getQuery()))
+							$buildUrl .= '?'.$query;
+						if (($fragment = $this->getFragment()))
+							$buildUrl .= '#'.$fragment;
+						return $buildUrl;
+				}
+			}
+			if (!($relativeTo instanceof SERIA_Url) && is_string($relativeTo))
+				$relativeTo = new SERIA_Url($relativeTo);
+			else if ($relativeTo instanceof SERIA_Url)
+				$relativeTo = new SERIA_Url($relativeTo->__toString());
+			else
+				throw new SERIA_Exception('Invalid argument, expected url!', SERIA_Exception::INCORRECT_USAGE);
+			$relativeTo->clearParams();
+			$relativeTo->unsetFragment();
+			$pathRelative = $relativeTo->getPath();
+			if (!$pathRelative)
+				$pathRelative = '/';
+			$relativeTo->setPath('/');
+			$relativeTo = $relativeTo->__toString();
+			$url = $this->getRelativeTo(self::RELATIVE_TO_NONE);
+			if (strpos($url, $relativeTo) === 0) {
+				$relWithPath = substr($url, strlen($relativeTo));
+				if (!$relWithPath || $relWithPath[0] != '/')
+					$relWithPath = '/'.$relWithPath;
+				$pathLen = strlen($pathRelative);
+				while ($pathRelative[$pathLen - 1] == '/')
+					$pathLen--;
+				if ($pathLen == 0)
+					return $relWithPath;
+				$pathRelative = substr($pathRelative, 0, $pathLen);
+				if ($pathRelative == $relWithPath) {
+					return '';
+				} else if (strpos($relWithPath, $pathRelative) === 0 && in_array($relWithPath[$pathLen], array('/', '?', '#'))) {
+					/* Simple removal of the path relative to */
+					$relWithPath = substr($relWithPath, $pathLen);
+					while ($relWithPath && $relWithPath[0] == '/')
+						$relWithPath = substr($relWithPath, 1);
+					return $relWithPath;
+				}
+				return $relWithPath;
+			}
+			/*
+			 * Host-part did not match..
+			 * Return full absolute url..
+			 */
+			return $url;
 		}
 
 		/**
