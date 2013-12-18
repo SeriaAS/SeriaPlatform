@@ -134,9 +134,11 @@
 				$errors = false; // no errors, _rowToDb() will save everything
 			}
 
-			$row = self::_rowToDB($instance->MetaBackdoor('get_update_row'), $spec, $saveReferences);
+			$new = $instance->MetaBackdoor('is_new');
 
-			if($instance->MetaBackdoor('is_new'))
+			$row = self::_rowToDB($instance->MetaBackdoor('get_update_row'), $spec, $new, $saveReferences);
+
+			if ($new)
 			{
 				if($errors!==false)
 					throw new SERIA_ValidationException('Validation errors', $errors);
@@ -1081,7 +1083,7 @@
 		 *	@param array $row	Array of column => value pairs where values are ready to be inserted into the database.
 		 * 	@param array $spec	Array of metaspec
 		 */
-		public /*package*/ static function _rowToDB($row, $spec, $autoSave=false)
+		public /*package*/ static function _rowToDB($row, $spec, $isNew, $autoSave=false)
 		{
 			$id = empty($row[$spec['primaryKey']]) ? SERIA_Base::guid() : $row[$spec['primaryKey']];
 			$newRow = array();
@@ -1093,7 +1095,7 @@
 					switch($info['special'])
 					{
 						case 'createdBy' :
-							if(empty($row[$spec['primaryKey']]))
+							if ($isNew)
 							{ // this is a new row
 								$newRow[$name] = ($t=SERIA_Base::userId()) ? $t : NULL;
 							}
@@ -1102,7 +1104,7 @@
 							$newRow[$name] = ($t=SERIA_Base::userId()) ? $t : NULL;
 							break;
 						case 'createdDate' :
-							if(empty($row[$spec['primaryKey']]))
+							if ($isNew)
 							{ // new row
 								$newRow[$name] = date('Y-m-d H:i:s', $ts);
 							}
