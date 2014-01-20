@@ -776,6 +776,7 @@ $trace
 						if($retv)
 							return $guid;
 					} catch (PDOException $e) {
+						if($e->getCode() == '42S02') throw $e;
 						$retv = 0;
 					}
 				}
