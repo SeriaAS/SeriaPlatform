@@ -98,6 +98,13 @@ $form->begin()."<table><thead>';
         else
             $src = $_GET;
 
+	if(isset($src['SAFI']) && $src['SAFI']!=$this->id) {
+		// The post data is not intended for this form
+		if(isset($this->_data[$name]))
+			return $this->_data[$name];
+		return NULL;
+	}
+
         if(isset($src[$this->_prefix.'bool']) && isset($src[$this->_prefix.'bool'][$name]))
             return isset($src[$this->_prefix.$name]);
 
