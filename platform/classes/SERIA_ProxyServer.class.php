@@ -1,155 +1,220 @@
 <?php
-	/**
-	 *	Class for handling proxy servers that work in front of Seria Platform.
-	 */
+/**
+
+        // session_cache_limiter('nocache');
+        // Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+        // Expires: Thu, 19 Nov 1981 08:52:00 GMT
+        // Pragma: no-cache
+
+        session_cache_limiter('nostore');
+        // No headers comes
+
+        // session_cache_limiter('public');
+        // Cache-Control:public, max-age=10800
+        // Expires:Thu, 13 Mar 2014 14:01:04 GMT
+
+        // session_cache_limiter('private');
+        // Cache-Control: private, max-age=10800, pre-check=10800
+        // Expires:Thu, 19 Nov 1981 08:52:00 GMT
+
+
+
+//      session_start();
+        echo "OK";
+
+*	Class for handling proxy servers that work in front of Seria Platform.
+*
+*	Interface
+*
+*	init()
+*		Sets cache control headers to the initial state, as defined by PHP.
+*	publicCache($ttl=604800)
+*		Sets time to live to $ttl, unless it's been set to a lower time to live earlier in the request
+*		Sets cache limiter to public, unless it is set to a more restricted cache limiter earlier in the request.
+*	privateCache($ttl=86400)
+*		Sets time to live to $ttl, unless it's been set to a lower time to live earlier in the request
+*		Sets cache limiter to public, unless it is set to a more restricted cache limiter earlier in the request.
+*	noCache()
+*		Sets time to live to 0.
+*		Requests that the data is not cached.
+*	noStore()
+*		Sets time to live to 0.
+*		Requests that the data is not stored. This can be a problem for content that should be loaded by browser
+*		plugins, such as Flash. Often these plugins rely on the browser downloading the file, and then the plugin
+*		loads the file from disk.
+*/
 	class SERIA_ProxyServer {
-		protected static $proxyLogId = 0;
-		protected static $cacheLim = null;
-		protected static $expireTime = null;
+                const CACHE_PUBLIC = 'SERIA_ProxyServer::CACHE_PUBLIC';
+                const CACHE_PRIVATE = 'SERIA_ProxyServer::CACHE_PRIVATE';
+                const CACHE_NOCACHE = 'SERIA_ProxyServer::CACHE_NOCACHE';
+		const CACHE_NOSTORE = 'SERIA_ProxyServer::CACHE_NOSTORE';
 
-		protected static function proxyLog($message) {
-			if(SERIA_DEBUG)
-				header("X-Proxy-".(self::$proxyLogId++).": ".$message);
-		}
+		const INIT_PUBLIC_TTL = 604800;
+		const INIT_PRIVATE_TTL = 86400;
 
-		/**
-		 *
-		 * Called to set the caching to the default of 60 seconds and reset the
-		 * cache headers to default (public 60).
-		 */
-		public static function init()
-		{
-			self::proxyLog('init');
-			$ttl = 60;
-			header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
-			header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
-			self::$cacheLim = 'public';
-			self::$expireTime = null;
-		}
-		/**
-		 *
-		 * Called to set the caching to the default of 60 seconds and reset the
-		 * cache headers to default (60 seconds). Limit initially to private.
-		 */
-		public static function private_init()
-		{
-			self::proxyLog('private-init');
-			$ttl = 60;
-			header("Cache-Control: private, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
-			header("Pragma: no-cache");
-			header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-			self::$cacheLim = 'private';
-			self::$expireTime = null;
-			session_cache_limiter('private');
-			session_cache_expire(intval($ttl / 60));
-		}
+		protected static $_expires = NULL;
+		protected static $_limiter = self::CACHE_PUBLIC;
+		// If override mode is set, you must call SERIA_ProxyServer::commit() at the end of your request. This will
+		// prevent session_cache_limiter from tampering with your headers.
+		protected static $_overrideMode = FALSE;
+		protected static $_overrideAvailable = TRUE;
 
 		/**
-		 * Sends headers that informs the proxy server to never cache this page.
-		 */
-		public static function noCache() {
-			self::proxyLog('noCache');
-	                header("Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0");
-	                header("Pragma: no-cache");
-	                header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
-	                header("Last-Modified: " . gmdate("D, d M Y H:i:s") . " GMT");
-
-			// if session is started, then PHP will override the above headers with it's own headers using the following configuration
-			session_cache_limiter('nocache');
-			session_cache_expire(0);
-
-			self::$cacheLim = 'nocache';
-		}
-
-		/**
-		 * Sends headers that informs the proxy server to never cache the page, while the web browser may cache it.
-		 * @param $ttl 		Time to live in seconds for the cache. Since PHP only allow per minute granularity, this should be at least 60 seconds.
-		 */
-		public static function privateCache($ttl=60)
-		{
-			self::proxyLog("privateCache($ttl)");
-
-			if (self::$cacheLim == 'nocache' ||
-			    (self::$cacheLim == 'private' && self::$expireTime < $ttl)) {
-				/*
-				 * This has been overriden by a previous call to
-				 * nocache or private, meaning that parts of this response is
-				 * not cacheable, or privately cacheable with a lower ttl.
-				 * Thus not allowing caching of this response with this ttl.
-				 */
-				return;
-			}
-			if (self::$expireTime && ($ttl === null || self::$expireTime < $ttl))
-				$ttl = self::$expireTime;
-			if ($ttl !== null)
-				header("Cache-Control: private, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".(intval($ttl)/2).", pre-check=".(intval($ttl)));
-			else {
-				$unspec_ttl = 86400;
-				header('Cache-Control: private, max-age='.intval($unspec_ttl).", s-maxage=".$unspec_ttl.", post-check=".($unspec_ttl/2).", pre-check=".($unspec_ttl));
-			}
-			header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-			header('Pragma: private');
-
-			// if session is started later, then PHP will override the above headers with it's own headers using the following configuration
-			session_cache_limiter('private');
-			if ($ttl !== null)
-				session_cache_expire(intval($ttl / 60));
-			else
-				session_cache_expire($unspec_ttl / 60);
-
-			self::$cacheLim = 'private';
-			self::$expireTime = $ttl;
-		}
-
-		/**
-		 * Sends headers that informs the proxy server to cache this page if possible. Warning! Although caching is important, you must be aware that
-		 * others accessing the exact same url might see the exact same content. You must therefore never call this function if you are displaying private
-		 * data.
-		 * @param $ttl 		Time to live in seconds for the cache. Since PHP only allow per minute granularity, this should be at least 60 seconds.
-		 */
-		public static function publicCache($ttl=60)
-		{
-			self::proxyLog("publicCache($ttl)");
-			if ($ttl !== null) {
-				if (self::$expireTime !== null)
-					$shorterTtl = ($ttl < self::$expireTime);
-				else
-					$shorterTtl = true;
-			} else
-				$shorterTtl = true; /* shorter or equal, no problem to say true */
-			if ((self::$cacheLim && self::$cacheLim != 'public') ||
-			    (self::$cacheLim == 'public' && !$shorterTtl)) {
-				/*
-				 * This has been overriden by a previous call to
-				 * nocache or private, meaning that parts of this response is
-				 * not cacheable, or privately cacheable with a lower ttl.
-				 * Thus not allowing caching of this response with this ttl.
-				 */
-				if (self::$cacheLim == 'private' && $shorterTtl)
-					self::privateCache($ttl); /* Reduce the ttl */
-				return;
-			}
-			if ($ttl !== null) {
-				header("Cache-Control: public, max-age=".intval($ttl).", s-maxage=".intval($ttl).", post-check=".intval($ttl).", pre-check=".(intval($ttl)*2));
-				header("Expires: " . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($ttl)));
+		*	Resets the caching parameters to their initial state
+		*	If a state object is provided, it merges that state with the current state and returns the prior state
+		*/
+		public static function init($state = NULL) {
+			self::_initProperties();
+			$currentState = array(
+				'limiter' => self::$_limiter,
+				'expires' => self::$_expires,
+			);
+			if($state) {
+				self::_setMode($state['limiter'], $state['expires']);
 			} else {
-				/*
-				 * Unlimited cache translates to max-age=24 hours.
-				 */
-				$unspec_ttl = 86400;
-				header('Cache-Control: public, max-age='.intval($unspec_ttl).", s-maxage=".intval($unspec_ttl).", post-check=".intval($unspec_ttl).", pre-check=".(intval($unspec_ttl)*2));
-				header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + intval($unspec_ttl)));
+				self::$_limiter = self::CACHE_PUBLIC;
+				self::$_expires = time() + self::INIT_PUBLIC_TTL;
 			}
-			header("Pragma: public");
+			self::_resetState();
+			return $currentState;
+		}
 
-			// if session is started later, then PHP will override the above headers with it's own headers using the following configuration
-			session_cache_limiter('private');
-			if ($ttl !== null)
-				session_cache_expire(intval($ttl / 60));
+
+		public static function override() {
+			if(self::$_overrideAvailable)
+				self::$_overrideMode = TRUE;
 			else
-				session_cache_expire($unspec_ttl / 60);
+				throw new SERIA_Exception('Too late to set SERIA_ProxyServer::override()');
+		}
 
-			self::$cacheLim = 'public';
-			self::$expireTime = $ttl;
+		public static function commit() {
+			if(!self::$_overrideMode)
+				throw new SERIA_Exception('Override mode not started');
+			if(session_id())
+				self::privateCache();
+			self::_resetState();
+		}
+
+		public static function publicCache($ttl=self::INIT_PUBLIC_TTL) {
+			if($ttl===NULL) throw new SERIA_Exception('Illegal argument NULL');
+			self::_setMode(self::CACHE_PUBLIC, time() + $ttl);
+		}
+
+		public static function privateCache($ttl=self::INIT_PRIVATE_TTL) {
+			if($ttl===NULL) throw new SERIA_Exception('Illegal argument NULL');
+			self::_setMode(self::CACHE_PRIVATE, time() + $ttl);
+		}
+
+		public static function noCache() {
+			self::_setMode(self::CACHE_NOCACHE);
+		}
+
+		public static function noStore() {
+			self::_setMode(self::CACHE_NOSTORE);
+		}
+
+		public static function applyState(array $state) {
+			self::_setMode($state['limiter'], $state['expires']);
+		}
+
+		public static function _setMode($limiter, $expires=NULL) {
+			self::_initProperties();
+			switch(self::$_limiter) {
+				case self::CACHE_PUBLIC : // Everything goes
+					break;
+				case self::CACHE_PRIVATE : // Public does not go
+					switch($limiter) {
+						case self::CACHE_PUBLIC :
+							$limiter = self::$_limiter;
+							break;
+					}
+					break;
+				case self::CACHE_NOCACHE : // Public and private does not go
+					switch($limiter) {
+						case self::CACHE_PUBLIC :
+						case self::CACHE_PRIVATE :
+							$limiter = self::$_limiter;
+							break;
+					}
+					break;
+				case self::CACHE_NOSTORE : // Public and private does not go
+					switch($limiter) {
+						case self::CACHE_PUBLIC :
+						case self::CACHE_PRIVATE :
+						case self::CACHE_NOCACHE :
+							$limiter = self::$_limiter;
+							break;
+					}
+					break;
+			}
+			if($expires !== NULL)
+				$expires = min(self::$_expires, $expires);
+			if($limiter == self::CACHE_NOSTORE || $limiter == self::CACHE_NOCACHE)
+				$expires = 0;
+			self::$_expires = $expires;
+			self::$_limiter = $limiter;
+			self::_resetState();
+		}
+
+		protected static function _initProperties() {
+			if(self::$_expires===NULL) {
+				switch(self::$_limiter) {
+					case self::CACHE_PUBLIC :
+						self::$_expires = time() + self::INIT_PUBLIC_TTL;
+						break;
+					default :
+						self::$_expires = time() + self::INIT_PRIVATE_TTL;
+						break;
+				}
+			}
+
+		}
+
+		protected static function _resetState() {
+			self::_initProperties();
+
+			self::$_overrideAvailable = FALSE;
+			switch(self::$_limiter) {
+				case self::CACHE_PUBLIC :
+					if(!self::$_overrideMode) session_cache_limiter('private');
+					header('Cache-Control: public, max-age='.(self::$_expires-time()));
+					header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', intval(self::$_expires)));
+					break;
+				case self::CACHE_PRIVATE :
+					if(!self::$_overrideMode) {
+						session_cache_limiter('private');
+						header('Cache-Control: private, expires='.self::$_expires.', max-age='.(self::$_expires - time()).', pre-check='.(self::$_expires - time()));
+					} else {
+						header('Cache-Control: private, expires='.self::$_expires.', max-age='.(self::$_expires - time()));
+					}
+					header('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
+					break;
+				case self::CACHE_NOCACHE :
+					if(!self::$_overrideMode)
+						session_cache_limiter('nocache');
+					header('Cache-Control: no-cache, must-revalidate, post-check=0, pre-check=0');
+					header('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
+					break;
+				case self::CACHE_NOSTORE :
+					if(!self::$_overrideMode) session_cache_limiter('nocache');
+					header('Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0');
+					header('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
+					break;
+			}
+			// This prevents PHP from setting these headers whenever the session is started.
+//			session_cache_limiter('do-not-set');
+			if(!self::$_overrideMode)
+				session_cache_expire(intval((self::$_expires-time()) / 60));
+			else
+				session_cache_limiter('do-not-set');
+			header('Pragma: ');
+		}
+
+		public static function getState() {
+			self::_initProperties();
+			return array(
+				'limiter' => self::$_limiter,
+				'expires' => self::$_expires,
+			);
 		}
 	}
