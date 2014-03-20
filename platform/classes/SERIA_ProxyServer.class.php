@@ -44,11 +44,9 @@
 *		loads the file from disk.
 */
 
-	if (SERIA_COMPATIBILITY<3) {
-		require(__DIR__.'/SERIA_ProxyServer.2.class.php');
-		return;
-	}
-
+if (SERIA_COMPATIBILITY<3) {
+	require(__DIR__.'/SERIA_ProxyServer.2.class.php');
+} else {
 	class SERIA_ProxyServer {
                 const CACHE_PUBLIC = 'SERIA_ProxyServer::CACHE_PUBLIC';
                 const CACHE_PRIVATE = 'SERIA_ProxyServer::CACHE_PRIVATE';
@@ -224,3 +222,4 @@
 			);
 		}
 	}
+}
