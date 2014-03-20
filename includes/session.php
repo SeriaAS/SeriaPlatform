@@ -23,8 +23,7 @@
 
 	function seria_headers_privatecache_init()
 	{
-		SERIA_ProxyServer::init();
-		return SERIA_ProxyServer::privateCache();
+		return SERIA_ProxyServer::private_init();
 	}
 	function seria_headers_publiccache_init()
 	{
