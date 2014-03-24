@@ -94,6 +94,8 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'displayName' => '',
 					'email' => '',
 					'feideRoles' => array(),
+					'jpegPhoto' => array(),
+					'postalCode' => ''
 				),
 				'load' => array(
 					'unique' => $this->getUniqueSourceKey(),
@@ -101,7 +103,9 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'firstName' => array('givenName', 0),
 					'lastName' => array('sn', 0),
 					'displayName' => array('cn', 0),
-					'feideRoles' => 'eduPersonAffiliation'
+					'feideRoles' => 'eduPersonAffiliation',
+					'jpegPhoto' => 'jpegPhoto',
+					'postalCode' => 'postalCode'
 				),
 				'combinations' => array(
 				),
@@ -114,7 +118,9 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'firstName',
 					'lastName',
 					'displayName',
-					'feideRoles'
+					'feideRoles',
+					'jpegPhoto',
+					'postalCode'
 				)
 			),
 			'metadata' => array(
