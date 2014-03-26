@@ -256,7 +256,15 @@
 				{
 					if(SERIA_DEBUG) SERIA_Base::debug("SERIA_DB->query($statement) (<strong>not prepared</strong>)");
 					$this->doConnect();
-					return $this->autoCursorClose($this->_db->query(preg_replace('|{([a-zA-Z0-9_]+)}|m', SERIA_PREFIX.'_\1', $statement)));	//OPTIMIZATION: perform the preg_replace here instead of in $this->rewriteQuery
+					try {
+						return $this->autoCursorClose($this->_db->query(preg_replace('|{([a-zA-Z0-9_]+)}|m', SERIA_PREFIX.'_\1', $statement)));	//OPTIMIZATION: perform the preg_replace here instead of in $this->rewriteQuery
+					} catch (PDOExcepion $e) {
+						if ($e->getCode() == '42S02') {
+							/* Table not found */
+							SERIA_Base::debug('Table not found exception!');
+						}
+						throw $e;
+					}
 //					return $this->autoCursorClose($this->_db->query($this->rewriteQuery($statement)));
 				}
 				if(SERIA_DEBUG) SERIA_Base::debug("SERIA_DB->query($statement)");

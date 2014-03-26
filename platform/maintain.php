@@ -227,7 +227,8 @@ function run_maintains() {
 		run_payment_maintain();
 	}
 
-	run_janitor_maintain();
+	if (SERIA_COMPATIBILITY < 3 && class_exists('SERIA_Janitor'))
+		run_janitor_maintain();
 	run_maintain_hooks();
 	run_async_maintain();
 }

@@ -1,92 +1,45 @@
 <?php
 
-class SERIA_QueueTask extends SERIA_FluentObject
+class SERIA_QueueTask extends SERIA_MetaObject
 {
-	/**
-	 * Create a queue if it does not exist. Change $title and $description in database if changed.
-	 */
-	public function __construct($description, $data=null, $priority=0, $duplicateIdentifier=null)
+	public static function createObject($description, $data=null, $priority=0, $duplicateIdentifier=null)
 	{
-		if ((is_array($description) || is_numeric($description)) && $description) {
-			parent::__construct($description);
-			return;
-		}
 		if (!$description)
 			throw new SERIA_Exception('Description is required.');
 		if ($data === null)
 			throw new SERIA_Exception('Data for task is required.');
-		parent::__construct();
-		$this->set('description', $description);
-		$this->set('data', $data);
-		$this->set('priority', $priority);
-		$this->set('uniq_id', $duplicateIdentifier);
+		$obj = new static();
+		$obj->set('description', $description);
+		$obj->set('data', $data);
+		$obj->set('priority', $priority);
+		$obj->set('uniq_id', $duplicateIdentifier);
 	}
 	public static function getFieldSpec() // returns array() specifying rules for the columns
 	{
 		return array(
-			'id' => array(
-				'caption' => _t('ID'),
-				'fieldtype' => 'integer',
-				'validator' => new SERIA_Validator(array())
-			),
-			'uniq_id' => array(
-				'caption' => _t('Identifier'),
-				'fieldtype' => 'text',
-				'validator' => new SERIA_Validator(array())
-			),
-			'state' => array(
-				'caption' => _t('State'),
-				'fieldtype' => 'integer',
-				'validator' => new SERIA_Validator(array())
-			),
-			'reason' => array(
-				'caption' => _t('Reason'),
-				'fieldtype' => 'text',
-				'validator' => new SERIA_Validator(array())
-			),
-			'description' => array(
-				'caption' => _t('Description'),
-				'fieldtype' => 'text',
-				'validator' => new SERIA_Validator(array())
-			),
-			'data' => array(
-				'caption' => _t('Blob'),
-				'fieldtype' => 'text',
-				'validator' => new SERIA_Validator(array())
-			),
-			'priority' => array(
-				'caption' => _t('Priority'),
-				'fieldtype' => 'int',
-				'validator' => new SERIA_Validator(array())
-			),
-			'queue' => array(
-				'caption' => _t('Queue'),
-				'fieldtype' => 'text',
-				'validator' => new SERIA_Validator(array())
-			),
-			'expires' => array(
-				'caption' => _t('Expires'),
-				'fieldtype' => 'integer',
-				'validator' => new SERIA_Validator(array())
-			)
+			'uniq_id' => array('name', _t('Identifier')),
+			'state' => array('integer', _t('State')),
+			'reason' => array('text', _t('Reason')),
+			'description' => array('text', _t('Description')),
+			'data' => array('text', _t('Blob')),
+			'priority' => array('integer', _t('Priority')),
+			'queue' => array('name', _t('Queue')),
+			'expires' => array('integer', _t('Expires'))
 		);
 	}
-	public static function fluentSpec() // returns array('table' => '{tablename}', 'primaryKey' => 'id', 'selectWhere' => 'ownerId=123')
+	public static function Meta($instance = NULL)
 	{
 		return array(
 			'table' => '{queue_task}',
-			'primaryKey' => 'id'
+			'primaryKey' => 'id',
+			'fields' => static::getFieldSpec()
 		);
 	}
 	public static function fromDB($row)
 	{
-		return new SERIA_Queue($row['name'], $row['title'], $row['description']);
+		return SERIA_Queue::createObject($row['name'], $row['title'], $row['description']);
 	}
-	public static function createObject($p=false) // should accept false, an array or a primay key and return a single instance of the object (must use caching)
-	{
-			return new SERIA_QueueTask($p);
-	}
-	
+
 	/**
 	 * Removes the task from the queue, and records a reason to why it failed. It will not be run again.
 	 * 

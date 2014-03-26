@@ -13,7 +13,7 @@ class SERIA_Async {
 			'call' => $cb,
 			'args' => $args
 		);
-		$task = new SERIA_QueueTask('Call', serialize($call));
+		$task = SERIA_QueueTask::createObject('Call', serialize($call));
 		self::$queue->add($task);
 	}
 }

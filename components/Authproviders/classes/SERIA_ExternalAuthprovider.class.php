@@ -8,7 +8,7 @@ class SERIA_ExternalAuthprovider extends SERIA_ExternalAuthproviderDB implements
 
 	public static function loadProviders()
 	{
-		$providers = new SERIA_FluentQuery('SERIA_ExternalAuthprovider');
+		$providers = SERIA_Meta::all('SERIA_ExternalAuthprovider');
 		self::$externalProviders = array();
 		foreach ($providers as $provider) {
 			SERIA_Authproviders::addProvider($provider);

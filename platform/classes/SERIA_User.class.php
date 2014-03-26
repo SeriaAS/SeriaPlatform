@@ -55,6 +55,52 @@
 			SERIA_Hooks::dispatch('SERIA_User::__construct', $this);
 		}
 
+		protected static function createDatabaseTable()
+		{
+			if (SERIA_COMPATIBILITY >= 3) {
+				$ct = "
+					CREATE TABLE `seria_users` (
+					  `id` int(11) NOT NULL DEFAULT '0',
+					  `first_name` varchar(50) DEFAULT NULL,
+					  `last_name` varchar(50) DEFAULT NULL,
+					  `display_name` varchar(100) DEFAULT NULL,
+					  `username` varchar(50) DEFAULT NULL,
+					  `password` varchar(50) DEFAULT NULL,
+					  `email` varchar(100) DEFAULT NULL,
+					  `is_administrator` int(1) DEFAULT '0',
+					  `enabled` int(1) DEFAULT '1',
+					  `password_change_required` tinyint(1) NOT NULL DEFAULT '0',
+					  `is_guest` tinyint(1) NOT NULL DEFAULT '0',
+					  PRIMARY KEY (`id`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8
+				";
+				SERIA_Base::db()->exec($ct);
+				$ct = "
+					CREATE TABLE `seria_user_meta_value` (
+					  `name` varchar(100) NOT NULL DEFAULT '',
+					  `owner` int(11) NOT NULL DEFAULT '0',
+					  `value` text,
+					  `timestamp` datetime DEFAULT NULL,
+					  PRIMARY KEY (`name`,`owner`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8
+				";
+				SERIA_Base::db()->exec($ct);
+				$user = new SERIA_User();
+				$user->set('first_name', 'Super');
+				$user->set('last_name', 'User');
+				$user->set('display_name', 'Admininstrator');
+				$user->set('username', 'admin');
+				$user->set('password', 'admin123');
+				$user->set('email', 'post@seria.no');
+				$user->set('is_administrator', 1);
+				$user->set('enabled', 1);
+				$user->set('password_change_required', 0);
+				$user->set('guestAccount', 0);
+				if (!SERIA_Base::elevateUser(array($user, 'save'))) {
+					throw new SERIA_Exception('Unable to save user');
+				}
+			}
+		}
 		/**
 		*	Login a user to the system by either e-mail address or username
 		*/
@@ -63,10 +109,18 @@
 
 			$username = mb_strtolower($username, "UTF-8");
 
-			$userRow = SERIA_Base::db()->query('SELECT * FROM {users} WHERE enabled=1 AND (username=:username OR email=:username) AND password=:password', array(
-				'username' => $username,
-				'password' => md5($password),
-			))->fetch(PDO::FETCH_ASSOC);
+			try {
+				$userRow = SERIA_Base::db()->query('SELECT * FROM {users} WHERE enabled=1 AND (username=:username OR email=:username) AND password=:password', array(
+					'username' => $username,
+					'password' => md5($password),
+				))->fetch(PDO::FETCH_ASSOC);
+			} catch (PDOException $e) {
+				if ($e->getCode() == '42S02' && SERIA_COMPATIBILITY >= 3) /* Tbl not found */ {
+					static::createDatabaseTable();
+					return static::login($username, $password);
+				}
+				throw $e;
+			}
 
 
 			if(!$userRow)

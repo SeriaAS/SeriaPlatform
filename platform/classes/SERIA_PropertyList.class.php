@@ -24,6 +24,23 @@
 			$this->object = $o;
 		}
 
+		protected static function createDatabaseTable()
+		{
+			if (SERIA_COMPATIBILITY >= 3) {
+				$ct = "
+					CREATE TABLE `seria_property_list` (
+					  `owner` varchar(90) NOT NULL DEFAULT '',
+					  `name` varchar(48) NOT NULL DEFAULT '',
+					  `className` varchar(40) DEFAULT NULL,
+					  `value` varchar(255) DEFAULT NULL,
+					  PRIMARY KEY (`owner`,`name`),
+					  KEY `className` (`className`,`name`,`value`)
+					) ENGINE=InnoDB DEFAULT CHARSET=utf8
+				";
+				SERIA_Base::db()->exec($ct);
+			}
+		}
+
 		function &createObject(SERIA_NamedObject $o)
 		{ // caches objects created
 			static $cache = false;
@@ -157,6 +174,14 @@
 				foreach($this->properties as $name => $value)
 					$properties[$name] = $value;
 				return $this->properties = $properties;
+			}
+			catch (PDOException $e)
+			{
+				if ($e->getCode() == '42S02' && SERIA_COMPATIBILITY >= 3) /* Tbl not found */ {
+					static::createDatabaseTable();
+					return $this->properties = array();
+				}
+				throw $e;
 			}
 			catch (SERIA_Exception $e)
 			{

@@ -5,7 +5,7 @@ class PowerpointConverterSystem
 	public static function addToQueue($file, $ext)
 	{
 		$q = SERIA_Queue::createObject('PowerpointConverterSystem', 'PowerpointConverterSystem Taskqueue', 'This taskqueue sequentially converts powerpoints received.');
-		$t = new SERIA_QueueTask('ConvertPPTtoPNG', serialize(array(
+		$t = SERIA_QueueTask::createObject('ConvertPPTtoPNG', serialize(array(
 			'id' => $file->get('id'),
 			'ext' => $ext 
 		)));
