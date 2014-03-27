@@ -2,7 +2,6 @@
 *	This is the AJAX API for Seria Platform. It must be included AFTER including private.js or public.js, since it
 *	relies on the global SERIA being available.
 */
-if(typeof(SERIA_VARS)=='undefined') alert("SERIA_VARS have not been defined.");
 if(typeof(SERIA)=='undefined') alert("Either private.js or public.js is not included. One of these must be included before including common.js");
 
 /**

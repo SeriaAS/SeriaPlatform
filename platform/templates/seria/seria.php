@@ -5,11 +5,13 @@
 SERIA_ScriptLoader::loadScript('jQuery-ui');
 SERIA_ScriptLoader::loadScript('jQuery-treeview');
 SERIA_ScriptLoader::loadScript('jQuery-ui-tabs');
-if(SERIA_Base::user() !== false)
-	SERIA_ScriptLoader::loadScript('SERIA-Platform-Private');
-else
-	SERIA_ScriptLoader::loadScript('SERIA-Platform-Public');
-SERIA_ScriptLoader::loadScript('SERIA-Platform-Common');
+if (SERIA_COMPATIBILITY < 3) {
+	if(SERIA_Base::user() !== false)
+		SERIA_ScriptLoader::loadScript('SERIA-Platform-Private');
+	else
+		SERIA_ScriptLoader::loadScript('SERIA-Platform-Public');
+	SERIA_ScriptLoader::loadScript('SERIA-Platform-Common');
+}
 
 $subMenu = array();
 if($subMenuItems = $gui->getMenuItemsLevel(2))
@@ -72,6 +74,11 @@ else
 <html>
 	<head>
 		<title><?php echo htmlspecialchars($title); ?></title>
+
+		<?php
+		if (SERIA_COMPATIBILITY >= 3)
+			echo SERIA_ScriptLoader::getHeadContent();
+		?>
 
 		<script type='text/javascript'>
 			SERIA.Template = {

@@ -536,24 +536,28 @@ class SERIA_ScriptLoader
 				SERIA_Base::debug('OOOPS: FAILED TO SAVE SCRIPT-LOADER CACHE: '.$e->getMessage());
 			}
 		}
-		SERIA_Hooks::listen('SERIA_Template::outputHandler', array('SERIA_ScriptLoader', 'doLoads'));
+		if (SERIA_COMPATIBILITY < 3) {
+			SERIA_Hooks::listen('SERIA_Template::outputHandler', array('SERIA_ScriptLoader', 'doLoads'));
 
-		/*
-		 * Reserve space in the template for script includes: should be included before eventually other scripts in the head.
-		 */
-		SERIA_Template::head('SERIA_ScriptLoader', '');
-		SERIA_Base::debug('Script loader is ready..');
+			/*
+			 * Reserve space in the template for script includes: should be included before eventually other scripts in the head.
+			 */
+			SERIA_Template::head('SERIA_ScriptLoader', '');
+			SERIA_Base::debug('Script loader is ready..');
+		}
 	}
-	public static function doLoads()
-	{
-		static $loaded = false;
 
-		if ($loaded)
-			return;
-		$loaded = true;
+	/**
+	 * SERIA_COMPATIBILITY>=3 has to request and include the head content in a main-template-file. No auto..
+	 *
+	 * @return string
+	 * @throws Exception
+	 */
+	public static function getHeadContent()
+	{
 		self::init();
 		if (!self::$loadScript)
-			return;
+			return '';
 		try {
 			$loadHash = sha1(SERIA_HTTP_ROOT.serialize(self::$loadScript).self::$ident);
 			try {
@@ -581,23 +585,40 @@ class SERIA_ScriptLoader
 				}
 			} else
 				SERIA_Base::debug('SERIA_ScriptLoader has cached this situation. Can load directly.');
-			SERIA_Template::head('SERIA_ScriptLoader', $loadHtml);
+			if ($loadHtml)
+				return $loadHtml;
 		} catch (Exception $e) {
 			if (SERIA_DEBUG) {
-				SERIA_Template::debugMessage("SERIA_ScriptLoader has failed. This is the load log:");
+				SERIA_Base::debug("SERIA_ScriptLoader has failed. This is the load log:");
 				foreach (self::$loadLog as $load) {
-					SERIA_Template::debugMessage("***************************************<br/>\n");
-					SERIA_Template::debugMessage('Script: '.$load['name']."<br/>\n");
-					SERIA_Template::debugMessage('Preferred version: '.($load['preferred'] !== false ? $load['preferred'] : 'NULL')."<br/>\n");
-					SERIA_Template::debugMessage('Minimum version: '.($load['minimum'] !== false ? $load['minimum'] : 'NULL')."<br/>\n");
-					SERIA_Template::debugMessage('Maximum version: '.($load['maximum'] !== false ? $load['maximum'] : 'NULL')."<br/>\n");
-					SERIA_Template::debugMessage("#######################################<br/>\n");
-					SERIA_Template::debugMessage($load['backtrace']);
-					SERIA_Template::debugMessage("***************************************<br/>\n");
+					SERIA_Base::debug("***************************************<br/>\n");
+					SERIA_Base::debug('Script: '.$load['name']."<br/>\n");
+					SERIA_Base::debug('Preferred version: '.($load['preferred'] !== false ? $load['preferred'] : 'NULL')."<br/>\n");
+					SERIA_Base::debug('Minimum version: '.($load['minimum'] !== false ? $load['minimum'] : 'NULL')."<br/>\n");
+					SERIA_Base::debug('Maximum version: '.($load['maximum'] !== false ? $load['maximum'] : 'NULL')."<br/>\n");
+					SERIA_Base::debug("#######################################<br/>\n");
+					SERIA_Base::debug($load['backtrace']);
+					SERIA_Base::debug("***************************************<br/>\n");
 				}
 			}
 			throw $e;
 		}
+		return '';
+	}
+
+	/**
+	 * SERIA_COMPATIBILITY < 3: Automatic load will take place through the SERIA_Template.
+	 */
+	public static function doLoads()
+	{
+		static $loaded = false;
+
+		if ($loaded)
+			return;
+		$loaded = true;
+		$loadHtml = self::getHeadContent();
+		if ($loadHtml)
+			SERIA_Template::head('SERIA_ScriptLoader', $loadHtml);
 		SERIA_Base::debug('SERIA_ScriptLoader is done.');
 	}
 	public static function reset()
