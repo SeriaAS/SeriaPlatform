@@ -296,6 +296,7 @@ $trace
 
 		static function exceptionHandler($e)
 		{ // unhandled exception
+			SERIA_ScriptLoader::enterSafeMode();
 			SERIA_Base::$requestError = $e;
 			try {
 				SERIA_Base::$requestErrorTrace = $e->getTraceAsString();

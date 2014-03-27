@@ -3,41 +3,6 @@
 class SERIA_ScriptLoader
 {
 	private static $scripts = array(
-		"jQuery" => array(
-			"versions" => array(
-			 	"1.2.3" => array(
-					"depends" => array(),
-					"filename" => "/seria/libs/jquery/jquery-1.2.3.min.js"
-				),
-				"1.2.6" => array(
-					"depends" => array(),
-					"filename" => "/seria/libs/jquery/jquery-1.2.6.min.js"
-				),
-				"1.3" => array(
-					"depends" => array(),
-					"filename" => "/seria/libs/jQuery-1.3/jquery-1.3.min.js"
-				),
-				'1.3.1' => array(
-					'depends' => array(),
-					'filename' => '/seria/libs/jQuery-1.3/jquery-1.3.1.min.js'
-				),
-				'1.4.2' => array(
-					'depends' => array(),
-					'filename' => '/seria/platform/js/jquery/js/jquery-1.4.2.min.js'
-				),
-				'1.6.4' => array(
-					'depends' => array(),
-					'filename' => '/seria/platform/js/jquery/js/jquery-1.6.4.min.js'
-				),
-				'1.7' => array(
-					'depends' => array(),
-					'filename' => '/seria/platform/js/jquery/js/jquery-1.7.min.js'
-				)
-			),
-			'default' => array(
-				'preferred' => '1.7'
-			)
-		),
 		"jQuery-tablesorter" => array(
 			'versions' => array(
 				array(
@@ -495,7 +460,7 @@ class SERIA_ScriptLoader
 	);
 
 	protected static $ident; /* The identifier of the current script table (caching) */
-	protected static $loadOrder = array();
+	protected static $loadOrder = NULL;
 	protected static $loadScript = array();
 	protected static $doneInit = false;
 
@@ -503,13 +468,32 @@ class SERIA_ScriptLoader
 
 	protected static $cache;
 
+	protected static $safeMode = 0;
+
+	public static function provideScript($name, $version, $info)
+	{
+		if (!isset(self::$scripts[$name]))
+			self::$scripts[$name] = array();
+		if (!isset(self::$scripts[$name]['versions']))
+			self::$scripts[$name]['versions'] = array();
+		if (!isset(self::$scripts[$name]['versions'][$version]))
+			self::$scripts[$name]['versions'][$version] = $info;
+		else
+			throw new Exception('Duplicate provider for '.$name.'-'.$version);
+		SERIA_Base::debug('SERIA_ScriptLoader: Adding '.$name.'-'.$version);
+		self::$doneInit = false; /* reinit load-order */
+	}
+	public static function enterSafeMode()
+	{
+		self::$safeMode++;
+	}
+	public static function exitSafeMode()
+	{
+		self::$safeMode--;
+	}
+
 	protected static function initSolver()
 	{
-		static $loaded = false;
-
-		if ($loaded)
-			return;
-		$loaded = true;
 		SERIA_ScriptLoader_Solver::setScripts(self::$scripts);
 	}
 	public static function init()
@@ -528,13 +512,20 @@ class SERIA_ScriptLoader
 		}
 		if (!self::$loadOrder) {
 			SERIA_Base::debug('Need to calculate safe load order (caching)');
-			self::initSolver();
-			self::$loadOrder = SERIA_ScriptLoader_Solver::getSafeLoadOrder();
 			try {
-				self::$cache->set(self::$ident, serialize(self::$loadOrder), 30*24*3600);
+				self::initSolver();
+				$loadOrder = SERIA_ScriptLoader_Solver::getSafeLoadOrder();
+				try {
+					self::$cache->set(self::$ident, serialize($loadOrder), 30*24*3600);
+				} catch (Exception $e) {
+					SERIA_Base::debug('OOOPS: FAILED TO SAVE SCRIPT-LOADER CACHE: '.$e->getMessage());
+				}
 			} catch (Exception $e) {
-				SERIA_Base::debug('OOOPS: FAILED TO SAVE SCRIPT-LOADER CACHE: '.$e->getMessage());
+				SERIA_Base::debug('SERIA_ScriptLoader: Failed to generate '.self::$ident.' load order, waiting for valid dependency tree...');
+				$loadOrder = null;
 			}
+			if ($loadOrder !== null)
+				self::$loadOrder = $loadOrder;
 		}
 		if (SERIA_COMPATIBILITY < 3) {
 			SERIA_Hooks::listen('SERIA_Template::outputHandler', array('SERIA_ScriptLoader', 'doLoads'));
@@ -555,8 +546,11 @@ class SERIA_ScriptLoader
 	 */
 	public static function getHeadContent()
 	{
+		//print_r(self::$scripts); die();
 		self::init();
 		if (!self::$loadScript)
+			return '';
+		if (self::$loadOrder == NULL)
 			return '';
 		try {
 			$loadHash = sha1(SERIA_HTTP_ROOT.serialize(self::$loadScript).self::$ident);
@@ -568,7 +562,6 @@ class SERIA_ScriptLoader
 			}
 			if (!$loadHtml) {
 				SERIA_Base::debug('SERIA_ScriptLoader has not cached this situation. Need to calculate dependencies..');
-				self::initSolver();
 				foreach (self::$loadOrder as $load) {
 					if (isset(self::$loadScript[$load])) {
 						foreach (self::$loadScript[$load] as $callLoad) {
@@ -642,16 +635,20 @@ ob_start destroys SERIA_GUI::start() because of output buffering inside output b
 			);
 		}
 */
-		self::init();
-		if (!in_array($name, self::$loadOrder))
-			throw new Exception('Trying to load unknown script.');
-		if (!isset(self::$loadScript[$name]))
-			self::$loadScript[$name] = array();
-		self::$loadScript[$name][] = array(
-			'preferred' => $preferred,
-			'minimum' => $minimum,
-			'maximum' => $maximum
-		);
+		try {
+			self::init();
+			if (!isset(self::$loadScript[$name]))
+				self::$loadScript[$name] = array();
+			self::$loadScript[$name][] = array(
+				'preferred' => $preferred,
+				'minimum' => $minimum,
+				'maximum' => $maximum
+			);
+		} catch (Exception $e) {
+			if (self::$safeMode)
+				return;
+			throw $e;
+		}
 	}
 
 	public static function sScriptTag($tag)

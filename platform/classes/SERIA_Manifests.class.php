@@ -122,6 +122,36 @@ class SERIA_Manifests {
 						SERIA_Hooks::listen($name, $callback);
 			}
 			catch (ReflectionException $null) {}
+			try {
+				$scripts = $reflector->getStaticPropertyValue('scripts');
+				foreach ($scripts as $script) {
+					$name = $version = $path = NULL;
+					if (isset($script['name']))
+						$name = $script['name'];
+					if (isset($script['version']))
+						$version = $script['version'];
+					if (isset($script['url']))
+						$url = $script['url'];
+					else if (isset($script['path'])) {
+						$path = $script['path'];
+						$url = SERIA_Meta::assetUrl($reflector->getConstant('NAME'), $path)->__toString();
+					}
+					if (isset($script['depends']))
+						$depends = $script['depends'];
+					else
+						$depends = array();
+					if (!$name || !$version || !$url)
+						throw new Exception('name, version and url/path is essential information for providing a script');
+					$info = array(
+						'filename' => $url,
+						'depends' => $depends
+					);
+					SERIA_ScriptLoader::provideScript($name, $version, $info);
+				}
+			}
+			catch (ReflectionException $e)
+			{
+			}
 		}
 		$currentHash = SERIA_Base::getParam('manifestversions:'.$namespace);
 		if($currentHash !== $hash)
@@ -677,8 +707,20 @@ class SERIA_Manifests {
 		$namespaces[$namespace]['recursive']++;
 		foreach ($paths as $path) {
 			$componentDir = dirname($path);
-			$bn = basename($path);
-			if ($loaded[$bn]) {
+			$bnRaw = basename($path);
+			/* sanitize */
+			$legalChars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_';
+			$bn = '';
+			while ($bnRaw) {
+				$char = substr($bnRaw, 0, 1);
+				$bnRaw = substr($bnRaw, 1);
+				if (strpos($legalChars, $char) !== false)
+					$bn .= $char;
+				else
+					$bn .= '_';
+			}
+			/* */
+			if (isset($loaded[$bn]) && $loaded[$bn]) {
 				if ($loaded[$bn] != $path)
 					die('A component with the same name has been loaded from a different path: '.$loaded[$bn].'!='.$path);
 				continue; /* The component has already been loaded */
