@@ -18,6 +18,7 @@ class NDLA_SyncSchedulerComponent extends SERIA_Component
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Edit sync', array($this, 'editSync'), 'ndlasyncschedules/edit/:id');
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Show sync log', array($this, 'showLog'), 'ndlasyncschedules/log');
 		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Sync now', array($this, 'syncNow'), 'ndlasyncschedules/sync');
+		SERIA_Router::instance()->addRoute('NDLA_SyncSchedulerComponent', 'Partial sync', array($this, 'partialSync'), 'ndlasyncschedules/partialsync');
 	}
 	function getInstallationPath()
 	{
@@ -104,6 +105,14 @@ class NDLA_SyncSchedulerComponent extends SERIA_Component
 		SERIA_Base::pageRequires('admin');
 		$template = new SERIA_MetaTemplate();
 		echo $template->parse($this->getInstallationPath().'/pages/syncnow.php');
+		die();
+	}
+
+	public function partialSync()
+	{
+		SERIA_Base::pageRequires('admin');
+		$template = new SERIA_MetaTemplate();
+		echo $template->parse($this->getInstallationPath().'/pages/partialsync.php');
 		die();
 	}
 }

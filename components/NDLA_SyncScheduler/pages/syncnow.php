@@ -45,8 +45,10 @@
 								<tr>
 									<td>
 										<?php
+											$partial = '<a href="'.htmlspecialchars(SERIA_HTTP_ROOT.'?route=ndlasyncschedules/partialsync&multimode='.rawurlencode($key)).'">'._t('advanced').'</a>';
 											echo $action->field($key);
 											echo $action->label($key);
+											echo '   '._t('(%PARTIAL%)', array('PARTIAL' => $partial));
 										?>
 									</td>
 								</tr>

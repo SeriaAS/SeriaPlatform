@@ -8,7 +8,9 @@ class NDLA_SyncLog extends SERIA_MetaObject
 			'table' => '{ndla_sync_log}',
 			'fields' => array(
 				'executedAt' => array('datetime required', _t('Time of sync')),
-				'description' => array('text required', _t('Description'))
+				'description' => array('text required', _t('Description')),
+				'syncType' => array('text', _t('Sync type')),
+				'partialSync' => array('text', _t('Partial sync')),
 			)
 		);
 	}
@@ -42,6 +44,23 @@ class NDLA_SyncLog extends SERIA_MetaObject
 		return $avail;
 	}
 
+	public static function startSync($description, $syncType, $partial=NULL)
+	{
+		$log = new self();
+		$log->set('executedAt', date('Y-m-d H:i:s'));
+		$log->set('description', $description);
+		$log->set('syncType', $syncType);
+		if ($partial !== NULL)
+			$log->set('partial', 'Partial:'.implode(',', $partial));
+		SERIA_Meta::save($log);
+		$syncAvail = self::loadSync2();
+		if (isset($syncAvail[$syncType])) {
+			list($caption, $callable) = $syncAvail[$syncType];
+			call_user_func($callable, $partial);
+		} else
+			throw new SERIA_Exception('Sync type not avail: '.$syncType);
+	}
+
 	/**
 	 *
 	 * Do a sync now.
@@ -49,23 +68,19 @@ class NDLA_SyncLog extends SERIA_MetaObject
 	 */
 	public static function doSync($description, $syncTypes=null)
 	{
+		if (defined('NDLA_SYNC_SCRIPT_2')) {
+			foreach ($syncTypes as $syncType)
+				self::startSync($description, $syncType);
+			return;
+		}
 		$log = new self();
 		$log->set('executedAt', date('Y-m-d H:i:s'));
 		$log->set('description', $description);
 		SERIA_Meta::save($log);
 		/* Do the sync!: */
-		$syncAvail = self::loadSync2();
-		if (defined('NDLA_SYNC_SCRIPT_2')) {
-			foreach ($syncAvail as $key => $data) {
-				list($caption, $callable) = $data;
-				if ($syncTypes === null || in_array($key, $syncTypes))
-					call_user_func($callable);
-			}
-		} else {
-			if ($syncTypes !== null)
-				throw new SERIA_Exception('This sync component is not configured for sync2.');
-			require(NDLA_SYNC_SCRIPT);
-		}
+		if ($syncTypes !== null)
+			throw new SERIA_Exception('This sync component is not configured for sync2.');
+		require(NDLA_SYNC_SCRIPT);
 	}
 
 	/**
@@ -157,6 +172,18 @@ class NDLA_SyncLog extends SERIA_MetaObject
 					self::writeSyncLogEntry('Polled: Not syncing');
 			}
 		}
+	}
+
+	public static function getSyncType($key)
+	{
+		$avail = self::loadSync2();
+		foreach ($avail as $k => $data) {
+			list($caption, $callable) = $data;
+			$fkey = 'mode_'.sha1(serialize($callable));
+			if ($fkey == $key)
+				return $k;
+		}
+		return NULL;
 	}
 
 	/**
