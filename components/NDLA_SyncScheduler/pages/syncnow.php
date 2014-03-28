@@ -29,6 +29,7 @@
 			</script>
 			<?php
 		}
+		$avail = NDLA_SyncLog::loadSync2();
 		$keys = NDLA_SyncLog::getMultimodeFields();
 		echo $action->begin();
 		?>
@@ -48,7 +49,8 @@
 											$partial = '<a href="'.htmlspecialchars(SERIA_HTTP_ROOT.'?route=ndlasyncschedules/partialsync&multimode='.rawurlencode($key)).'">'._t('advanced').'</a>';
 											echo $action->field($key);
 											echo $action->label($key);
-											echo '   '._t('(%PARTIAL%)', array('PARTIAL' => $partial));
+											if (isset($avail[NDLA_SyncLog::getSyncType($key)][2]))
+												echo '   '._t('(%PARTIAL%)', array('PARTIAL' => $partial));
 										?>
 									</td>
 								</tr>
