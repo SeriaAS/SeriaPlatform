@@ -112,10 +112,10 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'jpegPhoto' => 'jpegPhoto',
 					'postalCode' => 'postalCode',
 					'fylke' => 'eduPersoOrgDN:eduOrgLegalName',
-					'eduPersonOrgDN:o' => 'eduPersonOrgDN:o',
-					'eduPersonOrgDN:eduOrgLegalName' => 'eduPersonOrgDN:eduOrgLegalName',
-					'eduPersonOrgUnitDN:ou' => 'eduPersonOrgUnitDN:ou',
-					'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier' => 'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier'
+					'eduPersonOrgDN:o' => array('eduPersonOrgDN:o', 0),
+					'eduPersonOrgDN:eduOrgLegalName' => array('eduPersonOrgDN:eduOrgLegalName', 0),
+					'eduPersonOrgUnitDN:ou' => array('eduPersonOrgUnitDN:ou', 0),
+					'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier' => array('eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier', 0)
 				),
 				'combinations' => array(
 				),
