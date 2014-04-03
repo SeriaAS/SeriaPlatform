@@ -132,7 +132,7 @@ class WebApp {
 	*	Accepts a path in the form of /path/to/resource?with=arguments. Returns the template file, or NULL if no template file was found.
 	*/
 	public function resolve($path) {
-		if(!$path) throw new SERIA_Exception("\$path is a required argument");
+		if(!is_string($path)) throw new SERIA_Exception("\$path is a required argument");
 
 		// Validate the path. We only allow alphanumeric characters, . (dot), _ (underscore) and / (slash).
 		if(trim($path, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./_-')!=='')
