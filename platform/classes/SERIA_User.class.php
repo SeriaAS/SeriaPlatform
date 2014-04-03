@@ -41,6 +41,7 @@
 
 		function __construct()
 		{
+			SERIA_ProxyServer::privateCache(86400);
 			$args = func_get_args();
 			if(is_array($args[0]))
 			{
@@ -106,6 +107,7 @@
 		*/
 		static function login($username, $password)
 		{
+			SERIA_ProxyServer::noCache();
 
 			$username = mb_strtolower($username, "UTF-8");
 
@@ -152,6 +154,7 @@
 
 		const LOGOUT_ACTION = 'userLogout';
 		static function logoutAction($continueUrl=false) {
+			SERIA_ProxyServer::noCache();
 			$action = new SERIA_ActionUrl(self::LOGOUT_ACTION, NULL, $continueUrl);
 
 			if ($action->invoked()) {
@@ -188,6 +191,7 @@
 
 		const LOGIN_ACTION = 'userLogin';
 		/**
+		 * DEPRECATED
 		 *
 		 * Returns a login-action object. Due to redirects you will never get an invoked action object (the method does not return invoked).
 		 * @param $continueUrl Continue url, the browser is redirected here when the user is logged in.
@@ -220,6 +224,7 @@
 
 		static function logout()
 		{
+			SERIA_ProxyServer::noCache();
 			return SERIA_Base::user(NULL);
 		}
 
@@ -228,6 +233,7 @@
 		*/
 		function setLoggedIn()
 		{
+			SERIA_ProxyServer::noCache();
 			return SERIA_Base::user($this);
 		}
 
@@ -281,7 +287,9 @@
 		*	Create a user account
 		*/
 		public function create(&$firstName=null, &$lastName=null, &$displayName=null, &$username=null, &$password=null, &$email=null, $isAdministrator=false)
-		{ 
+		{
+			SERIA_ProxyServer::noCache();
+
 			if (!$firstName && !$lastName && ($this && (get_class($this) == 'SERIA_User'))) {
 				// This is a create event from Active Record
 				$this->_db = SERIA_Base::db();
@@ -373,6 +381,8 @@
 
 		function delete()
 		{
+			SERIA_ProxyServer::noCache();
+
 			if(!SERIA_Base::isAdministrator() && !SERIA_Base::isElevated())
 				throw new SERIA_Exception("Access Denied. Requires Administrator privileges to delete users.");
 
@@ -454,11 +464,12 @@
 			if (SERIA_Base::user()->id !== $this->_row['id'])
 				throw new SERIA_Exception('Access denied.');
 			$this->validate();
-			
+
 			$this->save();
 		}
 		function save()
 		{
+			SERIA_ProxyServer::noCache();
 			if(!(SERIA_Base::isAdministrator() || SERIA_Base::isElevated()))
 				throw new SERIA_Exception("Access Denied. Requires Administrator privileges to edit users.");
 
@@ -472,7 +483,6 @@
 				$res = $db->insert('{users}', array('id', 'first_name', 'last_name', 'display_name', 'username', 'password', 'email', 'is_administrator', 'enabled', 'password_change_required', 'is_guest'), $this->_row);
 				if($res)
 					SERIA_PropertyList::createObject($this)->save();
-	
 				return $res;
 			}
 			else
@@ -481,23 +491,23 @@
 				SERIA_PropertyList::createObject($this)->save();
 				return true;
 			}
-
-
-
 		}
 
 		function isAdministrator()
 		{
+			SERIA_ProxyServer::privateCache();
 			return isset($this->_row['is_administrator']) && $this->_row['is_administrator'] ? true : false;
 		}
 
 		function isGuest()
 		{
+			SERIA_ProxyServer::privateCache();
 			return isset($this->_row['is_guest']) && $this->_row['is_guest'] ? true : false;
 		}
 
 		function set($field, $value)
 		{
+			SERIA_ProxyServer::noCache();
 			switch($field)
 			{
 				case "firstName" :  case "first_name" : $field = "first_name"; break;
@@ -547,6 +557,7 @@
 		*/
 		function hasRight($type)
 		{
+			SERIA_ProxyServer::privateCache();
 			if($this->isAdministrator())
 				return true;
 			return SERIA_PropertyList::createObject($this)->get('right:'.$type);
@@ -554,6 +565,7 @@
 
 		function setRight($type, $value)
 		{
+			SERIA_ProxyServer::noCache();
 			if($this->isAdministrator())
 				throw new SERIA_Exception(_t("This is an administrator account."));
 			$pl = SERIA_PropertyList::createObject($this);
@@ -569,6 +581,7 @@
 		*/
 		function addRight($type)
 		{
+			SERIA_ProxyServer::noCache();
 			if($this->isAdministrator())
 				throw new SERIA_Exception(_t("This is an administrator account."));
 			return SERIA_PropertyList::createObject($this)->set($type, 1);
@@ -579,6 +592,7 @@
 		*/
 		function removeRight($type)
 		{
+			SERIA_ProxyServer::privateCache();
 			if($this->isAdministrator())
 				throw new SERIA_Exception(_t("This is an administrator account."));
 
@@ -707,7 +721,8 @@
 
 		public static function fromDB($row) { return SERIA_User::createObject($row); }
 
-		public function isDeletable() { 
+		public function isDeletable() {
+			SERIA_ProxyServer::privateCache();
 			if(empty($this->row['id']))
 				return false; // can't delete an object that is not stored
 			if(!(SERIA_Base::isElevated() || SERIA_Base::isAdministrator()))
@@ -755,6 +770,7 @@
 		 */
 		public function _setMetaExtended($name, $value, $timestamp)
 		{
+			SERIA_ProxyServer::noCache();
 			SERIA_Base::db()->updateOrInsert('{user_meta_value}', array(
 				'name',
 				'owner'
@@ -836,6 +852,7 @@
 		 */
 		public static function requireGuestAccount()
 		{
+			SERIA_ProxyServer::privateCache();
 			if (SERIA_Base::user() !== false)
 				return;
 			if (file_exists(SERIA_ROOT.'/login.php')) {

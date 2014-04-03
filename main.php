@@ -291,7 +291,7 @@ require(SERIA_ROOT . '/seria/includes/hooks.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/hooks.php)');
 require(SERIA_ROOT . '/seria/includes/locale.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/locale.php)');
-require(SERIA_ROOT . '/seria/includes/session.php');
+if(SERIA_COMPATIBILITY < 4) require(SERIA_ROOT . '/seria/includes/session.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/session.php)');
 require(SERIA_ROOT . '/seria/includes/coreComponents.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/coreComponents.php)');

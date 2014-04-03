@@ -37,21 +37,25 @@ class WebAppRequest {
 	// Caching information
 	public $caching;
 
-	// Will contain a list of all sub requests of this, that is requests that have been
-	// performed by calling WebApp::request() within the exec() method of WebAppRequest.
-	public $children = array();
-
+	protected $url;
 	protected $path;
 	protected $queryString;
+	protected $requestInfo;
 
 	public function __construct($url) {
 		$url = trim(trim($url), "/");
 		$parts = explode("?", $url);
 		$path = trim($parts[0], "/");
 
+		$this->url = $url;
+
 		$this->path = $path;
 		if(isset($parts[1]))
 			$this->queryString = $parts[1];
+
+		$this->requestInfo = WebApp::$instance->resolve($this->path);
+		if(!$this->requestInfo)
+			throw new SERIA_Exception('Could not resolve path "'.$this->path.'".');
 	}
 
 	/**
@@ -60,11 +64,6 @@ class WebAppRequest {
 	public function exec() {
 
 		WebApp::debug('WebAppRequest::exec() '.$this->path);
-
-		$webApp = WebApp::$instance;
-		$requestInfo = $webApp->resolve($this->path);
-		if(!$requestInfo)
-			throw new SERIA_Exception('Could not resolve path "'.$this->path.'".');
 
 		$keepState = self::$_latestState;
 
@@ -79,8 +78,24 @@ class WebAppRequest {
 		}
 		$_SERVER['QUERY_STRING'] = $this->queryString;
 		$cache = new SERIA_Cache('WebApp');
-		$cacheKey = filemtime($requestInfo[0]).md5(serialize($requestInfo).$_SERVER['QUERY_STRING']);
-		$res = $cache->get($cacheKey);
+		$cacheKey = filemtime($this->requestInfo[0]).md5(serialize($this->requestInfo).$_SERVER['QUERY_STRING']);
+		if(!empty($_SERVER['HTTP_CACHE_CONTROL'])) {
+			$res = NULL;
+		} else {
+			$res = $cache->get($cacheKey);
+		}
+
+		if(in_array($this->requestInfo[0], WebApp::$instance->_templateStack)) {
+			// If this request resolves down to the root of the template stack, it means that the sub request was not found
+			if(WebApp::$instance->_templateStack[0] == $this->requestInfo[0]) {
+				throw new WebApp_Exception("Sub request url \"".$this->url."\" was not found.", self::HTTP_NOT_FOUND);
+			} else {
+				throw new webApp_Exception("Recursively including template files is not supported, to prevent infinite loops. Tried to include \"".$this->requestInfo[0]."\" at URL \"".$this->url."\".", self::HTTP_NOT_IMPLEMENTED);
+			}
+		}
+
+		WebApp::$instance->_templateStack[] = $this->requestInfo[0];
+
 		if($res) {
 			self::$_latestState = $this->state = $res['state'];
 			$this->content = $res['content'];
@@ -95,22 +110,26 @@ class WebAppRequest {
 
 			// Parse template
 			ob_start();
-			$this->parseTemplate($requestInfo[0], $this->state);
+			$this->parseTemplate($this->requestInfo[0], $this->state);
 			$this->content = ob_get_contents();
 			ob_end_clean();
 
 			// Record proxy state
 			$this->caching = SERIA_ProxyServer::init($currentProxyState);
 
-			// Save cache
 			if($this->caching['limiter']==SERIA_ProxyServer::CACHE_PUBLIC && ($ttl = $this->caching['expires'] - time()) > 0) {
+				// Save internal cache
 				$cache->set($cacheKey, array(
 					'state' => $this->state,
 					'content' => $this->content,
 					'caching' => $this->caching,
 				), $ttl);
+			} else {
+				$cache->set($cacheKey, NULL);
 			}
 		}
+
+		array_pop(WebApp::$instance->_templateStack);
 
 		$_GET = unserialize($keepGet);
 		if($keepQueryString)

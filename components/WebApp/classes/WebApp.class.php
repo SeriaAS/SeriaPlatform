@@ -61,17 +61,23 @@ class WebApp {
 	);
 
 	/**
-	*	Holds a list of the currently requested URLs. Prevents infinite loops.
+	*	Holds a list of the currently requested templates. Prevents infinite loops.
 	*/
-	protected $_urlStack = array();
+	public $_templateStack = array();
 
 	/**
 	*	Specify a view root, or multiple view roots as an array.
 	*/
 	public static function bootstrap($views) {
-		SERIA_Template::disable();
+		ignore_user_abort(TRUE);
+		set_time_limit(10);
+		self::debug("WebApp::bootstrap()");
+		if(SERIA_COMPATIBILITY < 4) throw new SERIA_Exception("Seria WebApp will only work when SERIA_COMPATIBILITY >= 4, currently ".SERIA_COMPATIBILITY.".");
 		SERIA_ProxyServer::override();
 		if(self::$instance) throw new SERIA_Exception("You can't call WebApp::bootstrap() from within another WebApp::bootstrap().");
+
+		if($_SERVER['REQUEST_METHOD']!=='GET' && $_SERVER['REQUEST_METHOD']!=='HEAD')
+			SERIA_ProxyServer::noCache();
 
 		if(is_array($views))
 			self::$instance = new WebApp($views);
@@ -89,33 +95,36 @@ class WebApp {
 
 	public static function request($url) {
 		if(!self::$instance) throw new SERIA_Exception("You can't call WebApp::request() without a current WebApp::bootstrap().");
+		self::debug("WebApp::request($url)");
 		return self::$instance->_request($url);
 	}
 
 	protected function _request($url) {
-		if(isset($this->_urlStack[$url]))
-			throw new SERIA_Exception("URLs cannot be called recursively (called \"$url\") (stack: \"".implode(", ", $this->_urlStack)."\". Usually this results from the default handler calling the default handler.");
-		$this->_urlStack[$url] = $url;
-
 		$request = new WebAppRequest($url);
 
 		// Remember the old request
 		$oldRequest = $this->currentRequest;
 
-		// Add the new request as a child to the current request
-		if($this->currentRequest)
-			$this->currentRequest->children[] = $request;
-
 		// This request is now the current request
 		$this->currentRequest = $request;
 
 		// Do the work
-		$request->exec();
+		try {
+			$request->exec();
+		} catch (WebApp_Exception $e) {
+			// An internal error happened, so we should try to make sensible results for the end user
+			switch($e->getCode()) {
+				case SERIA_Exception::NOT_FOUND :
+					$request = new WebAppRequestFake($e->getMessage(), $e->getCode());
+					break;
+				default :
+					$request = new WebAppRequestFake('Exception: '.$e->getMessage(), 200);
+					break;
+			}
+		}
 
 		// Set back the current request
 		$this->currentRequest = $oldRequest;
-
-		unset($this->_urlStack[$url]);
 		return $request;
 	}
 
@@ -126,14 +135,22 @@ class WebApp {
 		if(!$path) throw new SERIA_Exception("\$path is a required argument");
 
 		// Validate the path. We only allow alphanumeric characters, . (dot), _ (underscore) and / (slash).
-		if(trim($path, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ./_')!=='')
-			throw new SERIA_Exception('Illegal characters in URL', SERIA_Exception::UNSUPPORTED);
+		if(trim($path, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789./_-')!=='')
+			throw new SERIA_Exception('Illegal characters in URL "'.$path.'"', SERIA_Exception::UNSUPPORTED);
 
 		// Now that we are certain that the string does not contain illegal characters - we need to prevent certain use cases
 		if(strpos($path, './')!==FALSE || strpos($path, '/.')!==FALSE || strpos($path, '/_/')!==FALSE)
 			throw new SERIA_Exception('URLs cannot contain . (dot) or _ (underscore) as a path component', SERIA_Exception::UNSUPPORTED);
 
 		$res = self::_resolve($this->_viewPaths[0], $path);
+		if($res === NULL) {
+			// The path does not resolve, so we should try to resolve it using one of the secondary paths
+			$max = sizeof($this->_viewPaths);
+			for($i = 1; $i < $max; $i++) {
+				if($res = self::_resolve($this->_viewPaths[$i], $path, TRUE)) break;
+				var_dump($this->_viewPaths[$i]);
+			}
+		}
 		return $res;
 	}
 
@@ -152,7 +169,11 @@ class WebApp {
 			return self::$_fsCacheIsFile[$path];
 		return self::$_fsCacheIsFile[$path] = is_file($path);
 	}
-	public function _resolve($root, $path) {
+
+	/**
+	*	@param $exactRoot	If true, will not recurse
+	*/
+	public function _resolve($root, $path, $exactRoot=FALSE) {
 		$exts = array_keys(self::$templateHandlers);
 
 		$path = explode("/", trim($path,'/'));
@@ -213,6 +234,7 @@ class WebApp {
 	}
 
 	public static function phpTemplate($path, &$state) {
+		self::debug("require($path);");
 		require($path);
 	}
 

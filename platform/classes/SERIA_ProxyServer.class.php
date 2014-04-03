@@ -62,6 +62,7 @@ if (SERIA_COMPATIBILITY<3) {
 		// prevent session_cache_limiter from tampering with your headers.
 		protected static $_overrideMode = FALSE;
 		protected static $_overrideAvailable = TRUE;
+		protected static $_overrideBacktrace = NULL;
 
 		/**
 		*	Resets the caching parameters to their initial state
@@ -87,8 +88,9 @@ if (SERIA_COMPATIBILITY<3) {
 		public static function override() {
 			if(self::$_overrideAvailable)
 				self::$_overrideMode = TRUE;
-			else
+			else {
 				throw new SERIA_Exception('Too late to set SERIA_ProxyServer::override()');
+			}
 		}
 
 		public static function commit() {
@@ -176,20 +178,24 @@ if (SERIA_COMPATIBILITY<3) {
 
 		protected static function _resetState() {
 			self::_initProperties();
+			if(self::$_overrideAvailable)
+				self::$_overrideBacktrace = debug_backtrace();
+
+			$ttl = self::$_expires-time();
 
 			self::$_overrideAvailable = FALSE;
 			switch(self::$_limiter) {
 				case self::CACHE_PUBLIC :
 					if(!self::$_overrideMode) session_cache_limiter('private');
-					header('Cache-Control: public, max-age='.(self::$_expires-time()));
+					header('Cache-Control: public, max-age='.$ttl.', post-check='.$ttl.', pre-check='.$ttl);
 					header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', intval(self::$_expires)));
 					break;
 				case self::CACHE_PRIVATE :
 					if(!self::$_overrideMode) {
 						session_cache_limiter('private');
-						header('Cache-Control: private, expires='.self::$_expires.', max-age='.(self::$_expires - time()).', pre-check='.(self::$_expires - time()));
+						header('Cache-Control: private, max-age='.$ttl.', post-check='.$ttl.', pre-check='.$ttl);
 					} else {
-						header('Cache-Control: private, expires='.self::$_expires.', max-age='.(self::$_expires - time()));
+						header('Cache-Control: private, max-age='.$ttl.', post-check='.$ttl.', pre-check='.$ttl);
 					}
 					header('Expires: Thu, 19 Nov 1981 08:52:00 GMT');
 					break;

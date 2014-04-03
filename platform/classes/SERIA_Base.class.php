@@ -402,6 +402,7 @@ $trace
                 
 		static function hasRight($rightName)
 		{
+			SERIA_ProxyServer::privateCache(1);
 			if(($user = SERIA_Base::user()) && ($user->hasRight($rightName) || self::isAdministrator()))
 				return true;
 
@@ -417,6 +418,7 @@ $trace
 		 */
 		static function isAdministrator($temporaryGrant=false)
 		{
+			SERIA_ProxyServer::privateCache(1);
 			if($temporaryGrant)
 				throw new SERIA_Exception('Temporary granting of administrator privileges have been disabled. Use SERIA_Base::elevateUser($callback).');
 			if ($user = SERIA_Base::user()) {
@@ -429,6 +431,7 @@ $trace
 
 		static function isGuest()
 		{
+			SERIA_ProxyServer::privateCache(1);
 			if($user = SERIA_Base::user()) {
 				return $user->isGuest();
 			}
@@ -490,6 +493,7 @@ $trace
 		 */
 		public static function hasSystemAccess()
 		{
+			SERIA_ProxyServer::privateCache(1);
 			if (self::isLoggedIn() && (!isset($_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED']) || !$_SESSION['USER_LOGIN_SYSTEM_ACCESS_BLOCKED'])) {
 				$user = SERIA_Base::user();
 				if (!$user)
@@ -510,6 +514,17 @@ $trace
 		 */
 		static function user($setUser=false, $tempoary=false)
 		{
+			SERIA_ProxyServer::privateCache(1);
+			if(SERIA_COMPATIBILITY >= 4 && !session_id()) {
+				if(isset($_COOKIE[get_cfg_var('session.name')])) {
+					session_id($_COOKIE[get_cfg_var('session.name')]);
+					session_start();
+				} else if(isset($_GET[get_cfg_var('session.name')])) {
+					session_id($_GET[get_cfg_var('session.name')]);
+					session_start();
+				}
+			}
+
 			static $user = false;
 
 			if ($setUser !== false) {
@@ -611,6 +626,7 @@ $trace
 
 		static function isLoggedIn()
 		{
+			SERIA_ProxyServer::privateCache(1);
 			return SERIA_Base::user() ? true : false;
 		}
 

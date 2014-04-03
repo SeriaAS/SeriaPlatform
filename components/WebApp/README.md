@@ -53,15 +53,7 @@ The template code in /contents/ will percieve this as a completely new request a
 a real full HTTP request, as it happens "internally" without the overhead of bootstrapping the PHP interpreter.
 
 
-$contents = WebApp::exec('/path/to/url?arg1=123', function($contents) {
-	
-});
-echo strtoupper($contents);
-
-
-
-
-
+$contents = WebApp::request('/path/to/url?arg1=123');
 
 Whenever you want to create a dynamic piece of information to display on your website, you designate a URL for that piece of information. For example,
 the contents for the frontpage should be placed in ./views/contents/index.php. If the browser visits http://www.yoursite.com/contents/, it will only

@@ -70,7 +70,9 @@
 //	define('SERIA_MEMCACHED_KEY', 	'');					// key to use to separate from other uses of the same memcache server
 
 
-	define('SERIA_COMPATIBILITY',	3);					// This define is for keeping backward compatability. Sometimes APIs change, and we need to know what APIs your site is depending on.
+	define('SERIA_COMPATIBILITY',	4);					// This define is for keeping backward compatability. Sometimes APIs change, and we need to know what APIs your site is depending on.
+										// Level 3 Removes SERIA_Template automatic loading
+										// Level 4 Removes automatic session initialization
 
 //	define('SERIA_USER_COMPONENTS', 'Component1,Component2');		// Comma separated list of components to load from /seria/components
 //	define('SERIA_USER_APPS', 'App1,App2');					// Comma separated list of components to load from /seria/components
