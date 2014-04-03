@@ -96,7 +96,11 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'feideRoles' => array(),
 					'jpegPhoto' => array(),
 					'postalCode' => '',
-					'fylke' => ''
+					'fylke' => '',
+					'eduPersonOrgDN:o' => '',
+					'eduPersonOrgDN:eduOrgLegalName' => '',
+					'eduPersonOrgUnitDN:ou' => '',
+					'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier' => ''
 				),
 				'load' => array(
 					'unique' => $this->getUniqueSourceKey(),
@@ -107,7 +111,11 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'feideRoles' => 'eduPersonAffiliation',
 					'jpegPhoto' => 'jpegPhoto',
 					'postalCode' => 'postalCode',
-					'fylke' => 'eduPersoOrgDN:eduOrgLegalName'
+					'fylke' => 'eduPersoOrgDN:eduOrgLegalName',
+					'eduPersonOrgDN:o' => 'eduPersonOrgDN:o',
+					'eduPersonOrgDN:eduOrgLegalName' => 'eduPersonOrgDN:eduOrgLegalName',
+					'eduPersonOrgUnitDN:ou' => 'eduPersonOrgUnitDN:ou',
+					'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier' => 'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier'
 				),
 				'combinations' => array(
 				),
@@ -123,7 +131,11 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 					'feideRoles',
 					'jpegPhoto',
 					'postalCode',
-					'fylke'
+					'fylke',
+					'eduPersonOrgDN:o',
+					'eduPersonOrgDN:eduOrgLegalName',
+					'eduPersonOrgUnitDN:ou',
+					'eduPersonOrgUnitDN:norEduOrgUnitUniqueIdentifier'
 				)
 			),
 			'metadata' => array(
