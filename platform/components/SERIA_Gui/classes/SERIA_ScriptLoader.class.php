@@ -501,6 +501,7 @@ class SERIA_ScriptLoader
 		if (self::$doneInit)
 			return;
 		SERIA_Base::debug('Starting script loader..');
+		self::initSolver();
 		self::$doneInit = true;
 		self::$cache = new SERIA_Cache('SERIA_ScriptLoader');
 		self::$ident = sha1(serialize(self::$scripts)).'_ordercache';
@@ -513,7 +514,6 @@ class SERIA_ScriptLoader
 		if (!self::$loadOrder) {
 			SERIA_Base::debug('Need to calculate safe load order (caching)');
 			try {
-				self::initSolver();
 				$loadOrder = SERIA_ScriptLoader_Solver::getSafeLoadOrder();
 				try {
 					self::$cache->set(self::$ident, serialize($loadOrder), 30*24*3600);
