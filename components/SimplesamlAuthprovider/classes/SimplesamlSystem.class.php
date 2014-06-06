@@ -11,7 +11,12 @@ class SimplesamlSystem
 	{
 		SERIA_Base::debug('Saving simplesaml session (auto)');
 		$session = SimpleSAML_Session::getInstance();
-		$session->saveSession();
+		if (method_exists($session, "saveSession"))
+			$session->saveSession(); // <=1.10.0
+		else { // 1.12.0 and later
+			$sessionHandler = SimpleSAML_SessionHandler::getSessionHandler();
+			$sessionHandler->saveSession($session);
+		}
 		foreach ($_SESSION as $nam => $val) {
 			if (is_string($val))
 				SERIA_Base::debug('SESSION: '.$nam.' => string:'.$val);
