@@ -822,6 +822,12 @@
 						"type" => "integer",
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::INTEGER))),
 					);
+				case "integer64" : case "int64" :
+					return array(
+						"fieldtype" => "text",
+						"type" => "bigint",
+						"validator" => new SERIA_Validator(array(array(SERIA_Validator::INTEGER))),
+					);
 				case "float" : case "int" :
 					return array(
 						"fieldtype" => "text",
