@@ -10,6 +10,7 @@
 		const NOT_READY = 5;		// NOT READY
 		const DISABLED = 6;		// THE FEATURE IS NOT ENABLED IN THIS CASE
 		const UNSUPPORTED = 7;		// THE OPERATION REQUIRED AN UNSUPPORTED FEATURE
+		const SERVER_ERROR = 500;
 
 		public function __construct($message=NULL, $code=NULL, $extra=NULL) {
 			parent::__construct($message, $code);
