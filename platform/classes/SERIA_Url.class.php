@@ -15,10 +15,13 @@
 		* @param string $url	An absolute URL
 		*/
 		public function __construct($url)
-		{
+		{ 
 			if(!is_string($url) && (!is_object($url) || get_class($url)!='SERIA_Url')) throw new Exception("Must receive a string");
 			if(is_object($url)) $this->_url = ''.$url;
-			else $this->_url = $url;
+			else {
+				if(strpos($url, "//")===0) $url = 'http:'.(!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS'])!='off' ? 's' : '').$url;
+				$this->_url = $url;
+			}
 		}
 
         /**
@@ -42,6 +45,21 @@
 			else $parsed['query'] = $paramName.'='.$hash;
 			$this->_url = self::buildUrl($parsed);
 			return $this;
+		}
+
+		/**
+		* Sign the provided URL
+		*/
+		public function quickSign() {
+			$this->sign(SERIA_SALT);
+			return $this;
+		}
+
+		/**
+		* Check that the current URL is signed using quickSign()
+		*/
+		public static function quickCheck() {
+			return SERIA_Url::current()->isSigned(SERIA_SALT);
 		}
 
         /**
