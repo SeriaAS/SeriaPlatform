@@ -16,6 +16,7 @@ class SERIA_ActionForm
     protected $_state;
     protected $_errorTemplate = '%MESSAGE%';	// String returned when calling $form->error('fieldname') and there is an error
     protected $_noError = '';			// String returned when calling $form->error('fieldname') and there is no error
+    protected $_fileFields = array();
 
     /**
      *	Construct a form object for allowing users to perform actions.
@@ -155,6 +156,11 @@ $form->begin()."<table><thead>';
         return ($this->errors!==false && isset($this->errors[$name]));
     }
 
+    public function addError($name, $error) {
+	if($this->errors===false) $this->errors = array();
+	$this->errors[$name] = $error;
+    }
+
     /**
      *	Prefix all field names with this string
      *	@param string $prefix		Prefix for field names
@@ -229,6 +235,25 @@ $form->begin()."<table><thead>';
             }
         }
         return $this;
+    }
+
+    /**
+     *  Add a file field to the form. This field must be handled separately via your application logic, by accessing the $_FILES array.
+     *
+     *  function myFileAction() {
+     *      $form->addFileField('myFile');
+     *      if($form->hasData()) {
+     *        // Validate that the $_FILES['myFile'] is whatever you expect
+     *        // If it isn't then $form->addError('myFile', 'errormessage');
+     *        // Else do your file handling and set $form->success = TRUE;
+     *      }
+     *      return $form;
+     *  }
+     *
+     *  @param $name
+     */
+    public function addFileField($name) {
+	$this->fileFields[$name] = array();
     }
 
     /**
@@ -569,6 +594,16 @@ $form->begin()."<table><thead>';
             'id' => $this->_prefix.$name,
             'name' => $this->_prefix.$name,
             'class' => 'textarea'.($this->hasError($name)?' ui-state-error':''),
+        ), htmlspecialchars($this->get($name)));
+    }
+
+    public function file($name, array $attributes=NULL)
+    {
+        return self::renderTag('input', $attributes, array(
+	    'type' => 'file',
+            'id' => $this->_prefix.$name,
+            'name' => $this->_prefix.$name,
+            'class' => 'file'.($this->hasError($name)?' ui-state-error':''),
         ), htmlspecialchars($this->get($name)));
     }
 
