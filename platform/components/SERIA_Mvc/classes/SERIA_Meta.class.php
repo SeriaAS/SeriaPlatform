@@ -1212,7 +1212,7 @@
 			return $newRow;
 		}
 
-		public /*package*/ function _syncColumnSpec($spec)
+		public /*package*/ static function _syncColumnSpec($spec)
 		{
 			$schema = array();
 
