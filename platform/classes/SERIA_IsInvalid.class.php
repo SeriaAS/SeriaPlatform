@@ -1,7 +1,7 @@
 <?php
 	class SERIA_IsInvalid
 	{
-		function isoDate($value, $required=false)
+		public static function isoDate($value, $required=false)
 		{
 			$value = trim($value);
 			if(!$required && $value=="")
@@ -29,7 +29,7 @@
 					return false;
 			return _t("Wrong date or invalid format");
 		}
-		function norwegianDate($value, $required=false)
+		public static function norwegianDate($value, $required=false)
 		{
 			SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::WARNING, "Using deprecated function SERIA_IsInvalid::norwegianDate.");
 			
@@ -53,7 +53,7 @@
 				return _t("Wrong date or invalid format");
 			return false;
 		}
-		function localDate($value, $required=false, $datelocale=false)
+		public static function localDate($value, $required=false, $datelocale=false)
 		{
 			if (!$required && !$value) return false;
 			if ($datelocale === false)
@@ -79,7 +79,7 @@
 		 * @param $refTS A reference time (date). Unless you validate time of day on the current date this should be supplied to get the correct behaviour according to daylight savings.
 		 * @return unknown_type
 		 */
-		static function localTime($value, $required=false, $datelocale=false, $type='time', $refTS=false)
+		public static function localTime($value, $required=false, $datelocale=false, $type='time', $refTS=false)
 		{
 			if (!$required && !$value) return false;
 			if ($datelocale === false)
@@ -96,7 +96,7 @@
 			return false;
 		}
 
-		function oneOf($value, $values)
+		public static function oneOf($value, $values)
 		{
 			$oneOf = array();
 			if ($values)
@@ -109,7 +109,7 @@
 			return _t("Must be one of: %TYPES%", array("%TYPES%" => implode(", ", $oneOf)));
 		}
 
-		function username($name, $required=false)
+		public static function username($name, $required=false)
 		{
 			if($required && trim($name)=="")
 				return _t("Required");
@@ -117,7 +117,7 @@
 			return false;
 		}
 
-		function name($name, $required=false)
+		public static function name($name, $required=false)
 		{
 			if($required && trim($name)=="")
 				return _t("Required");
@@ -125,7 +125,7 @@
 			return false;
 		}
 
-		function password($password)
+		public static function password($password)
 		{
 			if(trim($password)=="")
 				return _t("Required");
@@ -156,7 +156,7 @@
 			return false;
 		}
 
-		function eMail($eMail, $required=false)
+		public static function eMail($eMail, $required=false)
 		{
 			if($required && trim($eMail)=="")
 				return _t("Required");
@@ -206,7 +206,7 @@
 			return false;
 		}
 
-		function number($number, $required=false, $min=false, $max=false, $onlyInteger = false)
+		public static function number($number, $required=false, $min=false, $max=false, $onlyInteger = false)
 		{
 			if($required && trim($number)=="")
 				return _t("Required");
@@ -222,17 +222,17 @@
 			return false;
 		}
 
-		function integer($number, $required=false, $min=false, $max=false)
+		public static function integer($number, $required=false, $min=false, $max=false)
 		{
 			return SERIA_IsInvalid::number($number, $required, $min, $max, true);
 		}
 
-		function real($number, $required=false, $min=false, $max=false)
+		public static function real($number, $required=false, $min=false, $max=false)
 		{
 			return SERIA_IsInvalid::number($number, $required, $min, $max, false);
 		}
-		
-		function flashStreamUrl($url, $required = false) {
+
+		public static function flashStreamUrl($url, $required = false) {
 			if($required && trim($url)=="")
 				return _t("Required");
 			else if(!$required && trim($url)=="")
@@ -259,7 +259,7 @@
 			return self::relativeUrl($restUrl, true);
 		}
 
-		function url($url, $required=false)
+		public static function url($url, $required=false)
 		{
 			if($required && trim($url)=="")
 				return _t("Required");
@@ -296,7 +296,7 @@
 			return self::relativeUrl($restUrl, true);
 		}
 
-		function relativeURL($url, $required=false)
+		public static function relativeURL($url, $required=false)
 		{
 			$restURL = $url;
 			if(($o = strpos($restURL, "/"))!==false)
@@ -347,7 +347,7 @@
 			return false;
 		}
 
-		function phone($phone, $required=false)
+		public static function phone($phone, $required=false)
 		{
 			if(!$required && trim($phone)=="")
 				return false;
@@ -367,23 +367,23 @@
 			return false;
 		}
 
-		function timeZone($timeZone, $required=false)
+		public static function timeZone($timeZone, $required=false)
 		{
 			//TODO:Validate timezones according to some standard
 			return _t("Invalid timezone");
 		}
 
-		function latitude($latitude, $required=false)
+		public static function latitude($latitude, $required=false)
 		{
 			return SERIA_IsInvalid::real($latitude, $required, -180, 180);
 		}
 
-		function longitude($longitude, $required=false)
+		public static function longitude($longitude, $required=false)
 		{
 			return SERIA_IsInvalid::real($latitude, $required, -90, 90);
 		}
 
-		function uploadedImage($file, $required=false, $maxFileSize="41943040")
+		public static function uploadedImage($file, $required=false, $maxFileSize="41943040")
 		{
 			$uploadedFileCheck = SERIA_IsInvalid::uploadedFile($file, $required, $maxFileSize, array("jpg", "jpeg", 'gif', 'png'));
 			if ($uploadedFileCheck === false) {
@@ -407,7 +407,7 @@
 			}
 		}
 
-		function uploadedFile($file, $required=false, $maxFileSize=NULL, $filetypes="")
+		public static function uploadedFile($file, $required=false, $maxFileSize=NULL, $filetypes="")
 		{
 
 			if (!$required && $file == "")
