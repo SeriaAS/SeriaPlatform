@@ -1022,6 +1022,11 @@
 						"type" => isset($info[2]['type']) ? $info[2]['type'] : 'varchar(200)',
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::ONE_OF, array_keys($info[2]['values'])))),
 					);
+                case "binary":
+                    return array(
+                        "fieldType" => "textarea",
+                        "type" => "longblob"
+                    );
 				default :
 					if(class_exists($specName))
 					{
