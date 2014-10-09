@@ -4,7 +4,7 @@ class FacebookAuthprovider extends SERIA_GenericAuthprovider
 {
 	public static function loadProviders() /* Ok */
 	{
-		$retv =& parent::loadProviders();
+		$retv = parent::loadProviders();
 		SERIA_Authproviders::addProvider(new FacebookAuthprovider());
 		return array_merge($retv, array(
 			'configure' => array(

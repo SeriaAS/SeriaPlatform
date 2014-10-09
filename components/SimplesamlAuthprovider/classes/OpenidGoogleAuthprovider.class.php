@@ -4,7 +4,7 @@ class OpenidGoogleAuthprovider extends SimplesamlAuthprovider
 {
 	public static function loadProviders()
 	{
-		$retv =& parent::loadProviders();
+		$retv = parent::loadProviders();
 		SERIA_Authproviders::addProvider(new OpenidGoogleAuthprovider());
 		return $retv;
 	}

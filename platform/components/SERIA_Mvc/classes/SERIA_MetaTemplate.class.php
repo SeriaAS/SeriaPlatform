@@ -995,7 +995,7 @@
 		/**
 		 * Special filter. Do not call from normal code.
 		 */
-		public function _translate()
+		public static function _translate()
 		{
 			$args = func_get_args();
 			$filename = array_shift($args);

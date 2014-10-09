@@ -4,7 +4,7 @@ class TwitterAuthprovider extends SimplesamlAuthprovider
 {
 	public static function loadProviders()
 	{
-		$retv =& parent::loadProviders();
+		$retv = parent::loadProviders();
 		SERIA_Authproviders::addProvider(new TwitterAuthprovider());
 		return array_merge($retv, array(
 			'configure' => array(

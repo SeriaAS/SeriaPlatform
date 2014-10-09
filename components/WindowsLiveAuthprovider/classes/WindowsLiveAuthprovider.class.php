@@ -6,7 +6,7 @@ class WindowsLiveAuthprovider extends SERIA_GenericAuthprovider
 
 	public static function loadProviders()
 	{
-		$retv =& parent::loadProviders();
+		$retv = parent::loadProviders();
 		self::$provider = new WindowsLiveAuthprovider();
 		SERIA_Authproviders::addProvider(self::$provider);
 		return array_merge($retv, array(

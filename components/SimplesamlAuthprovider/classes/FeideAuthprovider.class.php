@@ -15,7 +15,7 @@ class FeideAuthprovider extends SimplesamlAuthprovider
 
 	public static function loadProviders()
 	{
-		$retv =& parent::loadProviders();
+		$retv = parent::loadProviders();
 		SERIA_Authproviders::addProvider(new FeideAuthprovider(_t('Feide public authentication'), 'feide_openidp', 'https://openidp.feide.no'));
 		SERIA_Authproviders::addProvider(new FeideAuthprovider(_t('Feide test authentication'), 'feide_test', 'https://idp-test.feide.no'));
 		SERIA_Authproviders::addProvider(new FeideAuthprovider(_t('Feide authentication'), 'feide', 'https://idp.feide.no'));

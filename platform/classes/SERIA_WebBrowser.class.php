@@ -637,7 +637,8 @@
 					'path' => $this->currentRequest['path'],
 					'time' => $time
 				);
-				SERIA_Hooks::dispatch(self::METRICS_HOOK, ($a = self::METRIC_FETCH_TIME), $metrics);
+				$a = self::METRIC_FETCH_TIME;
+				SERIA_Hooks::dispatch(self::METRICS_HOOK, $a, $metrics);
 			}
 			if ($buflen <= $bytes)
 				return $this->buffer;
