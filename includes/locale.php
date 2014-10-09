@@ -98,6 +98,51 @@
 		require($filename);
 		return $Giant_list_lang;
 	}
+	function _t_dirExists($dir) {
+		static $cache = NULL;
+		if ($cache === NULL) {
+			$cache = array();
+		}
+		if (!isset($cache[$dir])) {
+			$cache[$dir] = is_dir($dir);
+		}
+		return $cache[$dir];
+	}
+	function _t_fileExists($filename) {
+		static $cache = NULL;
+		if ($cache === NULL) {
+			$cache = array();
+		}
+		if (!isset($cache[$filename])) {
+			$cache[$filename] = file_exists($filename);
+		}
+		return $cache[$filename];
+	}
+	function _t_concatFilename($parts) {
+		$cum = FALSE;
+		foreach ($parts as $part) {
+			if ($cum) {
+				$end = substr($cum, -1);
+				$start = substr($part, 0, 1);
+				if ($end == '/' || $end == DIRECTORY_SEPARATOR) {
+					if ($start == '/' || $start == DIRECTORY_SEPARATOR) {
+						$part = substr($part, 1);
+					}
+					$cum .= $part;
+				} else {
+					if ($start != '/' && $start != DIRECTORY_SEPARATOR) {
+						$part = DIRECTORY_SEPARATOR.$part;
+					}
+					$cum .= $part;
+				}
+			} else
+				$cum = $part;
+		}
+		return $cum;
+	}
+	function _t_langFileExists($langDir, $filename) {
+		return (_t_dirExists($langDir) && _t_fileExists(_t_concatFilename(array($langDir, $filename))));
+	}
 
 	/**
 	 * 
@@ -169,7 +214,7 @@
 				if ($file_loaded[$file_hash] == 0) {
 					$file_loaded[$file_hash]++; /* 1 = locale loaded */
 					$locale_filename = $lang_root.'/'.SERIA_Template::getLanguage().'/'.$relpath;
-					if (file_exists($locale_filename))
+					if (_t_langFileExists($lang_root.'/'.SERIA_Template::getLanguage(), $relpath))
 						$Giant_list_lang[$filename] = _t_loadLangFile($locale_filename);
 					else
 						$Giant_list_lang[$filename] = array();
@@ -184,7 +229,7 @@
 						/* PHASE IId: Load default language file */
 						$file_loaded[$file_hash]++; /* 2 = default loaded */
 						$default_filename = $lang_root.'/default/'.$relpath;
-						if (file_exists($default_filename)) {
+						if (_t_langFileExists($lang_root.'/default', $relpath)) {
 							$defaultFileContents = _t_loadLangFile($default_filename);
 							foreach ($defaultFileContents as $whash => $value) {
 								if (!isset($Giant_list_lang[$filename][$whash]))
@@ -237,7 +282,7 @@
 		while ($call_stack) {
 			$call = array_shift($call_stack);
 			$filename = $call['file'];
-			if (file_exists($filename))
+			if (_t_fileExists($filename))
 				break;
 		}
 		$call_stack = null;
