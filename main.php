@@ -46,6 +46,55 @@ function seria_debugger_notice($msg)
 	fwrite($GLOBALS['seria']['debug_ticker']['fp'], 'File: "'.$stack[0]['file'].'" Line: '.$stack[0]['line']."$msg\n");
 }
 
+$_sp_has_apc = function_exists('apc_store');
+// Functions to eliminate disk io
+function _sp_filemtime($path) {
+	global $_sp_has_apc;
+	if($_sp_has_apc) {
+		$filemtime = apc_fetch('_t_fmt:'.$path, $success);
+		if(!$success) {
+			$filemtime = filemtime($path);
+			apc_store('_t_fmt:'.$path, $filemtime, 1); // Too much creates trouble
+		} else return $filemtime;
+	}
+	return filemtime($path);
+}
+function _sp_is_dir($dir) {
+	global $_sp_has_apc;
+	if($_sp_has_apc) {
+		$exists = apc_fetch('_t_de:'.$filename, $success);
+		if(!$success) {
+			$exists = is_dir($filename);
+			apc_store('_t_de:'.$filename, $exists, $exists ? 600 : 60); // Store for 10 minutes if they exists, 1 minute if not exists.
+			return $exists;
+		} else return $exists;
+	}
+	return is_dir($filename);
+}
+function _sp_file_exists($filename) {
+	global $_sp_has_apc;
+	if($_sp_has_apc) {
+		$exists = apc_fetch('_t_fe:'.$filename, $success);
+		if(!$success) {
+			$exists = file_exists($filename);
+			apc_store('_t_fe:'.$filename, $exists, $exists ? 600 : 60); // Store for 10 minutes if they exists, 1 minute if not exists.
+			return $exists;
+		} else return $exists;
+	}
+	return file_exists($filename);
+}
+function _sp_realpath($path) {
+	global $_sp_has_apc;
+	$key = md5(getcwd().'|'.$path); // CWD must be part of key, because it affects the output of realpath
+	if($_sp_has_apc) {
+		$realpath = apc_fetch('_t_rp:'.$key, $success);
+		if(!$success) {
+			$realpath = realpath($path);
+			apc_store('_t_rp:'.$key, $realpath, 3600);
+		} else return $realpath;
+	}
+	return realpath($path);
+}
 /**
  *	Set default values for $seria_options
  */
@@ -81,7 +130,7 @@ if(isset($_SERVER['HTTP_X_FORWARDED_HOST']))
  *	Load the configuration file for Seria Platform
  */
 
-if(file_exists($dirname.'/../_config.multisite.php'))
+if(_sp_file_exists($dirname.'/../_config.multisite.php'))
 {
 	require_once($dirname.'/platform/classes/SERIA_Base.class.php');
 	require_once($dirname.'/platform/classes/SERIA_DB.class.php');
@@ -182,7 +231,7 @@ if(SERIA_COMPATIBILITY < 3) {
 /**
  *	Where to search for classes. Modules might add more classpaths. * identifies the classname part.
  */
-if(file_exists(SERIA_ROOT.'/classes'))
+if(_sp_file_exists(SERIA_ROOT.'/classes'))
 	$GLOBALS['seria']['classpaths'] = array_merge(array(SERIA_ROOT.'/classes/*.class.php'), $GLOBALS['seria']['classpaths']);
 
 /**
@@ -209,17 +258,16 @@ function seria_autoload($class) {
 	if(SERIA_DEBUG) SERIA_Base::debug('seria_autoload('.$class.')');
 	if(isset($GLOBALS["seria"]["classes"][$class]))
 	{
-		$GLOBALS['seria']['classmtimes'][$class] = filemtime(SERIA_ROOT.'/seria/'.$GLOBALS["seria"]["classes"][$class]);
+		$GLOBALS['seria']['classmtimes'][$class] = _sp_filemtime(SERIA_ROOT.'/seria/'.$GLOBALS["seria"]["classes"][$class]);
 		$result = require(SERIA_ROOT.'/seria/'.$GLOBALS["seria"]["classes"][$class]);
 		SERIA_Hooks::dispatch('seria_autoload', $class, $filename, $result);
 		return $result;
 	}
 
 	foreach($GLOBALS["seria"]["classpaths"] as $path) {
-		if(file_exists($filename = str_replace("*", $class, $path))) {
+		if(_sp_file_exists($filename = str_replace("*", $class, $path))) {
 			seria_debugger_notice('Autoloading "'.$filename.'"');
-			$GLOBALS['seria']['classmtimes'][$class] = filemtime($filename);
-
+			$GLOBALS['seria']['classmtimes'][$class] = _sp_filemtime($filename);
 			$result = require($filename);
 			SERIA_Hooks::dispatch('seria_autoload', $class, $filename, $result);
 			return $result;
@@ -228,9 +276,9 @@ function seria_autoload($class) {
 
 	// deprecated classes special case
 	if(SERIA_COMPATIBILITY < 3) {
-		if(file_exists($filename = SERIA_ROOT.'/seria/platform/classes/deprecated/'.$class.'.class.php')) {
+		if(_sp_file_exists($filename = SERIA_ROOT.'/seria/platform/classes/deprecated/'.$class.'.class.php')) {
 			SERIA_SystemStatus::publishMessage(SERIA_SystemStatus::WARNING, _t('Using deprecated class %CLASS%. If the system is updated, the class might become unavailable.', array('CLASS' => $class)));
-			$GLOBALS['seria']['classmtimes'][$class] = filemtime($filename);
+			$GLOBALS['seria']['classmtimes'][$class] = _sp_filemtime($filename);
 			return require($filename);
 		}
 	}
@@ -299,7 +347,7 @@ require(SERIA_ROOT . '/seria/includes/userComponents.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/userComponents.php)');
 require(SERIA_ROOT . '/seria/includes/userApplications.php');
 if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria/includes/userApplications.php)');
-if(file_exists(SERIA_ROOT.'/seria.php'))
+if(_sp_file_exists(SERIA_ROOT.'/seria.php'))
 {
 	require(SERIA_ROOT.'/seria.php');
 	if(SERIA_DEBUG) SERIA_Base::debug('main.php:require('.SERIA_ROOT . '/seria.php)');

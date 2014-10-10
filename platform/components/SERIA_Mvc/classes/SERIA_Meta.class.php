@@ -1022,11 +1022,11 @@
 						"type" => isset($info[2]['type']) ? $info[2]['type'] : 'varchar(200)',
 						"validator" => new SERIA_Validator(array(array(SERIA_Validator::ONE_OF, array_keys($info[2]['values'])))),
 					);
-                case "binary":
-                    return array(
-                        "fieldType" => "textarea",
-                        "type" => "longblob"
-                    );
+		                case "binary":
+		                    return array(
+		                        "fieldType" => "textarea",
+		                        "type" => "longblob"
+		                    );
 				default :
 					if(class_exists($specName))
 					{
@@ -1491,7 +1491,7 @@ DELETE THIS
 			$pathFromRoot = substr($manifestDir, $rootLen);
 			SERIA_Base::debug('SERIA_Meta::assetUrl: Uncorrected path: '.$pathFromRoot);
 			if (substr($manifestDir, 0, $rootLen) != $rootDir || ($pathFromRoot && $pathFromRoot[0] != DIRECTORY_SEPARATOR)) {
-				$rootDir = realpath($rootDir);
+				$rootDir = _sp_realpath($rootDir);
 				$rootLen = strlen($rootDir);
 				if ($rootDir[$rootLen - 1] == DIRECTORY_SEPARATOR) {
 					$rootLen--;

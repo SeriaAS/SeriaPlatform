@@ -227,7 +227,7 @@
 			 * eval.
 			 */
 			if (file_exists($templateFileName))
-				$templateFileName = realpath($templateFileName);
+				$templateFileName = _sp_realpath($templateFileName);
 
 			$code = file_get_contents($templateFileName);
 			if(empty($code)) throw new SERIA_Exception('Template "'.$templateFileName.'" not found', SERIA_Exception::NOT_FOUND);

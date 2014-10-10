@@ -39,8 +39,8 @@
 		public static function getMessages() {
 			SERIA_ProxyServer::noCache();
 
-			$notice = $_SESSION['flashNotice'];
-			$error = $_SESSION['flashError'];
+			$notice = isset($_SESSION['flashNotice']) ? $_SESSION['flashNotice'] : NULL;
+			$error = isset($_SESSION['flashError']) ? $_SESSION['flashError'] : NULL;
 
 			unset($_SESSION["flashNotice"]);
 			unset($_SESSION["flashError"]);

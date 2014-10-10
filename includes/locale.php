@@ -98,26 +98,6 @@
 		require($filename);
 		return $Giant_list_lang;
 	}
-	function _t_dirExists($dir) {
-		static $cache = NULL;
-		if ($cache === NULL) {
-			$cache = array();
-		}
-		if (!isset($cache[$dir])) {
-			$cache[$dir] = is_dir($dir);
-		}
-		return $cache[$dir];
-	}
-	function _t_fileExists($filename) {
-		static $cache = NULL;
-		if ($cache === NULL) {
-			$cache = array();
-		}
-		if (!isset($cache[$filename])) {
-			$cache[$filename] = file_exists($filename);
-		}
-		return $cache[$filename];
-	}
 	function _t_concatFilename($parts) {
 		$cum = FALSE;
 		foreach ($parts as $part) {
@@ -141,7 +121,7 @@
 		return $cum;
 	}
 	function _t_langFileExists($langDir, $filename) {
-		return (_t_dirExists($langDir) && _t_fileExists(_t_concatFilename(array($langDir, $filename))));
+		return (_sp_is_dir($langDir) && _sp_file_exists(_t_concatFilename(array($langDir, $filename))));
 	}
 
 	/**
@@ -155,103 +135,119 @@
 	 */
 	function _t_with_caller($string, $vars, $key, $filename)
 	{
+		global $_sp_has_apc;
+
+		$skipResolve = FALSE;
+		$apcKey = FALSE;
+		if($_sp_has_apc) {
+			$apcKey = 'twc:'.md5($string.$key.$filename.SERIA_Template::getLanguage());
+			$res = apc_fetch($apcKey, $skipResolve);
+			if($skipResolve) {
+				$string = $res;
+			}
+		}
+
 		static $Giant_list_lang = array();
 		static $file_loaded = array();
 		static $realpaths = array();
 
-		if (!$filename)
-			throw new Exception('Filename not specified.');
-		$cwd = getcwd();
-		if (!isset($realpaths[$cwd.':'.$filename]))
-			$realpaths[$cwd.':'.$filename] = realpath($filename);
-		$filename = $realpaths[$cwd.':'.$filename];
+		if(!$skipResolve) {
+			if (!$filename)
+				throw new Exception('Filename not specified.');
+			$cwd = getcwd();
+			if (!isset($realpaths[$cwd.':'.$filename]))
+				$realpaths[$cwd.':'.$filename] = _sp_realpath($filename);
+			$filename = $realpaths[$cwd.':'.$filename];
 
-		/* PHASE I: Encoding */
-		$string = mb_convert_encoding($string, "UTF-8", "UTF-8, ISO-8859-1");
+			/* PHASE I: Encoding */
+			$string = mb_convert_encoding($string, "UTF-8", "UTF-8, ISO-8859-1");
 
-		/* PHASE II: Translate */
-		$hash = hash('md4', $string.($key === null ? '' : $key)); /* MD4 has been claimed to be the fastest hash function */
-		if (!isset($Giant_list_lang[$filename]) || !isset($Giant_list_lang[$filename][$hash])) {
-			/* PHASE IIb: Check if language def is loaded */
-			$file_hash = hash('md4', $filename);
-			if (!isset($file_loaded[$file_hash]))
-				$file_loaded[$file_hash] = 0;
-			$rootpath = realpath(SERIA_ROOT);
-			$rootpath_len = strlen($rootpath);
-			if (substr($filename, 0, $rootpath_len) != $rootpath) {
-				/*
-				 * Autodetect a translation directory.
-				 * This means that if you have code that is outside the SERIA_ROOT
-				 * you can still use _t in it provided that you create a seria_lang directory
-				 * there.
-				 */
-				$rootpath = dirname($filename);
-				while (!is_dir($rootpath.'/seria_lang')) {
-					if ($rootpath == dirname($rootpath))
-						throw new Exception('The included file ('.$filename.') is outside SERIA_ROOT. Translation is not implemented.');						
-					$rootpath = dirname($rootpath);
-				}
+			/* PHASE II: Translate */
+			$hash = hash('md4', $string.($key === null ? '' : $key)); /* MD4 has been claimed to be the fastest hash function */
+			if (!isset($Giant_list_lang[$filename]) || !isset($Giant_list_lang[$filename][$hash])) {
+				/* PHASE IIb: Check if language def is loaded */
+				$file_hash = hash('md4', $filename);
+				if (!isset($file_loaded[$file_hash]))
+					$file_loaded[$file_hash] = 0;
+				$rootpath = _sp_realpath(SERIA_ROOT);
 				$rootpath_len = strlen($rootpath);
-				$lang_root = $rootpath.'/seria_lang';
-			} else
-				$lang_root = null;
-			$relpath = substr($filename, $rootpath_len);
-			if ($relpath[0] == DIRECTORY_SEPARATOR)
-				$relpath = substr($relpath, 1);
-			$seria_base_path = 'seria'.DIRECTORY_SEPARATOR;
-			$seria_base_path_len = strlen($seria_base_path);
-			if ($lang_root === null) {
-				if (substr($relpath, 0, $seria_base_path_len) == $seria_base_path) {
-					/* seria/ code: */
-					$lang_root = SERIA_ROOT.'/seria/lang';
-				} else {
-					/* user/local code: */
-					$lang_root = SERIA_LANG_PATH;
+				if (substr($filename, 0, $rootpath_len) != $rootpath) {
+					/*
+					 * Autodetect a translation directory.
+					 * This means that if you have code that is outside the SERIA_ROOT
+					 * you can still use _t in it provided that you create a seria_lang directory
+					 * there.
+					 */
+					$rootpath = dirname($filename);
+					while (!is_dir($rootpath.'/seria_lang')) {
+						if ($rootpath == dirname($rootpath))
+							throw new Exception('The included file ('.$filename.') is outside SERIA_ROOT. Translation is not implemented.');						
+						$rootpath = dirname($rootpath);
+					}
+					$rootpath_len = strlen($rootpath);
+					$lang_root = $rootpath.'/seria_lang';
+				} else
+					$lang_root = null;
+				$relpath = substr($filename, $rootpath_len);
+				if ($relpath[0] == DIRECTORY_SEPARATOR)
+					$relpath = substr($relpath, 1);
+				$seria_base_path = 'seria'.DIRECTORY_SEPARATOR;
+				$seria_base_path_len = strlen($seria_base_path);
+				if ($lang_root === null) {
+					if (substr($relpath, 0, $seria_base_path_len) == $seria_base_path) {
+						/* seria/ code: */
+						$lang_root = SERIA_ROOT.'/seria/lang';
+					} else {
+						/* user/local code: */
+						$lang_root = SERIA_LANG_PATH;
+					}
 				}
-			}
-			if ($file_loaded[$file_hash] < 2) {
-				/* PHASE IIc: Load locale language file */
-				if ($file_loaded[$file_hash] == 0) {
-					$file_loaded[$file_hash]++; /* 1 = locale loaded */
-					$locale_filename = $lang_root.'/'.SERIA_Template::getLanguage().'/'.$relpath;
-					if (_t_langFileExists($lang_root.'/'.SERIA_Template::getLanguage(), $relpath))
-						$Giant_list_lang[$filename] = _t_loadLangFile($locale_filename);
-					else
-						$Giant_list_lang[$filename] = array();
-				}
+				if ($file_loaded[$file_hash] < 2) {
+					/* PHASE IIc: Load locale language file */
+					if ($file_loaded[$file_hash] == 0) {
+						$file_loaded[$file_hash]++; /* 1 = locale loaded */
+						$locale_filename = $lang_root.'/'.SERIA_Template::getLanguage().'/'.$relpath;
+						if (_t_langFileExists($lang_root.'/'.SERIA_Template::getLanguage(), $relpath))
+							$Giant_list_lang[$filename] = _t_loadLangFile($locale_filename);
+						else
+							$Giant_list_lang[$filename] = array();
+					}
 
-				/* DEBUG ASSERTION: THE LOAD COUNTER MUST BE STRICTLY (0 = none loaded, 1 = locale loaded, 2 = default loaded) */
-				if (SERIA_DEBUG && $file_loaded[$file_hash] !== 1 && $file_loaded[$file_hash] !== 2)
-					throw new Exception('Unexpected value!');
+					/* DEBUG ASSERTION: THE LOAD COUNTER MUST BE STRICTLY (0 = none loaded, 1 = locale loaded, 2 = default loaded) */
+					if (SERIA_DEBUG && $file_loaded[$file_hash] !== 1 && $file_loaded[$file_hash] !== 2)
+						throw new Exception('Unexpected value!');
 
-				if (!isset($Giant_list_lang[$filename][$hash])) {
-					if ($file_loaded[$file_hash] == 1) {
-						/* PHASE IId: Load default language file */
-						$file_loaded[$file_hash]++; /* 2 = default loaded */
-						$default_filename = $lang_root.'/default/'.$relpath;
-						if (_t_langFileExists($lang_root.'/default', $relpath)) {
-							$defaultFileContents = _t_loadLangFile($default_filename);
-							foreach ($defaultFileContents as $whash => $value) {
-								if (!isset($Giant_list_lang[$filename][$whash]))
-									$Giant_list_lang[$filename][$whash] = $value;
+					if (!isset($Giant_list_lang[$filename][$hash])) {
+						if ($file_loaded[$file_hash] == 1) {
+							/* PHASE IId: Load default language file */
+							$file_loaded[$file_hash]++; /* 2 = default loaded */
+							$default_filename = $lang_root.'/default/'.$relpath;
+							if (_t_langFileExists($lang_root.'/default', $relpath)) {
+								$defaultFileContents = _t_loadLangFile($default_filename);
+								foreach ($defaultFileContents as $whash => $value) {
+									if (!isset($Giant_list_lang[$filename][$whash]))
+										$Giant_list_lang[$filename][$whash] = $value;
+								}
 							}
 						}
 					}
 				}
+				/*
+				 * The files are guaranteed to have been loaded here..
+				 */
+				if (!isset($Giant_list_lang[$filename][$hash])) {
+					/* PHASE IIe: Add string to default language file */
+					$Giant_list_lang[$filename][$hash] = $string;
+					_t_addStringToDefaultLang($lang_root.'/default/'.$relpath, $hash, $string);
+				}
 			}
-			/*
-			 * The files are guaranteed to have been loaded here..
-			 */
-			if (!isset($Giant_list_lang[$filename][$hash])) {
-				/* PHASE IIe: Add string to default language file */
-				$Giant_list_lang[$filename][$hash] = $string;
-				_t_addStringToDefaultLang($lang_root.'/default/'.$relpath, $hash, $string);
-			}
-		}
-		if (SERIA_DEBUG && !isset($Giant_list_lang[$filename][$hash]))
-			throw new Exception('_t() algo failed to add string to array');
+			if (SERIA_DEBUG && !isset($Giant_list_lang[$filename][$hash]))
+				throw new Exception('_t() algo failed to add string to array');
 
-		$string = $Giant_list_lang[$filename][$hash];
+			$string = $Giant_list_lang[$filename][$hash];
+
+			apc_store($apcKey, $string, 600);
+		}
 
 		/* PHASE III: Replacements */
 		if(sizeof($vars))
@@ -282,13 +278,15 @@
 		while ($call_stack) {
 			$call = array_shift($call_stack);
 			$filename = $call['file'];
-			if (_t_fileExists($filename))
+			if (_sp_file_exists($filename))
 				break;
 		}
 		$call_stack = null;
 		if (($override = SERIA_TranslationContext::getContext($filename)) !== false)
 			$filename = $override;
-		return _t_with_caller($string, $vars, $key, $filename);
+		$res = _t_with_caller($string, $vars, $key, $filename);
+
+		return $res;
 	}
 
 	class SERIA_TranslationContext

@@ -177,7 +177,7 @@ class WebApp {
 		$exts = array_keys(self::$templateHandlers);
 
 		$path = explode("/", trim($path,'/'));
-		$current = realpath($root);
+		$current = _sp_realpath($root);
 
 		$allVars = array();
 		while($part = array_shift($path)) {

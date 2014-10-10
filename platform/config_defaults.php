@@ -6,7 +6,7 @@
 	defined('SERIA_READ_ONLY') || define('SERIA_READ_ONLY', 0);
 
 	defined('SERIA_HTTP_ROOT') || define('SERIA_HTTP_ROOT', 'http'.($_SERVER['HTTPS']?'s':'').'://'.$_SERVER['HOST_NAME']);
-	defined('SERIA_ROOT') || define('SERIA_ROOT', realpath(dirname(__FILE__) . '/../..'));
+	defined('SERIA_ROOT') || define('SERIA_ROOT', _sp_realpath(dirname(__FILE__) . '/../..'));
 	defined('SERIA_TEMPLATE_ROOT') || define('SERIA_TEMPLATE_ROOT', SERIA_ROOT.'/templates');
 	defined('SERIA_TEMPLATE_HTTP_ROOT') || define('SERIA_TEMPLATE_HTTP_ROOT', SERIA_HTTP_ROOT.'/templates');
 	defined('SERIA_DEBUG') || define('SERIA_DEBUG', 0);

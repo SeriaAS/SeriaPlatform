@@ -78,7 +78,7 @@ class WebAppRequest {
 		}
 		$_SERVER['QUERY_STRING'] = $this->queryString;
 		$cache = new SERIA_Cache('WebApp');
-		$cacheKey = filemtime($this->requestInfo[0]).md5(serialize($this->requestInfo).$_SERVER['QUERY_STRING']);
+		$cacheKey = _sp_filemtime($this->requestInfo[0]).md5(serialize($this->requestInfo).$_SERVER['QUERY_STRING']);
 		if(!empty($_SERVER['HTTP_CACHE_CONTROL'])) {
 			$res = NULL;
 		} else {
