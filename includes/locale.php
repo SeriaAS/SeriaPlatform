@@ -246,7 +246,7 @@
 
 			$string = $Giant_list_lang[$filename][$hash];
 
-			apc_store($apcKey, $string, 600);
+			if($_sp_has_apc) apc_store($apcKey, $string, 600);
 		}
 
 		/* PHASE III: Replacements */

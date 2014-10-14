@@ -162,6 +162,10 @@
 			$this->_data->where($where, $args);
 			return $this;
                 }
+		/**
+		*	Either provide $start, $length
+		*	or provide only $length
+		*/
                 final public function limit($a,$b = NULL) {
 			$this->_data->limit($a,$b);
 			return $this;
